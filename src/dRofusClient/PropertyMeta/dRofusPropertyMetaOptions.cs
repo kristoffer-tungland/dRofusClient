@@ -1,6 +1,3 @@
-using dRofusClient.Bases;
-using dRofusClient.Parameters;
-
 namespace dRofusClient.PropertyMeta;
 
 public record dRofusPropertyMetaOptions(int Depth = 0) : dRofusOptionsBase

@@ -16,7 +16,7 @@ public static class dRofusRegistryExtensions
     /// <returns>List of databases</returns>
     public static List<string> GetStoredDatabases(string server)
     {
-        dRofusClientExtensions.ValidateServerAddress(server);
+        dRofusConnectionArgs.ValidateServerAddress(server);
         server = server.Replace("http://", "").Replace("https://", "");
         var key = Registry.CurrentUser.OpenSubKey($@"SOFTWARE\dRoFUs\Projects\{server}");
         return key is null ? [] : key.GetSubKeyNames().ToList();
@@ -29,7 +29,7 @@ public static class dRofusRegistryExtensions
     /// <returns>List of projects ids</returns>
     public static List<string> GetStoredProjects(string server, string database)
     {
-        dRofusClientExtensions.ValidateServerAddress(server);
+        dRofusConnectionArgs.ValidateServerAddress(server);
         if (string.IsNullOrWhiteSpace(database))
             throw new Exception("No database provided.");
         server = server.Replace("http://", "").Replace("https://", "");

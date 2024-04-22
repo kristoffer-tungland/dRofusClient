@@ -1,6 +1,5 @@
 ﻿using Meziantou.Framework.Win32;
 using System;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,14 +9,6 @@ namespace dRofusClient.WindowsCredentials;
 
 public static class dRofusClientExtensions
 {
-    public static void ValidateServerAddress(string serverAddress)
-    {
-        var regex = new Regex(@"^https:\/\/api-[a-zA-Z]{2}\.drofus\.com\/?$");
-
-        if (!regex.IsMatch(serverAddress))
-            throw new InvalidOperationException("Invalid server address. Must be in the format https://api-no.drofus.com.");
-    }
-
     public static async Task<IdRofusClient> Create(
         this dRofusClientFactory dRofusClientFactory, 
         string serverAddress, 
@@ -34,7 +25,7 @@ public static class dRofusClientExtensions
         if (string.IsNullOrWhiteSpace(serverAddress))
             throw new InvalidOperationException("No server address provided.");
 
-        ValidateServerAddress(serverAddress);
+        dRofusConnectionArgs.ValidateServerAddress(serverAddress);
 
         var credential = CredentialManager.ReadCredential(serverAddress);
 
@@ -47,7 +38,7 @@ public static class dRofusClientExtensions
         return dRofusConnectionArgs.Create(serverAddress, database, projectId, username, password);
     }
 
-    public static void SaveConnectionArgs(this IdRofusClient client, string username, string password)
+    public static void SaveCredentials(this IdRofusClient client, string username, string password)
     {
         var serverAddress = client.GetBaseUrl();
         SaveCredentials(serverAddress, username, password);
@@ -55,7 +46,7 @@ public static class dRofusClientExtensions
 
     public static void SaveCredentials(string serverAddress, string username, string password)
     {
-        ValidateServerAddress(serverAddress);
+        dRofusConnectionArgs.ValidateServerAddress(serverAddress);
         const string comment = "dRofus login credentials";
         CredentialManager.WriteCredential(serverAddress, username, password, comment, CredentialPersistence.LocalMachine);
     }

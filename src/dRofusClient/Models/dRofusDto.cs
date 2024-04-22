@@ -1,7 +1,8 @@
 using System.Reflection;
+
 // ReSharper disable InconsistentNaming
 
-namespace dRofusClient;
+namespace dRofusClient.Models;
 
 public record dRofusDto
 {

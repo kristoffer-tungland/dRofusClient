@@ -1,4 +1,4 @@
-namespace dRofusClient;
+namespace dRofusClient.Enums;
 
 public enum dRofusOrderBy
 {

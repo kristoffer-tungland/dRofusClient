@@ -188,7 +188,7 @@ public class dRofusOptionsTests
     public void GetParametersListOptions()
     {
         // ReSharper disable once SuggestVarOrType_SimpleTypes
-        dRofusListOptions options = dRofusOptions.List()
+        var options = dRofusOptions.List()
             .Select(nameof(dRofusOccurence.Id))
             .OrderBy(nameof(dRofusOccurence.Id))
             .Filter(

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace dRofusClient;
+namespace dRofusClient.Enums;
 
 public enum dRofusComparison
 {
