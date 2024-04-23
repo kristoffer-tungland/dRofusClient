@@ -26,23 +26,23 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
 
     public static dRofusConnectionArgs CreateNoServer(string database, string projectId, string username, string password)
     {
-        return Create(GetNoServer(), projectId, projectId, username, password);
+        return Create(GetNoServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateEuServer(string database, string projectId, string username, string password)
     {
-        return Create(GetEuServer(), projectId, projectId, username, password);
+        return Create(GetEuServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateCaServer(string database, string projectId, string username, string password)
     {
-        return Create(GetCaServer(), projectId, projectId, username, password);
+        return Create(GetCaServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateUsServer(string database, string projectId, string username, string password)
     {
-        return Create(GetUsServer(), projectId, projectId, username, password);
+        return Create(GetUsServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateAuServer(string database, string projectId, string username, string password)
     {
-        return Create(GetAuServer(), projectId, projectId, username, password);
+        return Create(GetAuServer(), database, projectId, username, password);
     }
 
     public static string GetDefaultServer() => GetNoServer();
