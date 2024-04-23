@@ -1,5 +1,4 @@
 // ReSharper disable InconsistentNaming
-
 namespace dRofusClient.Projects;
 
 /// <summary>

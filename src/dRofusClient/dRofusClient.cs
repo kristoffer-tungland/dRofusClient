@@ -2,18 +2,12 @@
 namespace dRofusClient;
 
 [Register<IdRofusClient>, GenerateInterface]
-internal class dRofusClient : IdRofusClient
+internal sealed class dRofusClient : IdRofusClient
 {
     readonly HttpClient _httpClient;
     string? _database;
     string? _projectId;
-
-    public dRofusClient()
-    {
-        _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-    }
-
+    
     public dRofusClient(HttpClient httpClient)
     {
         _httpClient = httpClient;

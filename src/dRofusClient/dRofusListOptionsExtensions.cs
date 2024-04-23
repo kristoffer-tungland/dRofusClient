@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace dRofusClient;
 
 public static class dRofusListOptionsExtensions
@@ -42,10 +43,10 @@ public static class dRofusListOptionsExtensions
         return option.OrderBy(fields, dRofusOrderBy.Descending);
     }
 
-    public static TOption Filter<TOption>(this TOption option, dRofusFilterItem rofusFilterItem)
+    public static TOption Filter<TOption>(this TOption option, dRofusFilterItem dRofusAndFilter)
         where TOption : dRofusListOptions
     {
-        option._comparisons.Add(rofusFilterItem);
+        option._comparisons.Add(dRofusAndFilter);
         return option;
     }
 

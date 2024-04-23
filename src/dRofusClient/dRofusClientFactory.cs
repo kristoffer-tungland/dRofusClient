@@ -1,13 +1,16 @@
 // ReSharper disable InconsistentNaming
+
 namespace dRofusClient;
 
 [Register<IdRofusClientFactory>, GenerateInterface]
 public class dRofusClientFactory : IdRofusClientFactory
 {
-    public async Task<IdRofusClient> Create(dRofusConnectionArgs connectionArgs, CancellationToken cancellationToken = default)
+    readonly HttpClient _httpClient = new();
+
+    public IdRofusClient Create(dRofusConnectionArgs connectionArgs)
     {
-        var client = new dRofusClient();
-        await client.Login(connectionArgs, cancellationToken);
+        var client = new dRofusClient(_httpClient);
+        client.Setup(connectionArgs);
         return client;
     }
 }
