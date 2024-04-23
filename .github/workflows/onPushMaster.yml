@@ -63,4 +63,4 @@ jobs:
           **\*.nupkg
 
     - name: Push Package to GitHub
-      run: nuget push **\*.nupkg -Source github -SkipDuplicate -setApiKey ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet nuget push **\*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }}  --source "github"
