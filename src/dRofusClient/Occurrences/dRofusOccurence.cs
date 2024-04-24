@@ -1,26 +1,70 @@
 namespace dRofusClient.Occurrences;
 
-public record dRofusOccurence(
-    [property: JsonProperty("id")] int Id,
-    [property: JsonProperty("addition_order_quantity")] int AdditionOrderQuantity,
-    [property: JsonProperty("agreement_quantity")] int AgreementQuantity,
-    [property: JsonProperty("agreement_quantity_option")] int AgreementQuantityOption,
-    [property: JsonProperty("article_id")] int ArticleId,
-    [property: JsonProperty("article_sub_article_id")] int ArticleSubArticleId,
-    [property: JsonProperty("category_id")] int CategoryId,
-    [property: JsonProperty("classification_number")] string ClassificationNumber,
-    [property: JsonProperty("comment")] string Comment,
-    [property: JsonProperty("equipment_list_type_id")] int EquipmentListTypeId,
-    [property: JsonProperty("existing_quantity")] int ExistingQuantity,
-    [property: JsonProperty("net_quantity")] int NetQuantity,
-    [property: JsonProperty("occurrence_name")] string OccurrenceName,
-    [property: JsonProperty("ordered_quantity")] int OrderedQuantity,
-    [property: JsonProperty("product_id")] int ProductId,
-    [property: JsonProperty("quantity")] int Quantity,
-    [property: JsonProperty("received_quantity")] int ReceivedQuantity,
-    [property: JsonProperty("room_id")] int RoomId,
-    [property: JsonProperty("run_no")] string RunNo,
-    [property: JsonProperty("tender_quantity")] int TenderQuantity,
-    [property: JsonProperty("tender_quantity_option")] int TenderQuantityOption,
-    [property: JsonProperty("to_tender")] bool ToTender
-) : dRofusDto;
+public record dRofusOccurence : dRofusDto
+{
+    [JsonProperty("id")]
+    public int? Id { get; init; }
+
+    [JsonProperty("addition_order_quantity")]
+    public int? AdditionOrderQuantity { get; init; }
+
+    [JsonProperty("agreement_quantity")]
+    public int? AgreementQuantity { get; init; }
+
+    [JsonProperty("agreement_quantity_option")]
+    public int? AgreementQuantityOption { get; init; }
+
+    [JsonProperty("article_id")]
+    public int? ArticleId { get; init; }
+
+    [JsonProperty("article_sub_article_id")]
+    public int? ArticleSubArticleId { get; init; }
+
+    [JsonProperty("category_id")]
+    public int? CategoryId { get; init; }
+
+    [JsonProperty("classification_number")]
+    public string? ClassificationNumber { get; init; }
+
+    [JsonProperty("comment")]
+    public string? Comment { get; init; }
+
+    [JsonProperty("equipment_list_type_id")]
+    public int? EquipmentListTypeId { get; init; }
+
+    [JsonProperty("existing_quantity")]
+    public int? ExistingQuantity { get; init; }
+
+    [JsonProperty("net_quantity")]
+    public int? NetQuantity { get; init; }
+
+    [JsonProperty("occurrence_name")]
+    public string? OccurrenceName { get; init; }
+
+    [JsonProperty("ordered_quantity")]
+    public int? OrderedQuantity { get; init; }
+
+    [JsonProperty("product_id")]
+    public int? ProductId { get; init; }
+
+    [JsonProperty("quantity")]
+    public int? Quantity { get; init; }
+
+    [JsonProperty("received_quantity")]
+    public int? ReceivedQuantity { get; init; }
+
+    [JsonProperty("room_id")]
+    public int? RoomId { get; init; }
+
+    [JsonProperty("run_no")]
+    public string? RunNo { get; init; }
+
+    [JsonProperty("tender_quantity")]
+    public int? TenderQuantity { get; init; }
+
+    [JsonProperty("tender_quantity_option")]
+    public int? TenderQuantityOption { get; init; }
+
+    [JsonProperty("to_tender")]
+    public bool? ToTender { get; init; }
+}

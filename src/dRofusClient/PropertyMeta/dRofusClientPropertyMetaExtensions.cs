@@ -8,6 +8,6 @@ public static class dRofusClientPropertyMetaExtensions
         dRofusPropertyMetaOptions? options = default, 
         CancellationToken cancellationToken = default)
     {
-        return client.SendListAsync<dRofusPropertyMeta>(HttpMethod.Options, dRofusType, options, cancellationToken);
+        return client.OptionsListAsync<dRofusPropertyMeta>(dRofusType.ToRequest(), options, cancellationToken);
     }
 }

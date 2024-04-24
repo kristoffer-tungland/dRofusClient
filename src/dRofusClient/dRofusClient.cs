@@ -1,4 +1,7 @@
 // ReSharper disable InconsistentNaming
+
+using System.Text;
+
 namespace dRofusClient;
 
 [Register<IdRofusClient>, GenerateInterface]
@@ -92,27 +95,47 @@ internal sealed class dRofusClient : IdRofusClient
         return (_database, _projectId);
     }
 
-    public async Task<TResult> SendAsync<TResult>(
+    public Task<TResult> SendAsync<TResult>(
         HttpMethod method,
         dRofusType dRofusType,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto
     {
-        var response = await SendResponse(method, dRofusType.ToRequest(), options, cancellationToken);
+        return SendAsync<TResult>(method, dRofusType.ToRequest(), options, cancellationToken);
+    }
+
+    public async Task<TResult> SendAsync<TResult>(
+        HttpMethod method,
+        string route,
+        dRofusOptionsBase? options = default,
+        CancellationToken cancellationToken = default
+        ) where TResult : dRofusDto
+    {
+        var response = await SendResponse(method, route, options, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<TResult>() ??
                throw new NullReferenceException("Failed to read content from response.");
     }
 
-    public async Task<List<TResult>> SendListAsync<TResult>(
+    public Task<List<TResult>> SendListAsync<TResult>(
         HttpMethod method,
         dRofusType dRofusType,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto
     {
-        var response = await SendResponse(method, dRofusType.ToRequest(), options, cancellationToken);
+        return SendListAsync<TResult>(method, dRofusType.ToRequest(), options, cancellationToken);
+    }
+
+    public async Task<List<TResult>> SendListAsync<TResult>(
+        HttpMethod method,
+        string route,
+        dRofusOptionsBase? options = default,
+        CancellationToken cancellationToken = default
+        ) where TResult : dRofusDto
+    {
+        var response = await SendResponse(method, route, options, cancellationToken);
         var items = await response.Content.ReadFromJsonAsync<List<TResult>>() ?? throw new NullReferenceException("Failed to read content from response.");
         
         if (options is dRofusListOptions listOptions && listOptions.GetNextItems())
@@ -170,6 +193,23 @@ internal sealed class dRofusClient : IdRofusClient
         }
 
         var request = new HttpRequestMessage(method, url);
+
+        switch (options)
+        {
+            case dRofusBodyPatchOptions bodyPatchOptions:
+            {
+                var body = bodyPatchOptions.Body;
+                request.Content = new StringContent(body, Encoding.UTF8, "application/merge-patch+json");
+                break;
+            }
+            case dRofusBodyPostOptions bodyPostOptions:
+            {
+                var body = bodyPostOptions.Body;
+                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                break;
+            }
+        }
+
         return request;
     }
 }
