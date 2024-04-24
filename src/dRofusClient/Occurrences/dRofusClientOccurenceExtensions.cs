@@ -19,7 +19,7 @@ public static class dRofusClientOccurenceExtensions
 
     public static Task<dRofusOccurence> UpdateOccurrenceAsync(this IdRofusClient client, dRofusOccurence occurence, CancellationToken cancellationToken = default)
     {
-        return client.PatchAsync<dRofusOccurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), occurence.ToPostOption(), cancellationToken);
+        return client.PatchAsync<dRofusOccurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), occurence.ToPatchOption(), cancellationToken);
     }
 
     public static Task DeleteOccurrenceAsync(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
