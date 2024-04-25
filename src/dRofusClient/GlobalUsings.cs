@@ -13,6 +13,7 @@ global using dRofusClient.Enums;
 global using dRofusClient.Exceptions;
 global using dRofusClient.Extensions;
 global using dRofusClient.Filters;
+global using dRofusClient.Helpers;
 global using dRofusClient.Models;
 global using dRofusClient.Options;
 global using dRofusClient.Parameters;

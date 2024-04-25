@@ -1,7 +1,5 @@
 ﻿using Meziantou.Framework.Win32;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 // ReSharper disable InconsistentNaming
 
@@ -9,15 +7,14 @@ namespace dRofusClient.WindowsCredentials;
 
 public static class dRofusClientExtensions
 {
-    public static async Task<IdRofusClient> Create(
+    public static IdRofusClient Create(
         this dRofusClientFactory dRofusClientFactory, 
         string serverAddress, 
         string database, 
-        string projectId, 
-        CancellationToken cancellationToken = default)
+        string projectId)
     {
         var args = dRofusClientFactory.GetConnectionArgs(serverAddress, database, projectId);
-        return await dRofusClientFactory.Create(args, cancellationToken);
+        return dRofusClientFactory.Create(args);
     }
 
     public static dRofusConnectionArgs GetConnectionArgs(this dRofusClientFactory dRofusClientFactory, string serverAddress, string database, string projectId)

@@ -4,9 +4,23 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+
+    <!-- NuGet properties -->
+    <PackageId>dRofusClient</PackageId>
+    <Authors>Kristoffer Tungland</Authors>
+    <Product>dRofus Client Library</Product>
+    <Description>A .NET Standard library for interacting with the dRofus API.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kristoffer-tungland/dRofusClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kristoffer-tungland/dRofusClient.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dRofus API Client</PackageTags>
+    <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
+
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PolySharp" Version="1.13.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,16 +31,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="DependencyInjection.SourceGenerator.Microsoft.Contracts" Version="1.6.0" />
-    <PackageReference Include="DependencyInjection.SourceGenerator.Microsoft" Version="1.6.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="MakeInterface.Contracts" Version="0.4.0" />
     <PackageReference Include="MakeInterface.Generator" Version="0.4.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

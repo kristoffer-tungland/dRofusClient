@@ -7,7 +7,8 @@ namespace dRofusClient.Models;
 public record dRofusDto
 {
     // Dictionary to hold additional properties
-    [JsonExtensionData] public Dictionary<string, object> AdditionalProperties { get; set; } = [];
+    [JsonExtensionData]
+    public Dictionary<string, object> AdditionalProperties { get; set; } = [];
 
     public string? GetPropertyAsString(string property) => GetProperty<string>(property);
     public int GetPropertyAsInt(string property) => GetProperty<int>(property);
@@ -42,8 +43,7 @@ public record dRofusDto
         var properties = type.GetProperties();
         foreach (var propertyInfo in properties)
         {
-            var jsonProperty = propertyInfo.GetCustomAttribute<JsonPropertyAttribute>();
-            if (jsonProperty?.PropertyName == property)
+            if (propertyInfo.Name.ToSnakeCase() == property)
                 return propertyInfo;
         }
 

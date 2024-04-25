@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace dRofusClient;
 
 public static class dRofusListOptionsExtensions
@@ -5,7 +6,7 @@ public static class dRofusListOptionsExtensions
     static TOption OrderBy<TOption>(this TOption option, string field, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
-        option._orderBy.Add(field.ToLowerUnderscore());
+        option._orderBy.Add(field.ToSnakeCase());
         option._orderByDirection = orderBy;
         return option;
     }
@@ -13,7 +14,7 @@ public static class dRofusListOptionsExtensions
     static TOption OrderBy<TOption>(this TOption option, IEnumerable<string> fields, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
-        option._orderBy.AddRange(fields.Select(x => x.ToLowerUnderscore()));
+        option._orderBy.AddRange(fields.Select(x => x.ToSnakeCase()));
         option._orderByDirection = orderBy;
         return option;
     }
@@ -42,10 +43,10 @@ public static class dRofusListOptionsExtensions
         return option.OrderBy(fields, dRofusOrderBy.Descending);
     }
 
-    public static TOption Filter<TOption>(this TOption option, dRofusFilterItem rofusFilterItem)
+    public static TOption Filter<TOption>(this TOption option, dRofusFilterItem dRofusAndFilter)
         where TOption : dRofusListOptions
     {
-        option._comparisons.Add(rofusFilterItem);
+        option._comparisons.Add(dRofusAndFilter);
         return option;
     }
 
