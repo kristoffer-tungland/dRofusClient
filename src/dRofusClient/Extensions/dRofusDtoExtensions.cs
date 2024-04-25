@@ -1,18 +1,27 @@
+using Newtonsoft.Json.Linq;
+
 namespace dRofusClient.Extensions;
 
 public static class dRofusDtoExtensions
 {
-    static readonly JsonSerializerSettings _settings = new() { NullValueHandling = NullValueHandling.Ignore };
-
     public static dRofusBodyPatchOptions ToPatchOption(this dRofusDto dto)
     {
-        var json = JsonConvert.SerializeObject(dto, _settings);
+        var json = Json.Serialize(dto);
+        json = RemoveIdField(json);
         return new dRofusBodyPatchOptions(json);
     }
 
     public static dRofusBodyPostOptions ToPostOption(this dRofusDto dto)
     {
-        var json = JsonConvert.SerializeObject(dto, _settings);
+        var json = Json.Serialize(dto);
+        json = RemoveIdField(json);
         return new dRofusBodyPostOptions(json);
+    }
+
+    static string RemoveIdField(string json)
+    {
+        var jObject = JObject.Parse(json);
+        jObject.Remove("id");
+        return jObject.ToString(Formatting.None);
     }
 }

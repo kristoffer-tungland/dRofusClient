@@ -6,7 +6,7 @@ public static class dRofusListOptionsExtensions
     static TOption OrderBy<TOption>(this TOption option, string field, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
-        option._orderBy.Add(field.ToLowerUnderscore());
+        option._orderBy.Add(field.ToSnakeCase());
         option._orderByDirection = orderBy;
         return option;
     }
@@ -14,7 +14,7 @@ public static class dRofusListOptionsExtensions
     static TOption OrderBy<TOption>(this TOption option, IEnumerable<string> fields, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
-        option._orderBy.AddRange(fields.Select(x => x.ToLowerUnderscore()));
+        option._orderBy.AddRange(fields.Select(x => x.ToSnakeCase()));
         option._orderByDirection = orderBy;
         return option;
     }

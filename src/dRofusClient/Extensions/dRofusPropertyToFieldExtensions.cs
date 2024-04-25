@@ -6,7 +6,7 @@ internal static class dRofusPropertyToFieldExtensions
 {
     static readonly Regex _regex = new("(?<=[a-z])([A-Z])");
 
-    public static string ToLowerUnderscore(this string field)
+    public static string ToSnakeCase(this string field)
     {
         return _regex.Replace(field, "_$1").ToLower();
     }

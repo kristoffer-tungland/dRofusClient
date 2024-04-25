@@ -3,10 +3,10 @@ using dRofusClient.Occurrences;
 
 namespace dRofusClient.Tests;
 
-public sealed class dRofusBodyPatchOptionsTest
+public sealed class dRofusDtoExtensionsTests
 {
     [Fact]
-    internal void BodyPostOptionsTest()
+    internal void ToPostOptionTest()
     {
         var occurence = new dRofusOccurence { Id = 65 };
         var bodyOptions = occurence.ToPostOption();
@@ -14,7 +14,7 @@ public sealed class dRofusBodyPatchOptionsTest
     }
 
     [Fact]
-    internal void BodyPostOptionsTest_WithAdditionalProperties()
+    internal void ToPostOptionTest_WithAdditionalProperties()
     {
         var occurence = new dRofusOccurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
         var bodyOptions = occurence.ToPostOption();
@@ -22,7 +22,7 @@ public sealed class dRofusBodyPatchOptionsTest
     }
 
     [Fact]
-    internal void BodyPatchOptionsTest()
+    internal void ToPatchOptionTest()
     {
         var occurence = new dRofusOccurence { Id = 65, ArticleId = 1 };
         var bodyOptions = occurence.ToPatchOption();
@@ -30,7 +30,7 @@ public sealed class dRofusBodyPatchOptionsTest
     }
 
     [Fact]
-    internal void BodyPatchOptionsTest_WithAdditionalProperties()
+    internal void ToPatchOptionTest_WithAdditionalProperties()
     {
         var occurence = new dRofusOccurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
         var bodyOptions = occurence.ToPatchOption();

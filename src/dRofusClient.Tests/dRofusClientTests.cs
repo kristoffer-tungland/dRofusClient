@@ -33,7 +33,7 @@ public sealed class dRofusClientTests
         
         Assert.NotNull(requestMessage.Content);
         var jsonContent = await requestMessage.Content.ReadAsStringAsync();
-        Assert.Equal("""{"id":65,"prop1":"val1"}""", jsonContent);
+        Assert.Equal("""{"prop1":"val1"}""", jsonContent);
 
         var mediaType = requestMessage.Content.Headers?.ContentType?.MediaType;
         Assert.Equal("application/merge-patch+json", mediaType);
@@ -53,7 +53,7 @@ public sealed class dRofusClientTests
         
         Assert.NotNull(requestMessage.Content);
         var jsonContent = await requestMessage.Content.ReadAsStringAsync();
-        Assert.Equal("""{"id":65,"prop1":"val1"}""", jsonContent);
+        Assert.Equal("""{"prop1":"val1"}""", jsonContent);
 
         var mediaType = requestMessage.Content.Headers?.ContentType?.MediaType;
         Assert.Equal("application/json", mediaType);

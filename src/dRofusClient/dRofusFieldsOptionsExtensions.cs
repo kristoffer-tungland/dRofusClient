@@ -13,7 +13,7 @@ public static class dRofusFieldsOptionsExtensions
     public static TOption Select<TOption>(this TOption options, IEnumerable<string> fields)
         where TOption : dRofusFieldsOptions
     {
-        options._fieldsToSelect.AddRange(fields.Select(x => x.ToLowerUnderscore()));
+        options._fieldsToSelect.AddRange(fields.Select(x => x.ToSnakeCase()));
         return options;
     }
 
@@ -26,12 +26,10 @@ public static class dRofusFieldsOptionsExtensions
         foreach (var propertyInfo in properties)
         {
             // Get JsonNameAttribute from the property
-            if (propertyInfo.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName is { } propertyName)
-                options._fieldsToSelect.Add(propertyName.ToLowerUnderscore());
-            else if (propertyInfo.GetCustomAttribute<JsonExtensionDataAttribute>() is not null)
+           if (propertyInfo.GetCustomAttribute<JsonExtensionDataAttribute>() is not null)
                 continue;
-            else
-                options._fieldsToSelect.Add(propertyInfo.Name.ToLowerUnderscore());
+
+            options._fieldsToSelect.Add(propertyInfo.Name.ToSnakeCase());
         }
 
         return options;

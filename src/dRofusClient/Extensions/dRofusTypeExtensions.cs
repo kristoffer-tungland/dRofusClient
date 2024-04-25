@@ -20,11 +20,3 @@ public static class dRofusTypeExtensions
     public static string CombineToRequest(this dRofusType type, int? id, string part3) => type.CombineToRequest([id.ToRequest(),part3]);
     public static string CombineToRequest(this dRofusType type, int? id, string part3, string part4) => type.CombineToRequest([id.ToRequest(),part3,part4]);
 }
-
-public static class IdExtensions
-{
-    public static string ToRequest(this int? id)
-    {
-        return id.ToString() ?? throw new NullReferenceException("Id is not supplied");
-    }
-}

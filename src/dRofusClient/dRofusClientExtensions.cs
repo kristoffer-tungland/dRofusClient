@@ -6,7 +6,7 @@ public static class dRofusClientExtensions
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-    ) where TResult : dRofusDto
+    ) where TResult : dRofusDto, new()
     {
         return client.SendAsync<TResult>(HttpMethod.Get, route, options, cancellationToken);
     }
@@ -15,7 +15,7 @@ public static class dRofusClientExtensions
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-    ) where TResult : dRofusDto
+    ) where TResult : dRofusDto, new()
     {
         return client.SendAsync<TResult>(HttpMethod.Post, route, options, cancellationToken);
     }
@@ -24,7 +24,7 @@ public static class dRofusClientExtensions
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-    ) where TResult : dRofusDto
+    ) where TResult : dRofusDto, new()
     {
         return client.SendAsync<TResult>(new HttpMethod("PATCH"), route, options, cancellationToken);
     }
@@ -33,7 +33,7 @@ public static class dRofusClientExtensions
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-    ) where TResult : dRofusDto
+    ) where TResult : dRofusDto, new()
     {
         return client.SendAsync<TResult>(HttpMethod.Delete, route, options, cancellationToken);
     }

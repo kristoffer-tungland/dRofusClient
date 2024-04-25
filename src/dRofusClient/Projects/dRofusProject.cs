@@ -4,13 +4,6 @@ namespace dRofusClient.Projects;
 /// <summary>
 /// Dto for dRofus project.
 /// </summary>
-/// <param name="Id">The id of the project.</param>
-/// <param name="Constructor"></param>
-/// <param name="Name"></param>
-/// <param name="PlannedGrossArea"></param>
-/// <param name="ProjectDesignedGrossArea"></param>
-/// <param name="ProjectGrossNetFactor"></param>
-/// <param name="RoomLevelGrossNetFactor"></param>
 /// <schema>
 /// {
 ///     "id": "string",
@@ -22,12 +15,13 @@ namespace dRofusClient.Projects;
 ///     "room_level_gross_net_factor": 0,
 /// }
 /// </schema>
-public record dRofusProject(
-    [property: JsonProperty("id")] string Id,
-    [property: JsonProperty("constructor")] string Constructor,
-    [property: JsonProperty("name")] string Name,
-    [property: JsonProperty("planned_gross_area")] int? PlannedGrossArea,
-    [property: JsonProperty("project_designed_gross_area")] int? ProjectDesignedGrossArea,
-    [property: JsonProperty("project_gross_net_factor")] int? ProjectGrossNetFactor,
-    [property: JsonProperty("room_level_gross_net_factor")] int? RoomLevelGrossNetFactor
-) : dRofusDto;
+public record dRofusProject : dRofusDto
+{
+    public string? Id { get; init; }
+    public string? Constructor { get; init; }
+    public string? Name { get; init; }
+    public int? PlannedGrossArea { get; init; }
+    public int? ProjectDesignedGrossArea { get; init; }
+    public int? ProjectGrossNetFactor { get; init; }
+    public int? RoomLevelGrossNetFactor { get; init; }
+}

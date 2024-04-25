@@ -100,7 +100,7 @@ internal sealed class dRofusClient : IdRofusClient
         dRofusType dRofusType,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-        ) where TResult : dRofusDto
+        ) where TResult : dRofusDto, new()
     {
         return SendAsync<TResult>(method, dRofusType.ToRequest(), options, cancellationToken);
     }
@@ -110,10 +110,14 @@ internal sealed class dRofusClient : IdRofusClient
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
-        ) where TResult : dRofusDto
+        ) where TResult : dRofusDto, new()
     {
         var response = await SendResponse(method, route, options, cancellationToken);
         response.EnsureSuccessStatusCode();
+
+        if (method == HttpMethod.Delete)
+            return new TResult();
+
         return await response.Content.ReadFromJsonAsync<TResult>() ??
                throw new NullReferenceException("Failed to read content from response.");
     }
