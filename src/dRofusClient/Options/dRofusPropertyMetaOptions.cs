@@ -1,4 +1,4 @@
-namespace dRofusClient.PropertyMeta;
+namespace dRofusClient.Options;
 
 public record dRofusPropertyMetaOptions(int Depth = 0) : dRofusOptionsBase
 {
@@ -7,7 +7,7 @@ public record dRofusPropertyMetaOptions(int Depth = 0) : dRofusOptionsBase
         if (Depth < 1)
             return;
 
-        var depthParameter = new dRofusRequestParameter(nameof(Depth), Depth.ToString());
+        var depthParameter = new dRofusRequestParameter(nameof(Depth).ToSnakeCase(), Depth.ToString(), true);
         parameters.Add(depthParameter);
     }
 }

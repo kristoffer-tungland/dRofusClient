@@ -1,13 +1,13 @@
 namespace dRofusClient.Parameters;
 
-public record dRofusRequestParameter(string Name, string Value)
+public record dRofusRequestParameter(string Name, string Value, bool ExcludeDollar = false)
 {
-    public dRofusRequestParameter(string Name, IEnumerable<string> Values) :
-        this(Name, Values.ToCommaSeparated())
+    public dRofusRequestParameter(string name, IEnumerable<string> values, bool excludeDollar = false) :
+        this(name, values.ToCommaSeparated(), excludeDollar)
     { }
 
     public override string ToString()
     {
-        return $"${Name}={Value}";
+        return ExcludeDollar ? $"{Name}={Value}" : $"${Name}={Value}";
     }
 }

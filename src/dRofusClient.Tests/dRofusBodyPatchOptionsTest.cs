@@ -1,5 +1,6 @@
 using dRofusClient.Extensions;
 using dRofusClient.Occurrences;
+using dRofusClient.PropertyMeta;
 
 namespace dRofusClient.Tests;
 
