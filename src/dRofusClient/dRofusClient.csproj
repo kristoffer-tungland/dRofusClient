@@ -1,10 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-
     <!-- NuGet properties -->
     <PackageId>dRofusClient</PackageId>
     <Authors>Kristoffer Tungland</Authors>
@@ -16,34 +15,25 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>dRofus API Client</PackageTags>
     <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
-
+    <Version>0.0.1</Version>
+    <AssemblyName>$(PackageId).$(Version)</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="PolySharp" Version="1.13.2">
+    <PackageReference Include="System.Text.Json" Version="*" />
+    <PackageReference Include="PolySharp" Version="*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-
-    <PackageReference Include="DependencyInjection.SourceGenerator.LightInject.Contracts" Version="1.6.0" />
-    <PackageReference Include="DependencyInjection.SourceGenerator.LightInject" Version="1.6.0">
+    <PackageReference Include="MakeInterface.Contracts" Version="0.4.*" />
+    <PackageReference Include="MakeInterface.Generator" Version="0.4.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MakeInterface.Contracts" Version="0.4.0" />
-    <PackageReference Include="MakeInterface.Generator" Version="0.4.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="*" />
   </ItemGroup>
-
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>dRofusClient.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
-
 </Project>

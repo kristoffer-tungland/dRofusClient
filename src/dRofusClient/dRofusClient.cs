@@ -4,7 +4,7 @@ using System.Text;
 
 namespace dRofusClient;
 
-[Register<IdRofusClient>, GenerateInterface]
+[GenerateInterface]
 internal sealed class dRofusClient : IdRofusClient
 {
     readonly HttpClient _httpClient;
@@ -118,7 +118,7 @@ internal sealed class dRofusClient : IdRofusClient
         if (method == HttpMethod.Delete)
             return new TResult();
 
-        return await response.Content.ReadFromJsonAsync<TResult>() ??
+        return await response.Content.ReadFromJsonAsync<TResult>(cancellationToken) ??
                throw new NullReferenceException("Failed to read content from response.");
     }
 
@@ -140,7 +140,8 @@ internal sealed class dRofusClient : IdRofusClient
         ) where TResult : dRofusDto
     {
         var response = await SendResponse(method, route, options, cancellationToken);
-        var items = await response.Content.ReadFromJsonAsync<List<TResult>>() ?? throw new NullReferenceException("Failed to read content from response.");
+        var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken) 
+            ?? throw new NullReferenceException("Failed to read content from response.");
         
         if (options is dRofusListOptions listOptions && listOptions.GetNextItems())
             await GetNextItems(method, response, items, cancellationToken);
@@ -162,7 +163,9 @@ internal sealed class dRofusClient : IdRofusClient
         var request = new HttpRequestMessage(method, nextLink);
         var nextResponse = await _httpClient.SendAsync(request, cancellationToken);
         nextResponse.EnsureSuccessStatusCode();
-        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>() ?? throw new NullReferenceException("Failed to read content from response.");
+        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken) 
+            ?? throw new NullReferenceException("Failed to read content from response.");
+
         items.AddRange(nextItems);
 
         await GetNextItems(method, nextResponse, items, cancellationToken);

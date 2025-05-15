@@ -1,3 +1,5 @@
+
+
 namespace dRofusClient;
 
 public static class dRofusFilter
@@ -42,7 +44,9 @@ public static class dRofusFilter
         return And(result);
     }
 
-    public static dRofusFilterItem In(string field, IEnumerable<object> values) => new(field, dRofusComparison.In, values);
+    public static dRofusFilterItem In<T>(string field, IEnumerable<T> values) => new(field, dRofusComparison.In, values);
+    public static dRofusFilterItem In(string field, params int[] values) => new(field, dRofusComparison.In, values);
+    public static dRofusFilterItem In(string field, params string[] values) => new(field, dRofusComparison.In, values);
 
     public static dRofusAndFilter And(ICollection<dRofusFilterItem> filters) => new(filters);
     public static dRofusAndFilter And(dRofusFilterItem filter1, dRofusFilterItem filter2) => And([filter1, filter2]);
@@ -58,4 +62,5 @@ public static class dRofusFilter
 
     public static dRofusFilterItem IsNotEmpty(string field)
         => new(field, dRofusComparison.Ne, null);
+
 }

@@ -1,7 +1,6 @@
-﻿using Meziantou.Framework.Win32;
+﻿using dRofusClient.WindowsCredentials.Registries;
 using System;
-
-// ReSharper disable InconsistentNaming
+using System.Security.Authentication;
 
 namespace dRofusClient.WindowsCredentials;
 
@@ -9,30 +8,31 @@ public static class dRofusClientExtensions
 {
     public static IdRofusClient Create(
         this dRofusClientFactory dRofusClientFactory, 
-        string serverAddress, 
+        string server, 
         string database, 
-        string projectId)
+        string? projectId = default)
     {
-        var args = dRofusClientFactory.GetConnectionArgs(serverAddress, database, projectId);
+        projectId ??= "01";
+        var args = dRofusClientFactory.GetConnectionArgs(server, database, projectId);
         return dRofusClientFactory.Create(args);
     }
 
-    public static dRofusConnectionArgs GetConnectionArgs(this dRofusClientFactory dRofusClientFactory, string serverAddress, string database, string projectId)
+    public static dRofusConnectionArgs GetConnectionArgs(this dRofusClientFactory dRofusClientFactory, string server, string database, string projectId)
     {
-        if (string.IsNullOrWhiteSpace(serverAddress))
+        if (string.IsNullOrWhiteSpace(server))
             throw new InvalidOperationException("No server address provided.");
 
-        dRofusConnectionArgs.ValidateServerAddress(serverAddress);
+        var username = RegistryExtensions.GetUsername();
 
-        var credential = CredentialManager.ReadCredential(serverAddress);
+        if (username is null || string.IsNullOrWhiteSpace(username))
+            throw new InvalidCredentialException("You must log in to dRofus first.");
 
-        if (credential is null)
-            throw new InvalidOperationException("No credentials found for dRofus database.");
+        var credential = BasicCredentialsExtensions.ReadCredential(server, username) 
+            ?? throw new InvalidOperationException("No credentials found for dRofus database.");
 
-        var username = credential.UserName;
         var password = credential.Password;
 
-        return dRofusConnectionArgs.Create(serverAddress, database, projectId, username, password);
+        return dRofusConnectionArgs.Create(server, database, projectId, username, password);
     }
 
     public static void SaveCredentials(this IdRofusClient client, string username, string password)
@@ -41,10 +41,8 @@ public static class dRofusClientExtensions
         SaveCredentials(serverAddress, username, password);
     }
 
-    public static void SaveCredentials(string serverAddress, string username, string password)
+    public static void SaveCredentials(string server, string username, string password)
     {
-        dRofusConnectionArgs.ValidateServerAddress(serverAddress);
-        const string comment = "dRofus login credentials";
-        CredentialManager.WriteCredential(serverAddress, username, password, comment, CredentialPersistence.LocalMachine);
+        BasicCredentialsExtensions.SaveCredential(server, username, password);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace dRofusClient;
 
-[Register<IdRofusClientFactory>, GenerateInterface]
+[GenerateInterface]
 public class dRofusClientFactory : IdRofusClientFactory
 {
     readonly HttpClient _httpClient = new();

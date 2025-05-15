@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 // ReSharper disable InconsistentNaming
 
@@ -27,18 +28,24 @@ public record dRofusDto
 
     public object? GetProperty(string property)
     {
-        return AdditionalProperties[property] ?? GetPropertyByReflection(property);
+        if (string.IsNullOrEmpty(property))
+            return null;
+
+        if (AdditionalProperties.ContainsKey(property))
+            return AdditionalProperties[property];
+
+        return GetPropertyByReflection(property);
     }
 
     object? GetPropertyByReflection(string property)
     {
         var type = this.GetType();
-        var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonProperty(type, property);
+        var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonPropertyName(type, property);
         return propertyInfo?.GetValue(this);
 
     }
 
-    static PropertyInfo? GetPropertyByJsonProperty(Type type, string property)
+    static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)
     {
         var properties = type.GetProperties();
         foreach (var propertyInfo in properties)

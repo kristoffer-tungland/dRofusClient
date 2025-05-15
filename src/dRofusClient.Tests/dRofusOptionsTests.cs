@@ -79,6 +79,20 @@ public class dRofusOptionsTests
     }
 
     [Fact]
+    public void GetParametersParamsIntOptions_Includes_FilterIn()
+    {
+        var parameters = dRofusOptions.List().Filter(dRofusFilter.In("id", 1, 2, 3, 4)).GetParameters();
+        Assert.Equal("$filter=id in (1,2,3,4)", parameters);
+    }
+
+    [Fact]
+    public void GetParametersParamsStringOptions_Includes_FilterIn()
+    {
+        var parameters = dRofusOptions.List().Filter(dRofusFilter.In("id","apple", "banana")).GetParameters();
+        Assert.Equal("$filter=id in ('apple','banana')", parameters);
+    }
+
+    [Fact]
     public void GetParametersListOptions_Includes_FilterInString()
     {
         var parameters = dRofusOptions.List().Filter(dRofusFilter.In("name", ["kitchen", "office"])).GetParameters();

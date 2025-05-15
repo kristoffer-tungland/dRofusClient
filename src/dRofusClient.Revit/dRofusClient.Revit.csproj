@@ -1,12 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <langversion>12</langversion>
     <!-- NuGet properties -->
-    <PackageId>dRofusClient.WindowsCredentials</PackageId>
+    <PackageId>dRofusClient.Revit</PackageId>
     <Authors>Kristoffer Tungland</Authors>
     <Product>dRofus Client Library</Product>
     <Description>A library for interacting with the dRofus API.</Description>
@@ -17,12 +16,12 @@
     <PackageTags>dRofus API Client</PackageTags>
     <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
     <Version>0.0.1</Version>
-    <AssemblyName>$(PackageId).$(Version)</AssemblyName>
+  </PropertyGroup>
+  <Import Project=".\Configurations.targets" />
+  <PropertyGroup>
+    <AssemblyName>$(PackageId).$(MainRevitVersion).$(Version)</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework.Win32.CredentialManager" Version="1.3.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\dRofusClient\dRofusClient.csproj" />
+    <ProjectReference Include="..\dRofusClient.WindowsCredentials\dRofusClient.WindowsCredentials.csproj" />
   </ItemGroup>
 </Project>

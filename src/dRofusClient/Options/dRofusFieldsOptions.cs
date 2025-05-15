@@ -13,4 +13,12 @@ public record dRofusFieldsOptions : dRofusOptionsBase
     {
         parameters.AddIfNotNull(GetSelectParameters());
     }
+
+    public void AddFieldsToSelect(string field)
+    {
+        if (string.IsNullOrWhiteSpace(field))
+            throw new ArgumentException("Field cannot be null or empty.", nameof(field));
+
+        _fieldsToSelect.Add(field.ToSnakeCase());
+    }
 }

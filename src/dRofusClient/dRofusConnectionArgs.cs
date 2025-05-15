@@ -6,6 +6,19 @@ namespace dRofusClient;
 
 public record dRofusConnectionArgs(string BaseUrl, string Database, string ProjectId, string AuthenticationHeader)
 {
+    public string BaseUrl { get; } = NormalizeServerAddress(BaseUrl);
+
+    private static string NormalizeServerAddress(string baseUrl)
+    {
+        if (baseUrl.Equals("db2.nosyko.no", StringComparison.OrdinalIgnoreCase))
+            return GetNoServer();
+
+        if (baseUrl.StartsWith("https://api.", StringComparison.OrdinalIgnoreCase) == false)
+            baseUrl = "https://api." + baseUrl;
+
+        return baseUrl;
+    }
+
     public static dRofusConnectionArgs Create(string baseUrl, string database, string projectId, string username, string password)
     {
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
@@ -14,14 +27,6 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
         var base64String = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
 
         return new dRofusConnectionArgs(baseUrl, database, projectId, "Basic " + base64String);
-    }
-
-    public static void ValidateServerAddress(string serverAddress)
-    {
-        var regex = new Regex(@"^https:\/\/api-[a-zA-Z]{2}\.drofus\.com\/?$");
-
-        if (!regex.IsMatch(serverAddress))
-            throw new InvalidOperationException("Invalid server address. Must be in the format https://api-no.drofus.com.");
     }
 
     public static dRofusConnectionArgs CreateNoServer(string database, string projectId, string username, string password)
