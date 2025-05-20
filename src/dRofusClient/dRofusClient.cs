@@ -17,9 +17,9 @@ internal sealed class dRofusClient : IdRofusClient
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 
-    public string GetBaseUrl()
+    public string? GetBaseUrl()
     {
-        return _httpClient.BaseAddress?.ToString() ?? throw new Exception("No base URL provided.");
+        return _httpClient.BaseAddress?.ToString();
     }
 
     public void Setup(dRofusConnectionArgs args)
@@ -33,11 +33,26 @@ internal sealed class dRofusClient : IdRofusClient
         if (string.IsNullOrWhiteSpace(args.ProjectId))
             throw new dRofusClientCreateException("No dRofus project id provided.");
 
-        _httpClient.BaseAddress = new Uri(args.BaseUrl);
-        _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(args.AuthenticationHeader);
+        UpdateBaseAddress(args.BaseUrl);
+        UpdateAuthentication(args.AuthenticationHeader);
 
         _database = args.Database;
         _projectId = args.ProjectId;
+    }
+
+    public void UpdateBaseAddress(string baseUrl)
+    {
+        var newBaseUri = new Uri(baseUrl);
+        if (_httpClient.BaseAddress == null || _httpClient.BaseAddress != newBaseUri)
+        {
+            _httpClient.BaseAddress = newBaseUri;
+            // Optionally clear state or log
+        }
+    }
+
+    public void UpdateAuthentication(string authenticationHeader)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(authenticationHeader);
     }
 
     public Task Login(dRofusConnectionArgs args, CancellationToken cancellationToken = default)

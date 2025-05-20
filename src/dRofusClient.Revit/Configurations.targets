@@ -42,7 +42,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<MainRevitVersion>2024</MainRevitVersion>
 		<RevitVersion>2024.0.0</RevitVersion>
-		<DefineConstants>R2024;R2019_OR_GREATER;R2020_OR_GREATER;R2021_OR_GREATER;R2022_OR_GREATER;R2023_OR_GREATERR;R2024_OR_GREATER;R2024_OR_LESS;R2025_OR_LESS</DefineConstants>
+		<DefineConstants>R2024;R2019_OR_GREATER;R2020_OR_GREATER;R2021_OR_GREATER;R2022_OR_GREATER;R2023_OR_GREATER;R2024_OR_GREATER;R2024_OR_LESS;R2025_OR_LESS</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('2025')) or $(Configuration.Equals('Debug'))">
 		<MainRevitVersion>2025</MainRevitVersion>

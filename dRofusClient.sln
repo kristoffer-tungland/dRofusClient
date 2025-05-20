@@ -13,12 +13,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient.Tests", "src\d
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{661CA498-2731-4259-B386-466932FA3064}"
 	ProjectSection(SolutionItems) = preProject
+		.github\copilot-instructions.md = .github\copilot-instructions.md
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Demo", "src\dRofusClient.Demo\dRofusClient.Demo.csproj", "{15321B6A-EEA2-4AB5-B739-B228F71D67C0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Revit", "src\dRofusClient.Revit\dRofusClient.Revit.csproj", "{BAA331E1-DC7A-0D74-F9E6-147C2609D023}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Windows", "dRofusClient.Windows\dRofusClient.Windows.csproj", "{D1CE7301-019A-4068-9C25-3320056EC80C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.UI.Demo", "dRofusClient.UI.Demo\dRofusClient.UI.Demo.csproj", "{A41D9E16-0F44-4703-A710-E229FF23538D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +51,14 @@ Global
 		{BAA331E1-DC7A-0D74-F9E6-147C2609D023}.Debug|Any CPU.Build.0 = Debug 2025|Any CPU
 		{BAA331E1-DC7A-0D74-F9E6-147C2609D023}.Release|Any CPU.ActiveCfg = Release 2019|Any CPU
 		{BAA331E1-DC7A-0D74-F9E6-147C2609D023}.Release|Any CPU.Build.0 = Release 2019|Any CPU
+		{D1CE7301-019A-4068-9C25-3320056EC80C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1CE7301-019A-4068-9C25-3320056EC80C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1CE7301-019A-4068-9C25-3320056EC80C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1CE7301-019A-4068-9C25-3320056EC80C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A41D9E16-0F44-4703-A710-E229FF23538D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A41D9E16-0F44-4703-A710-E229FF23538D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A41D9E16-0F44-4703-A710-E229FF23538D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A41D9E16-0F44-4703-A710-E229FF23538D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FA21EE0E-EA32-4F8D-B2F1-1A039CC2A9BB} = {6E7F01A0-E6F3-4D22-A8AA-643F61BF3CB5}
 		{15321B6A-EEA2-4AB5-B739-B228F71D67C0} = {6E7F01A0-E6F3-4D22-A8AA-643F61BF3CB5}
+		{A41D9E16-0F44-4703-A710-E229FF23538D} = {6E7F01A0-E6F3-4D22-A8AA-643F61BF3CB5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F1336663-7D9B-4A04-8CC5-0E4909463306}

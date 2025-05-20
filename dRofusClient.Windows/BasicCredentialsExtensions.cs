@@ -1,6 +1,6 @@
 ﻿using Meziantou.Framework.Win32;
 
-namespace dRofusClient.WindowsCredentials;
+namespace dRofusClient.Windows;
 
 public static class BasicCredentialsExtensions
 {

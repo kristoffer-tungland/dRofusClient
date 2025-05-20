@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using System;
 using System.Linq;
-using dRofusClient.WindowsCredentials.Registries;
+using dRofusClient.Windows.Registries;
 
-namespace dRofusClient.WindowsCredentials.AttributeConfigurations;
+namespace dRofusClient.Windows.AttributeConfigurations;
 
 public static class dRofusAttributeConfigurationExtensions
 {

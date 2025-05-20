@@ -1,6 +1,4 @@
-// ReSharper disable InconsistentNaming
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace dRofusClient;
 
@@ -11,7 +9,7 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
     private static string NormalizeServerAddress(string baseUrl)
     {
         if (baseUrl.Equals("db2.nosyko.no", StringComparison.OrdinalIgnoreCase))
-            return GetNoServer();
+            return dRofusServers.GetNoServer();
 
         if (baseUrl.StartsWith("https://api.", StringComparison.OrdinalIgnoreCase) == false)
             baseUrl = "https://api." + baseUrl;
@@ -29,31 +27,29 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
         return new dRofusConnectionArgs(baseUrl, database, projectId, "Basic " + base64String);
     }
 
+    public static dRofusConnectionArgs CreateDefault(string database, string projectId, string username, string password)
+    {
+        return Create(dRofusServers.GetDefaultServer(), database, projectId, username, password);
+    }
+
     public static dRofusConnectionArgs CreateNoServer(string database, string projectId, string username, string password)
     {
-        return Create(GetNoServer(), database, projectId, username, password);
+        return Create(dRofusServers.GetNoServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateEuServer(string database, string projectId, string username, string password)
     {
-        return Create(GetEuServer(), database, projectId, username, password);
+        return Create(dRofusServers.GetEuServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateCaServer(string database, string projectId, string username, string password)
     {
-        return Create(GetCaServer(), database, projectId, username, password);
+        return Create(dRofusServers.GetCaServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateUsServer(string database, string projectId, string username, string password)
     {
-        return Create(GetUsServer(), database, projectId, username, password);
+        return Create(dRofusServers.GetUsServer(), database, projectId, username, password);
     }
     public static dRofusConnectionArgs CreateAuServer(string database, string projectId, string username, string password)
     {
-        return Create(GetAuServer(), database, projectId, username, password);
+        return Create(dRofusServers.GetAuServer(), database, projectId, username, password);
     }
-
-    public static string GetDefaultServer() => GetNoServer();
-    public static string GetNoServer() => "https://api-no.drofus.com";
-    public static string GetEuServer() => "https://api-eu.drofus.com";
-    public static string GetCaServer() => "https://api-ca.drofus.com";
-    public static string GetUsServer() => "https://api-us.drofus.com";
-    public static string GetAuServer() => "https://api-au.drofus.com/";
 }

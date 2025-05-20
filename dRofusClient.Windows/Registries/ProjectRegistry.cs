@@ -2,7 +2,7 @@
 using Microsoft.Win32;
 using System;
 
-namespace dRofusClient.WindowsCredentials.Registries;
+namespace dRofusClient.Windows.Registries;
 
 public static class RegistryKeyExtensions
 {

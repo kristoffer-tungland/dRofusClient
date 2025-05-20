@@ -5,12 +5,18 @@ namespace dRofusClient;
 [GenerateInterface]
 public class dRofusClientFactory : IdRofusClientFactory
 {
-    readonly HttpClient _httpClient = new();
-
     public IdRofusClient Create(dRofusConnectionArgs connectionArgs)
     {
-        var client = new dRofusClient(_httpClient);
+        var httpClient = new HttpClient();
+        var client = new dRofusClient(httpClient);
         client.Setup(connectionArgs);
+        return client;
+    }
+
+    public IdRofusClient Create()
+    {
+        var httpClient = new HttpClient();
+        var client = new dRofusClient(httpClient);
         return client;
     }
 }

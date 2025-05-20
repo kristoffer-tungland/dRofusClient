@@ -1,8 +1,8 @@
 ﻿using dRofusClient.Options;
 using dRofusClient.Revit.Utils;
 using dRofusClient.AttributeConfigurations;
-using dRofusClient.WindowsCredentials.AttributeConfigurations;
-using dRofusClient.WindowsCredentials.Registries;
+using dRofusClient.Windows.Registries;
+using dRofusClient.Windows.AttributeConfigurations;
 
 namespace dRofusClient.Revit.AttributeConfigurations;
 

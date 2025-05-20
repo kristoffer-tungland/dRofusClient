@@ -23,6 +23,17 @@ public record dRofusDto
         if (value is null)
             return default;
 
+        // If the target type is string, just cast or call ToString
+        if (typeof(T) == typeof(string))
+        {
+            // If value is already a string, return it directly
+            if (value is string s)
+                return (T)(object)s;
+
+            // Otherwise, use ToString
+            return (T)(object)value.ToString();
+        }
+
         return (T)Convert.ChangeType(value, typeof(T));
     }
 
