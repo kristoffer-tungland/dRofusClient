@@ -15,7 +15,7 @@ public static class dRofusFilter
     public static dRofusFilterItem EndsWith(string field, object value) => new(field, dRofusComparison.EndsWith, value);
     public static dRofusAndFilter Wildcard(string field, string value) => Wildcard(field, value.Split('*'));
 
-    static dRofusAndFilter Wildcard(string field, IReadOnlyList<string> strings)
+    private static dRofusAndFilter Wildcard(string field, IReadOnlyList<string> strings)
     {
         var last = strings.Count;
 

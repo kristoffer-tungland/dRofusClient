@@ -22,12 +22,12 @@ public record dRofusFilterItem(string Field, dRofusComparison Comparison, object
         };
     }
 
-    string ReturnComparison(string comparison)
+    private string ReturnComparison(string comparison)
     {
         return $"{Field} {comparison} {ConvertValue(Value)}";
     }
 
-    string ReturnInValues(object? value)
+    private string ReturnInValues(object? value)
     {
         if (value is not IEnumerable enumerable)
             return ConvertValue(value);
@@ -38,7 +38,7 @@ public record dRofusFilterItem(string Field, dRofusComparison Comparison, object
         return string.Join(",", results);
     }
 
-    static string ConvertValue(object? value)
+    private static string ConvertValue(object? value)
     {
         if (value is null)
             return "null";

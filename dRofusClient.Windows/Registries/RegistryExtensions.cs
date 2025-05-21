@@ -18,7 +18,7 @@ public static class RegistryExtensions
     /// <returns>List of databases</returns>
     public static List<string> GetStoredDatabases(string server)
     {
-        server = NormalizeServerAddress(server);
+        server = dRofusServers.UriAdressToServer(server);
         var key = Registry.CurrentUser.OpenSubKey(GetServerRegistryPath(server));
         return key is null ? [] : [.. key.GetSubKeyNames()];
     }
@@ -33,19 +33,9 @@ public static class RegistryExtensions
         if (string.IsNullOrWhiteSpace(database))
             throw new Exception("No database provided.");
 
-        server = NormalizeServerAddress(server);
+        server = dRofusServers.UriAdressToServer(server);
         var key = Registry.CurrentUser.OpenSubKey(GetDatabaseRegistryPath(server, database));
         return key is null ? [] : [.. key.GetSubKeyNames()];
-    }
-
-    private static string NormalizeServerAddress(string server)
-    {
-        if (server == "https://api-no.drofus.com")
-            server = "db2.nosyko.no";
-        else
-            server = server.Replace("http://", string.Empty).Replace("https://", string.Empty);
-
-        return server;
     }
 
     /// <summary>

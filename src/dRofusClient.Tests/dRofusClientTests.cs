@@ -5,7 +5,7 @@ namespace dRofusClient.Tests;
 
 public sealed class dRofusClientTests
 {
-    static dRofusClient CreateClient()
+    private static dRofusClient CreateClient()
     {
         var connection = dRofusConnectionArgs.CreateNoServer("test_database", "01", "username", "password");
         var client = new dRofusClient(new HttpClient());

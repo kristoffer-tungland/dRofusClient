@@ -7,13 +7,26 @@ namespace dRofusClient;
 [GenerateInterface]
 internal sealed class dRofusClient : IdRofusClient
 {
-    readonly HttpClient _httpClient;
-    string? _database;
-    string? _projectId;
-    
-    public dRofusClient(HttpClient httpClient)
+    private readonly HttpClient _httpClient;
+    private string? _database;
+    private string? _projectId;
+    private readonly ILoginPromptHandler _loginPromptHandler;
+
+    /// <summary>
+    /// Exposes the internal HttpClient for advanced scenarios.
+    /// </summary>
+    public HttpClient HttpClient => _httpClient;
+
+    // Optionally, expose a method to send custom requests
+    public Task<HttpResponseMessage> SendHttpRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+    {
+        return _httpClient.SendAsync(request, cancellationToken);
+    }
+
+    public dRofusClient(HttpClient httpClient, ILoginPromptHandler loginPromptHandler)
     {
         _httpClient = httpClient;
+        _loginPromptHandler = loginPromptHandler;
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 
@@ -24,23 +37,16 @@ internal sealed class dRofusClient : IdRofusClient
 
     public void Setup(dRofusConnectionArgs args)
     {
-        if (string.IsNullOrWhiteSpace(args.AuthenticationHeader))
-            throw new dRofusClientCreateException("No authentication provided.");
-
-        if (string.IsNullOrWhiteSpace(args.Database))
-            throw new dRofusClientCreateException("No dRofus database provided.");
-
-        if (string.IsNullOrWhiteSpace(args.ProjectId))
-            throw new dRofusClientCreateException("No dRofus project id provided.");
-
         UpdateBaseAddress(args.BaseUrl);
-        UpdateAuthentication(args.AuthenticationHeader);
+
+        if (args.AuthenticationHeader is { } authenticationHeader)
+            UpdateAuthentication(authenticationHeader);
 
         _database = args.Database;
         _projectId = args.ProjectId;
     }
 
-    public void UpdateBaseAddress(string baseUrl)
+    private void UpdateBaseAddress(string baseUrl)
     {
         var newBaseUri = new Uri(baseUrl);
         if (_httpClient.BaseAddress == null || _httpClient.BaseAddress != newBaseUri)
@@ -71,11 +77,18 @@ internal sealed class dRofusClient : IdRofusClient
         }
         catch (HttpRequestException requestException)
         {
-            throw new dRofusClientLoginException($"Failed to login to dRofus: {requestException.Message}");
+            await HandleLoginPromptAsync(cancellationToken);
+            await Login(cancellationToken);
+            return;
         }
 
         if (project is null)
             throw new dRofusClientLoginException("Logged in to dRofus, but failed to get any response");
+    }
+
+    private async Task HandleLoginPromptAsync(CancellationToken cancellationToken)
+    {
+        await _loginPromptHandler.Handle(this, cancellationToken);
     }
 
     public async Task<bool> IsLoggedIn()
@@ -91,21 +104,25 @@ internal sealed class dRofusClient : IdRofusClient
         }
     }
 
+    public void ClearAuthentication()
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = null;
+    }
+
     public void Logout()
     {
         _database = null;
         _projectId = null;
-        _httpClient.BaseAddress = null;
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
     public (string database, string projectId) GetDatabaseAndProjectId()
     {
         if (_database is null)
-            throw new Exception("No database provided, please login");
+            throw new dRofusClientLoginException("No database provided, please login");
 
         if (_projectId is null)
-            throw new Exception("No project id provided, please login");
+            throw new dRofusClientLoginException("No project id provided, please login");
 
         return (_database, _projectId);
     }
@@ -155,16 +172,16 @@ internal sealed class dRofusClient : IdRofusClient
         ) where TResult : dRofusDto
     {
         var response = await SendResponse(method, route, options, cancellationToken);
-        var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken) 
+        var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken)
             ?? throw new NullReferenceException("Failed to read content from response.");
-        
+
         if (options is dRofusListOptions listOptions && listOptions.GetNextItems())
             await GetNextItems(method, response, items, cancellationToken);
 
         return items;
     }
 
-    async Task GetNextItems<TResult>(HttpMethod method, HttpResponseMessage response, List<TResult> items, CancellationToken cancellationToken) where TResult : dRofusDto
+    private async Task GetNextItems<TResult>(HttpMethod method, HttpResponseMessage response, List<TResult> items, CancellationToken cancellationToken) where TResult : dRofusDto
     {
         if (!response.Headers.Contains("Link"))
             return;
@@ -172,13 +189,13 @@ internal sealed class dRofusClient : IdRofusClient
         var link = response.Headers.GetValues("Link").First();
         var nextLink = link.Split(';')[0].Trim('<', '>');
 
-        if (string.IsNullOrEmpty(nextLink)) 
+        if (string.IsNullOrEmpty(nextLink))
             return;
 
         var request = new HttpRequestMessage(method, nextLink);
         var nextResponse = await _httpClient.SendAsync(request, cancellationToken);
         nextResponse.EnsureSuccessStatusCode();
-        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken) 
+        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken)
             ?? throw new NullReferenceException("Failed to read content from response.");
 
         items.AddRange(nextItems);
@@ -186,17 +203,47 @@ internal sealed class dRofusClient : IdRofusClient
         await GetNextItems(method, nextResponse, items, cancellationToken);
     }
 
-    async Task<HttpResponseMessage> SendResponse(
+    private async Task<HttpResponseMessage> SendResponse(
         HttpMethod method,
         string route,
         dRofusOptionsBase? options = default,
         CancellationToken cancellationToken = default
         )
     {
-        var request = BuildRequest(method, route, options);
-        var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return response;
+        HttpRequestMessage? request;
+
+        try
+        {
+            request = BuildRequest(method, route, options);
+        }
+        catch (dRofusClientLoginException)
+        {
+            await HandleLoginPromptAsync(cancellationToken);
+            request = BuildRequest(method, route, options);
+        }
+
+        try
+        {
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            
+            response.EnsureSuccessStatusCode();
+            return response;
+        }
+        catch (HttpRequestException requestException)
+        {
+            if (requestException.Message.Contains(((int)System.Net.HttpStatusCode.Unauthorized).ToString()))
+            {
+                await HandleLoginPromptAsync(cancellationToken);
+
+                request = BuildRequest(method, route, options);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+                return response;
+            }
+            throw;
+        }
     }
 
     internal HttpRequestMessage BuildRequest(HttpMethod method, string route, dRofusOptionsBase? options)
@@ -219,17 +266,17 @@ internal sealed class dRofusClient : IdRofusClient
         switch (options)
         {
             case dRofusBodyPatchOptions bodyPatchOptions:
-            {
-                var body = bodyPatchOptions.Body;
-                request.Content = new StringContent(body, Encoding.UTF8, "application/merge-patch+json");
-                break;
-            }
+                {
+                    var body = bodyPatchOptions.Body;
+                    request.Content = new StringContent(body, Encoding.UTF8, "application/merge-patch+json");
+                    break;
+                }
             case dRofusBodyPostOptions bodyPostOptions:
-            {
-                var body = bodyPostOptions.Body;
-                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-                break;
-            }
+                {
+                    var body = bodyPostOptions.Body;
+                    request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                    break;
+                }
         }
 
         return request;

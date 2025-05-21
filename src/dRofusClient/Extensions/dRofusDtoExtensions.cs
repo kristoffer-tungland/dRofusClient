@@ -18,7 +18,7 @@ public static class dRofusDtoExtensions
         return new dRofusBodyPostOptions(json);
     }
 
-    static string RemoveIdField(string json)
+    private static string RemoveIdField(string json)
     {
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;

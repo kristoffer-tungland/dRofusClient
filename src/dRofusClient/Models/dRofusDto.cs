@@ -48,7 +48,7 @@ public record dRofusDto
         return GetPropertyByReflection(property);
     }
 
-    object? GetPropertyByReflection(string property)
+    private object? GetPropertyByReflection(string property)
     {
         var type = this.GetType();
         var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonPropertyName(type, property);
@@ -56,7 +56,7 @@ public record dRofusDto
 
     }
 
-    static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)
+    private static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)
     {
         var properties = type.GetProperties();
         foreach (var propertyInfo in properties)

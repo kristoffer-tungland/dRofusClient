@@ -75,7 +75,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Logo and Title -->
-        <StackPanel Grid.Row="0" Margin="0,32,0,0" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="0" Margin="0,30,0,0" HorizontalAlignment="Center">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
                 <Image Source="/Resources/drofus_logo.png" Width="64" Height="64" Margin="0,0,8,0"/>
                 <TextBlock Text="dRofus" FontSize="36" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -83,7 +83,7 @@
         </StackPanel>
 
         <!-- Use modern sign in -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,35,0,16">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,16">
             <TextBlock Text="Use modern sign in" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <ToggleButton Style="{StaticResource ModernToggleButtonStyle}"
                   Width="40" Height="20"
@@ -125,12 +125,17 @@
                 <!-- Server -->
                 <TextBlock Text="Server" Margin="0,0,0,2"/>
                 <ComboBox ItemsSource="{Binding Servers}" SelectedItem="{Binding Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                          Margin="0,0,0,12" IsEditable="True" />
+                          Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ServerIsEnabled, Mode=OneWay}" />
 
                 <!-- Database -->
                 <TextBlock Text="Database" Margin="0,0,0,2"/>
                 <ComboBox ItemsSource="{Binding Databases}" SelectedItem="{Binding Database, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                          Margin="0,0,0,12" IsEditable="True" />
+                          Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding DatabaseIsEnabled, Mode=OneWay}" />
+
+                <!-- Database -->
+                <TextBlock Text="Project" Margin="0,0,0,2"/>
+                <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding ProjectId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ProjectIsEnabled, Mode=OneWay}" />
 
                 <!-- Username -->
                 <TextBlock Text="Username" Margin="0,0,0,2"/>

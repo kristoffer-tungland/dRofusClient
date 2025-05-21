@@ -5,8 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dRofusClient.UI.Demo"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Button Click="Button_Click" Content="Login" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
-    </Grid>
+        Title="MainWindow" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainViewModel}">
+    <StackPanel>
+        <Button Command="{Binding ShowLoginCommand}" Content="Login" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+
+        <TextBlock Text="{Binding ProjectName}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" FontSize="16"/>
+
+        <Button Command="{Binding GetProjectNameCommand}" Content="Show Project" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+        
+        <Button Command="{Binding ClearAuthenticationCommand}" Content="Clear Authentication" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+
+        <Button Command="{Binding LogoutCommand}" Content="Logout" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+        <Button Command="{Binding UseModernSignInCommand}" Content="Use Modern Sign In" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+    </StackPanel>
 </Window>

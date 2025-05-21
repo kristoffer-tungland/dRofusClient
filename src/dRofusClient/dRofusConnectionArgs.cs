@@ -2,13 +2,13 @@ using System.Text;
 
 namespace dRofusClient;
 
-public record dRofusConnectionArgs(string BaseUrl, string Database, string ProjectId, string AuthenticationHeader)
+public record dRofusConnectionArgs(string BaseUrl, string Database, string ProjectId, string? AuthenticationHeader = default)
 {
     public string BaseUrl { get; } = NormalizeServerAddress(BaseUrl);
 
     private static string NormalizeServerAddress(string baseUrl)
     {
-        if (baseUrl.Equals("db2.nosyko.no", StringComparison.OrdinalIgnoreCase))
+        if (baseUrl.Equals(dRofusServers.GetDefaultServer(), StringComparison.OrdinalIgnoreCase))
             return dRofusServers.GetNoServer();
 
         if (baseUrl.StartsWith("https://api.", StringComparison.OrdinalIgnoreCase) == false)

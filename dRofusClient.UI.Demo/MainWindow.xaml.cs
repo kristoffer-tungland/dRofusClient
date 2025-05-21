@@ -1,5 +1,6 @@
-﻿using dRofusClient.Windows.UI;
-using Microsoft.Extensions.Logging.Abstractions;
+﻿#if DEBUG
+using Microsoft.Extensions.Configuration;
+#endif
 using System.Windows;
 
 namespace dRofusClient.UI.Demo
@@ -9,48 +10,22 @@ namespace dRofusClient.UI.Demo
     /// </summary>
     public partial class MainWindow : Window
     {
-        private LoginWindow? _loginWindow;
-
         public MainWindow()
         {
+#if DEBUG
+            var config = new ConfigurationBuilder()
+                .AddUserSecrets("9a317e62-4dc9-48e2-841d-a3eaa2ebdb88")
+                .Build();
+
+            Environment.SetEnvironmentVariable("OAUTH2_AUTHORITY", config["OAuth2:Authority"]);
+            Environment.SetEnvironmentVariable("OAUTH2_CLIENTID", config["OAuth2:ClientId"]);
+            Environment.SetEnvironmentVariable("OAUTH2_CLIENTSECRET", config["OAuth2:ClientSecret"]);
+            Environment.SetEnvironmentVariable("OAUTH2_SCOPE", config["OAuth2:Scope"]);
+#endif
+
+
+            DataContext = new MainViewModel(new dRofusClientFactory(), new Microsoft.Extensions.Logging.Abstractions.NullLogger<MainViewModel>());
             InitializeComponent();
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (_loginWindow != null)
-                return;
-
-            var factory = new dRofusClientFactory();
-            var client = factory.Create();
-            var viewModel = new LoginViewModel(client, NullLogger.Instance);
-
-            viewModel.Initialize(OnLogin);
-
-            _loginWindow = new LoginWindow(viewModel)
-            {
-                Owner = this
-            };
-
-            _loginWindow.Closed += (s, e) =>
-            {
-                _loginWindow = null;
-            };
-
-            _loginWindow.ShowDialog();
-        }
-
-        private void OnLogin(bool obj)
-        {
-            if (obj)
-            {
-                MessageBox.Show("Login successful!");
-                _loginWindow?.Close();
-            }
-            else
-            {
-                MessageBox.Show("Login failed!");
-            }
         }
     }
 }

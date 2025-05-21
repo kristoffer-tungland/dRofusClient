@@ -6,9 +6,10 @@ using System.Collections.ObjectModel;
 
 namespace dRofusClient.Windows.UI;
 
-public class LoginViewModel(IdRofusClient client, ILogger logger) : ViewModelBase
+public class LoginViewModel(IdRofusClientFactory clientFactory, ILogger logger) : ViewModelBase
 {
-    private Action<bool>? _onLogin;
+    private readonly IdRofusClient client = clientFactory.Create();
+    private Action<dRofusConnectionArgs>? _onLogin;
 
     public string? Server { get => Get<string?>(); set => When(value).Changed(SetDatabases).Notify(Login).Set(); }
     public string? Database { get => Get<string?>(); set => When(value).Changed(SetPojects).Notify(Login).Set(); }
@@ -24,13 +25,32 @@ public class LoginViewModel(IdRofusClient client, ILogger logger) : ViewModelBas
     public ObservableCollection<string> Databases { get; } = [];
     public ObservableCollection<string> Projects { get; } = [];
     public ObservableCollection<string> ModernServers { get; } = new() { "Nordics", "Americas", "Australia" };
-    public string? ModernServer { get => Get<string?>(); set => When(value).Set(); }
+    public string? ModernServer { get => Get<string?>(); set => Set(value); }
 
-    public void Initialize(Action<bool> onLogin, string? server = null, string? database = null, string? projectId = null, string? username = null, string? password = null)
+    public bool ServerIsEnabled { get => Get(true); set => Set(value); }
+    public bool DatabaseIsEnabled { get => Get(true); set => Set(value); }
+    public bool ProjectIsEnabled { get => Get(true); set => Set(value); }
+
+    public void Initialize(Action<dRofusConnectionArgs> onLogin, string? server = null, string? database = null, string? projectId = null, string? username = null, string? password = null)
     {
         _onLogin = onLogin;
+
+        if (string.IsNullOrWhiteSpace(server) == false)
+        { 
+            server = dRofusServers.UriAdressToServer(server);
+            ServerIsEnabled = false;
+        }
+        else
+            ServerIsEnabled = true;
+
         Server = server ?? RegistryExtensions.GetActiveServer() ?? dRofusServers.GetDefaultServer();
+
+        DatabaseIsEnabled = string.IsNullOrWhiteSpace(database) == true;
+
         Database = database ?? RegistryExtensions.GetActiveDatabase();
+
+        ProjectIsEnabled = string.IsNullOrWhiteSpace(projectId) == true;
+
         ProjectId = projectId ?? RegistryExtensions.GetActiveProjectId();
         Username = username ?? RegistryExtensions.GetUsername();
 
@@ -88,13 +108,11 @@ public class LoginViewModel(IdRofusClient client, ILogger logger) : ViewModelBas
                 client.SaveCredentials(Username!, string.Empty);
             }
 
-            _onLogin?.Invoke(true);
+            _onLogin?.Invoke(args);
         }
-        catch (dRofusClientLoginException ex)
+        catch (dRofusClientWrongCredentialsException)
         {
             ErrorMessage = "Failed to login to dRofus, please check your credentials.";
-            logger.LogError(ex, "Failed to login to dRofus: {Message}", ex.Message);
-            _onLogin?.Invoke(false);
         }
     }
 
