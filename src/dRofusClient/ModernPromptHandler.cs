@@ -1,4 +1,5 @@
-using Duende.IdentityModel.Client;
+using Duende.IdentityModel.OidcClient;
+using Duende.IdentityModel.OidcClient.Browser;
 
 namespace dRofusClient;
 
@@ -10,6 +11,7 @@ public class ModernPromptHandler : ILoginPromptHandler
         var clientId = Environment.GetEnvironmentVariable("OAUTH2_CLIENTID");
         var clientSecret = Environment.GetEnvironmentVariable("OAUTH2_CLIENTSECRET");
         var scope = Environment.GetEnvironmentVariable("OAUTH2_SCOPE");
+        var redirectUri = Environment.GetEnvironmentVariable("OAUTH2_REDIRECTURI");
 
         if (string.IsNullOrWhiteSpace(authority) ||
             string.IsNullOrWhiteSpace(clientId) ||
@@ -19,23 +21,50 @@ public class ModernPromptHandler : ILoginPromptHandler
             throw new InvalidOperationException("OAuth2 environment variables are not set.");
         }
 
-        var httpClient = client.HttpClient;
-
-        var disco = await httpClient.GetDiscoveryDocumentAsync(authority, cancellationToken);
-        if (disco.IsError)
-            throw new System.Exception($"Discovery failed: {disco.Error}");
-
-        var tokenResponse = await httpClient.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+        string? db = null, pr = null;
+        try
         {
-            Address = disco.TokenEndpoint,
+            var (dbVal, prVal) = client.GetDatabaseAndProjectId();
+            db = dbVal;
+            pr = prVal;
+        }
+        catch (Exception)
+        {
+            // Optionally handle missing db/pr
+        }
+
+        var browser = new SystemBrowser(new Uri(redirectUri).Port);
+
+        var options = new OidcClientOptions
+        {
+            Authority = authority,
             ClientId = clientId,
             ClientSecret = clientSecret,
             Scope = scope,
-        }, cancellationToken);
+            RedirectUri = redirectUri,
+            Browser = browser,
+            LoadProfile = false
+        };
 
-        if (tokenResponse.IsError)
-            throw new System.Exception($"Token request failed: {tokenResponse.Error}");
+        var oidcClient = new OidcClient(options);
 
-        client.UpdateAuthentication($"Bearer {tokenResponse.AccessToken}");
+        var parameters = new Duende.IdentityModel.Client.Parameters();
+        if (!string.IsNullOrEmpty(db)) parameters.Add("db", db);
+        if (!string.IsNullOrEmpty(pr)) parameters.Add("pr", pr);
+
+        var loginState = await oidcClient.PrepareLoginAsync(parameters, cancellationToken);
+
+        // Use the browser instance directly, not loginState.Browser
+        var browserResult = await browser.InvokeAsync(
+            new BrowserOptions(loginState.StartUrl,redirectUri),
+            cancellationToken
+        );
+
+        var result = await oidcClient.ProcessResponseAsync(browserResult.Response, loginState, parameters, cancellationToken);
+
+        if (result.IsError)
+            throw new Exception(result.Error + "\n" + result.ErrorDescription);
+
+        client.UpdateAuthentication($"Bearer {result.AccessToken}");
     }
 }

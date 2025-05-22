@@ -1,5 +1,7 @@
 ﻿#if DEBUG
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+
 #endif
 using System.Windows;
 
@@ -21,10 +23,10 @@ namespace dRofusClient.UI.Demo
             Environment.SetEnvironmentVariable("OAUTH2_CLIENTID", config["OAuth2:ClientId"]);
             Environment.SetEnvironmentVariable("OAUTH2_CLIENTSECRET", config["OAuth2:ClientSecret"]);
             Environment.SetEnvironmentVariable("OAUTH2_SCOPE", config["OAuth2:Scope"]);
+            Environment.SetEnvironmentVariable("OAUTH2_REDIRECTURI", config["OAuth2:RedirectUri"]);
 #endif
 
-
-            DataContext = new MainViewModel(new dRofusClientFactory(), new Microsoft.Extensions.Logging.Abstractions.NullLogger<MainViewModel>());
+            DataContext = new MainViewModel(new dRofusClientFactory(), new NullLogger<MainViewModel>());
             InitializeComponent();
         }
     }
