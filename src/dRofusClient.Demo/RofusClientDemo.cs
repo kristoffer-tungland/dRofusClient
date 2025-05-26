@@ -1,11 +1,11 @@
-﻿using dRofusClient.WindowsCredentials;
+﻿using dRofusClient.Windows;
 using dRofusClient.PropertyMeta;
 using dRofusClient.Projects;
 using dRofusClient;
 
 namespace dRofusClientDemo;
 
-public class Class1
+public class RofusClientDemo
 {
     public IdRofusClient CreateClient(string BaseUrl, string Database, string ProjectId, string AuthenticationHeader)
     {
@@ -21,7 +21,7 @@ public class Class1
 
     public IdRofusClient CreateClientWithWindowsCredentials(string database)
     {
-        return new dRofusClientFactory().Create(dRofusConnectionArgs.GetNoServer(), database);
+        return new dRofusClientFactory().Create(dRofusServers.GetNoServer(), database);
     }
 
     public async Task<dRofusProject> GetProject(IdRofusClient client)

@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\dRofusClient.WindowsCredentials\dRofusClient.WindowsCredentials.csproj" />
+    <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
   </ItemGroup>
 </Project>

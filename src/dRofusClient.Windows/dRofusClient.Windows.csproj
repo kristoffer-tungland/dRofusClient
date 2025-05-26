@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
@@ -17,8 +18,22 @@
 
   </ItemGroup>
 
+  <Choose>
+    <When Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+      <ItemGroup >
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <UseWPF>true</UseWPF>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
   <ItemGroup>
-    <ProjectReference Include="..\src\dRofusClient\dRofusClient.csproj" />
+    <ProjectReference Include="..\dRofusClient\dRofusClient.csproj" />
   </ItemGroup>
 
 </Project>

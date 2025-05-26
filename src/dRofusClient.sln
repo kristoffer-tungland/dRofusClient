@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34804.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient", "src\dRofusClient\dRofusClient.csproj", "{1A990CB8-13F2-4FA1-A932-652706FB9A6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient", "dRofusClient\dRofusClient.csproj", "{1A990CB8-13F2-4FA1-A932-652706FB9A6A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient.WindowsCredentials", "src\dRofusClient.WindowsCredentials\dRofusClient.WindowsCredentials.csproj", "{8FB406C2-CA8C-4561-8A6F-3CCAD6FF3B96}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient.WindowsCredentials", "dRofusClient.WindowsCredentials\dRofusClient.WindowsCredentials.csproj", "{8FB406C2-CA8C-4561-8A6F-3CCAD6FF3B96}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6E7F01A0-E6F3-4D22-A8AA-643F61BF3CB5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient.Tests", "src\dRofusClient.Tests\dRofusClient.Tests.csproj", "{FA21EE0E-EA32-4F8D-B2F1-1A039CC2A9BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dRofusClient.Tests", "dRofusClient.Tests\dRofusClient.Tests.csproj", "{FA21EE0E-EA32-4F8D-B2F1-1A039CC2A9BB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{661CA498-2731-4259-B386-466932FA3064}"
 	ProjectSection(SolutionItems) = preProject
@@ -17,9 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Demo", "src\dRofusClient.Demo\dRofusClient.Demo.csproj", "{15321B6A-EEA2-4AB5-B739-B228F71D67C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Demo", "dRofusClient.Demo\dRofusClient.Demo.csproj", "{15321B6A-EEA2-4AB5-B739-B228F71D67C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Revit", "src\dRofusClient.Revit\dRofusClient.Revit.csproj", "{BAA331E1-DC7A-0D74-F9E6-147C2609D023}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Revit", "dRofusClient.Revit\dRofusClient.Revit.csproj", "{BAA331E1-DC7A-0D74-F9E6-147C2609D023}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Windows", "dRofusClient.Windows\dRofusClient.Windows.csproj", "{D1CE7301-019A-4068-9C25-3320056EC80C}"
 EndProject

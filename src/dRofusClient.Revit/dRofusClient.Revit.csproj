@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <langversion>12</langversion>
+    <LangVersion>latest</LangVersion>
     <!-- NuGet properties -->
     <PackageId>dRofusClient.Revit</PackageId>
     <Authors>Kristoffer Tungland</Authors>
@@ -17,11 +17,15 @@
     <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
     <Version>0.0.1</Version>
   </PropertyGroup>
+ 
   <Import Project=".\Configurations.targets" />
+  
   <PropertyGroup>
     <AssemblyName>$(PackageId).$(MainRevitVersion).$(Version)</AssemblyName>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\dRofusClient.WindowsCredentials\dRofusClient.WindowsCredentials.csproj" />
+ 
+   <ItemGroup>
+    <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
   </ItemGroup>
+
 </Project>
