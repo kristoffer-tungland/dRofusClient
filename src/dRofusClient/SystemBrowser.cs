@@ -1,21 +1,13 @@
-﻿using Duende.IdentityModel.OidcClient.Browser;
-using System;
-using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using Duende.IdentityModel.OidcClient.Browser;
 
 namespace dRofusClient
 {
-    public class SystemBrowser : IBrowser
+    public class SystemBrowser(int port = 7890) : IBrowser
     {
-        public int Port { get; }
-
-        public SystemBrowser(int port = 7890)
-        {
-            Port = port;
-        }
+        public int Port { get; } = port;
 
         public async Task<BrowserResult> InvokeAsync(BrowserOptions options, CancellationToken cancellationToken = default)
         {
@@ -45,7 +37,7 @@ namespace dRofusClient
                     }
 
                     var context = contextTask.Result;
-                    string responseString = "<html><head><meta http-equiv='refresh' content='3;url=https://drofus.com'></head><body>You may now return to the app.</body></html>";
+                    string responseString = "<html><head><script>setTimeout(function(){ window.close(); }, 1000);</script></head><body>You may now return to the app. This window will close automatically.</body></html>";
                     var buffer = Encoding.UTF8.GetBytes(responseString);
                     context.Response.ContentLength64 = buffer.Length;
                     await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);

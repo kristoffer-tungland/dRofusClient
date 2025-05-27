@@ -145,7 +145,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
             LoadProfile = false
         };
         var oidcClient = new OidcClient(options);
-        var result = await oidcClient.RefreshTokenAsync(refreshToken, cancellationToken: cancellationToken);
+        var result = await oidcClient.RefreshTokenAsync(refreshToken, scope: modernLoginOptions.Scope, cancellationToken: cancellationToken);
         
         if (result.IsError)
             throw new dRofusClientModernLoginException(result.Error)
