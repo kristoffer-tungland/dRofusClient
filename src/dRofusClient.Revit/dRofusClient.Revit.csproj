@@ -16,8 +16,9 @@
     <PackageTags>dRofus API Client</PackageTags>
     <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
     <Version>0.0.1</Version>
+    <MainRevitVersion Condition="'$(Configuration)' == 'Design'">2025</MainRevitVersion>
   </PropertyGroup>
- 
+  
   <Import Project=".\Configurations.targets" />
   
   <PropertyGroup>

@@ -9,7 +9,7 @@ public class dRofusClientFactory : IdRofusClientFactory
 {
     // Make the cache static so it is shared across all instances
     private static readonly ConcurrentDictionary<(string baseAddress, string database, string projectId), HttpClient> _httpClientCache
-        = new ConcurrentDictionary<(string, string, string), HttpClient>();
+        = new();
 
     public IdRofusClient Create(dRofusConnectionArgs connectionArgs, ILoginPromptHandler? loginPromptHandler = default)
     {
@@ -28,13 +28,6 @@ public class dRofusClientFactory : IdRofusClientFactory
             return client;
         });
 
-        // Always set (or overwrite) the Authorization header for the current connectionArgs
-        if (!string.IsNullOrEmpty(connectionArgs.AuthenticationHeader))
-        {
-            httpClient.DefaultRequestHeaders.Remove("Authorization");
-            httpClient.DefaultRequestHeaders.Add("Authorization", connectionArgs.AuthenticationHeader);
-        }
-
         // Pass the loginPromptHandler to dRofusClient
         var clientInstance = new dRofusClient(httpClient, loginPromptHandler);
         clientInstance.Setup(connectionArgs);
@@ -44,7 +37,6 @@ public class dRofusClientFactory : IdRofusClientFactory
     public IdRofusClient Create(ILoginPromptHandler? loginPromptHandler = default)
     {
         loginPromptHandler ??= new NonePromptHandler();
-
         var httpClient = new HttpClient();
         var client = new dRofusClient(httpClient, loginPromptHandler);
         return client;

@@ -83,7 +83,8 @@
         </StackPanel>
 
         <!-- Use modern sign in -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,16">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,16" 
+                    Visibility="{Binding ModernLoginAvailable, Converter={StaticResource BoolToVis}}">
             <TextBlock Text="Use modern sign in" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <ToggleButton Style="{StaticResource ModernToggleButtonStyle}"
                   Width="40" Height="20"
@@ -111,21 +112,23 @@
                 </Style>
             </StackPanel.Resources>
 
-            
-
             <!-- Modern Server ComboBox (only visible when UseModernSignIn is true) -->
             <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="Server" Margin="0,0,0,2"/>
-                <ComboBox ItemsSource="{Binding ModernServers}" SelectedItem="{Binding ModernServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                <ComboBox ItemsSource="{Binding ModernServers}" DisplayMemberPath="Name" SelectedItem="{Binding ModernServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                           Margin="0,0,0,12" />
             </StackPanel>
 
             <!-- Legacy fields (hidden when UseModernSignIn is true) -->
-            <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource InverseBoolToVis}}">
-                <!-- Server -->
-                <TextBlock Text="Server" Margin="0,0,0,2"/>
-                <ComboBox ItemsSource="{Binding Servers}" SelectedItem="{Binding Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                          Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ServerIsEnabled, Mode=OneWay}" />
+            <StackPanel>
+
+                <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource InverseBoolToVis}}">
+                    <!-- Server -->
+                    <TextBlock Text="Server" Margin="0,0,0,2"/>
+                    <ComboBox ItemsSource="{Binding Servers}" SelectedItem="{Binding Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ServerIsEnabled, Mode=OneWay}" />
+                </StackPanel>
+
 
                 <!-- Database -->
                 <TextBlock Text="Database" Margin="0,0,0,2"/>
@@ -137,27 +140,30 @@
                 <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding ProjectId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ProjectIsEnabled, Mode=OneWay}" />
 
-                <!-- Username -->
-                <TextBlock Text="Username" Margin="0,0,0,2"/>
-                <TextBox Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,0,0,12" />
+                <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource InverseBoolToVis}}">
+                    <!-- Username -->
+                    <TextBlock Text="Username" Margin="0,0,0,2"/>
+                    <TextBox Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" />
 
-                <!-- Password -->
-                <TextBlock Text="Password" Margin="0,0,0,2"/>
-                <PasswordBox x:Name="PasswordBox" Margin="0,0,0,4"
-                             PasswordChanged="PasswordBox_PasswordChanged"/>
-                <!-- Bind PasswordBox in code-behind to ViewModel.Password -->
+                    <!-- Password -->
+                    <TextBlock Text="Password" Margin="0,0,0,2"/>
+                    <PasswordBox x:Name="PasswordBox" Margin="0,0,0,4"
+                            PasswordChanged="PasswordBox_PasswordChanged"/>
+                    <!-- Bind PasswordBox in code-behind to ViewModel.Password -->
 
-                <!-- Remember Password and Forgot Password -->
-                <DockPanel Margin="0,0,0,12" LastChildFill="False">
-                    <CheckBox Content="Remember Password" IsChecked="{Binding RememberMe, Mode=TwoWay}" VerticalAlignment="Center" />
-                    <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <Hyperlink NavigateUri="https://www.drofus.com/en/reset-password" RequestNavigate="ForgotPassword_RequestNavigate">Forgot your password?</Hyperlink>
-                    </TextBlock>
-                </DockPanel>
+                    <!-- Remember Password and Forgot Password -->
+                    <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                        <CheckBox Content="Remember Password" IsChecked="{Binding RememberMe, Mode=TwoWay}" VerticalAlignment="Center" />
+                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
+                            <Hyperlink NavigateUri="https://www.drofus.com/en/reset-password" RequestNavigate="ForgotPassword_RequestNavigate">Forgot your password?</Hyperlink>
+                        </TextBlock>
+                    </DockPanel>
 
-                <!-- Error Message -->
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                    <!-- Error Message -->
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                </StackPanel>
+
             </StackPanel>
         </StackPanel>
 

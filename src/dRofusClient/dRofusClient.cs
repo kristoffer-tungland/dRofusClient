@@ -1,5 +1,3 @@
-// ReSharper disable InconsistentNaming
-
 using System.Text;
 
 namespace dRofusClient;
@@ -10,6 +8,7 @@ internal sealed class dRofusClient : IdRofusClient
     private readonly HttpClient _httpClient;
     private string? _database;
     private string? _projectId;
+    private ModernLoginResult? _modernLoginResult;
     private readonly ILoginPromptHandler _loginPromptHandler;
 
     /// <summary>
@@ -39,8 +38,11 @@ internal sealed class dRofusClient : IdRofusClient
     {
         UpdateBaseAddress(args.BaseUrl);
 
-        if (args.AuthenticationHeader is { } authenticationHeader)
-            UpdateAuthentication(authenticationHeader);
+        if (args is BasicConnectionArgs basic)
+            UpdateAuthentication(basic.AuthenticationHeader);
+
+        else if (args is ModernConnectionArgs modernLoginResult)
+            UpdateAuthentication(modernLoginResult.LoginResult);
 
         _database = args.Database;
         _projectId = args.ProjectId;
@@ -61,6 +63,12 @@ internal sealed class dRofusClient : IdRofusClient
         _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(authenticationHeader);
     }
 
+    public void UpdateAuthentication(ModernLoginResult modernLoginResult)
+    {
+        _modernLoginResult = modernLoginResult;
+        _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(modernLoginResult.TokenType + " " + modernLoginResult.AccessToken);
+    }
+
     public Task Login(dRofusConnectionArgs args, CancellationToken cancellationToken = default)
     {
         Setup(args);
@@ -75,7 +83,7 @@ internal sealed class dRofusClient : IdRofusClient
         {
             project = await this.GetProjectAsync(cancellationToken: cancellationToken);
         }
-        catch (HttpRequestException requestException)
+        catch (HttpRequestException)
         {
             await HandleLoginPromptAsync(cancellationToken);
             await Login(cancellationToken);
@@ -224,6 +232,9 @@ internal sealed class dRofusClient : IdRofusClient
 
         try
         {
+            if (_modernLoginResult is not null)
+                await RefreshTokenIfNeededAsync(cancellationToken);
+
             var response = await _httpClient.SendAsync(request, cancellationToken);
             
             response.EnsureSuccessStatusCode();
@@ -234,7 +245,6 @@ internal sealed class dRofusClient : IdRofusClient
             if (requestException.Message.Contains(((int)System.Net.HttpStatusCode.Unauthorized).ToString()))
             {
                 await HandleLoginPromptAsync(cancellationToken);
-
                 request = BuildRequest(method, route, options);
 
                 var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -243,6 +253,22 @@ internal sealed class dRofusClient : IdRofusClient
                 return response;
             }
             throw;
+        }
+    }
+
+    private async Task RefreshTokenIfNeededAsync(CancellationToken cancellationToken)
+    {
+        if (_modernLoginResult is null || string.IsNullOrEmpty(_modernLoginResult.RefreshToken))
+            return;
+
+        if (_modernLoginResult.IsTokenAboutToExpire())
+        {
+            if (_loginPromptHandler is not ModernPromptHandler modernPromtHandler)
+                throw new dRofusClientLoginException("Modern login handler does not support token refresh.");
+
+            var result = await modernPromtHandler.HandleRefreshToken(this, _modernLoginResult.Server, _modernLoginResult.RefreshToken, cancellationToken);
+            
+            UpdateAuthentication(result);
         }
     }
 

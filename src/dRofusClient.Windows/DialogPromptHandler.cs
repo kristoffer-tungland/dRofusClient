@@ -1,11 +1,12 @@
 ﻿using dRofusClient.Exceptions;
 using dRofusClient.Windows.UI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Windows;
 
 namespace dRofusClient.Windows;
 
-public class DialogPromptHandler(IdRofusClientFactory clientFactory, ILogger logger) : ILoginPromptHandler
+public class DialogPromptHandler(IdRofusClientFactory clientFactory, ModernLoginOptions? modernLoginOptions = default, ILogger? logger = default) : ILoginPromptHandler
 {
     private LoginWindow? _loginWindow;
 
@@ -19,7 +20,7 @@ public class DialogPromptHandler(IdRofusClientFactory clientFactory, ILogger log
             _loginWindow?.Close();
         }
 
-        var viewModel = new LoginViewModel(clientFactory, logger);
+        var viewModel = new LoginViewModel(clientFactory, logger ?? NullLogger.Instance);
 
         string? database;
         string? projectId;
@@ -34,6 +35,9 @@ public class DialogPromptHandler(IdRofusClientFactory clientFactory, ILogger log
             database = null;
             projectId = null;
         }
+
+        if(modernLoginOptions != null)
+            viewModel.UseModernLogin(modernLoginOptions);
 
         viewModel.Initialize(OnLogin, server: client.GetBaseUrl(), database: database, projectId: projectId);
 
@@ -52,9 +56,11 @@ public class DialogPromptHandler(IdRofusClientFactory clientFactory, ILogger log
         _loginWindow.Show();
 
         var result = await tcs.Task.ConfigureAwait(true);
-        
-        if (result?.AuthenticationHeader is null)
-            throw new dRofusClientWrongCredentialsException();
+
+        if (result == null)
+        {
+            throw new dRofusClientLoginException("Login was cancelled or failed.");
+        }
 
         client.Setup(result);
     }

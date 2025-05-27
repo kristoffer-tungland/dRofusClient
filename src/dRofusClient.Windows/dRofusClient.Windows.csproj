@@ -1,12 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Configurations>Debug;Release;Design</Configurations>
   </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(Configuration)' == 'Design'">
+      <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <XamlDebuggingInformation>True</XamlDebuggingInformation>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
 
   <ItemGroup>
     <PackageReference Include="MVVMFluent.WPF" Version="0.0.2">
@@ -20,7 +34,7 @@
 
   <Choose>
     <When Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-      <ItemGroup >
+      <ItemGroup>
         <Reference Include="PresentationCore" />
         <Reference Include="PresentationFramework" />
       </ItemGroup>

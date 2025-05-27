@@ -7,13 +7,13 @@ using dRofusClient.Windows;
 
 namespace dRofusClient.UI.Demo;
 
-internal class MainViewModel(IdRofusClientFactory clientFactory,  ILogger logger) : ViewModelBase
+internal class MainViewModel(ModernLoginOptions modernLoginOptions, IdRofusClientFactory clientFactory,  ILogger logger) : ViewModelBase
 {
     private LoginWindow? _loginWindow;
 
     public string? ProjectName { get => Get("<Project Name>"); set => Set(value); }
 
-    private IdRofusClient client = clientFactory.Create(new DialogPromptHandler(clientFactory, logger));
+    private IdRofusClient client = clientFactory.Create(new DialogPromptHandler(clientFactory, modernLoginOptions, logger));
 
     public IFluentCommand ShowLoginCommand => Do(ShowLogin);
 
@@ -25,13 +25,13 @@ internal class MainViewModel(IdRofusClientFactory clientFactory,  ILogger logger
 
     public IFluentCommand UseModernSignInCommand => Do(() =>
     {
-        client = clientFactory.Create(new ModernPromptHandler());
+        client = clientFactory.Create(new ModernPromptHandler(modernLoginOptions, logger));
     });
 
     public IFluentCommand LogoutCommand => Do(() =>
     {
         client.Logout();
-        client = clientFactory.Create(new DialogPromptHandler(clientFactory, logger));
+        client = clientFactory.Create(new DialogPromptHandler(clientFactory, modernLoginOptions, logger));
         MessageBox.Show("Logged out!");
     });
 
@@ -49,6 +49,7 @@ internal class MainViewModel(IdRofusClientFactory clientFactory,  ILogger logger
 
         var viewModel = new LoginViewModel(clientFactory,logger);
 
+        viewModel.UseModernLogin(modernLoginOptions);
         viewModel.Initialize(OnLogin);
 
         _loginWindow = new LoginWindow(viewModel)
@@ -66,9 +67,21 @@ internal class MainViewModel(IdRofusClientFactory clientFactory,  ILogger logger
 
     private void OnLogin(dRofusConnectionArgs args)
     {
+        if (args is ModernConnectionArgs modernArgs)
+        {
+            OnModernLogin(modernArgs);
+            return;
+        }
+
         client = clientFactory.Create(args);
         MessageBox.Show("Login successful!");
         _loginWindow?.Close();
     }
 
+    private void OnModernLogin(ModernConnectionArgs connectionArgs)
+    {
+        client = clientFactory.Create(connectionArgs, new ModernPromptHandler(modernLoginOptions, logger));
+        _loginWindow?.Close();
+        MessageBox.Show("Modern login successful!");
+    }
 }
