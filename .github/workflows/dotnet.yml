@@ -49,15 +49,15 @@ jobs:
       working-directory: src
 
     - name: Pack dRofusClient.Revit
-      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs/${{ matrix.revit_config }}
       working-directory: src
 
     - name: List nupkgs directory
-      run: dir ./nupkgs
+      run: dir ./nupkgs/${{ matrix.revit_config }}
       working-directory: src
 
     - name: Push dRofusClient.Revit to GitHub
-      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+      run: dotnet nuget push ./nupkgs/${{ matrix.revit_config }}/*.nupkg --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
       working-directory: src
 
     # Build, pack, and push the other projects (only once, not in matrix)
