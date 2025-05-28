@@ -80,5 +80,8 @@ jobs:
         dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
         dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
 
-        dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+        Get-ChildItem -Path "./nupkgs" -Filter *.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+        }
+      shell: pwsh
       working-directory: src
