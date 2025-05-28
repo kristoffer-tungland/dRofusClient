@@ -7,9 +7,9 @@ namespace dRofusClientDemo;
 
 public class RofusClientDemo
 {
-    public IdRofusClient CreateClient(string BaseUrl, string Database, string ProjectId, string AuthenticationHeader)
+    public IdRofusClient CreateClient(string BaseUrl, string Database, string ProjectId)
     {
-        var args = new dRofusConnectionArgs(BaseUrl, Database, ProjectId, AuthenticationHeader);
+        var args = new dRofusConnectionArgs(BaseUrl, Database, ProjectId);
         return new dRofusClientFactory().Create(args);
     }
 

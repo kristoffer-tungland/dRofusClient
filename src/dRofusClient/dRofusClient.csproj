@@ -7,14 +7,16 @@
     <!-- NuGet properties -->
     <PackageId>dRofusClient</PackageId>
     <Authors>Kristoffer Tungland</Authors>
-    <Product>dRofus Client Library</Product>
-    <Description>A .NET Standard library for interacting with the dRofus API.</Description>
+    <Product>dRofus Client Core Library</Product>
+    <Description>
+      Core .NET Standard library for interacting with the dRofus API, providing models, authentication, and HTTP communication.
+    </Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/kristoffer-tungland/dRofusClient</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kristoffer-tungland/dRofusClient.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>dRofus API Client</PackageTags>
-    <PackageReleaseNotes>Initial release of the dRofus client library.</PackageReleaseNotes>
+    <PackageTags>dRofus;API;Client;Core;Data;Integration;BIM</PackageTags>
+    <PackageReleaseNotes>Initial release of the dRofus core client library.</PackageReleaseNotes>
     <Version>0.0.1</Version>
     <AssemblyName>$(PackageId).$(Version)</AssemblyName>
   </PropertyGroup>
