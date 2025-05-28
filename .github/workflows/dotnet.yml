@@ -46,7 +46,7 @@ jobs:
 
     # Build, pack, and push dRofusClient.Revit for each Revit configuration
     - name: Restore dRofusClient.Revit
-      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj --configfile nuget.config
+      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj
       working-directory: src
 
     - name: Build dRofusClient.Revit
@@ -65,15 +65,15 @@ jobs:
     - name: Restore, Build, Pack, and Push dRofusClient, dRofusClient.Windows, dRofusClient.WindowsCredentials
       if: matrix.revit_config == 'Release 2019' # Only run once
       run: |
-        dotnet restore dRofusClient/dRofusClient.csproj --configfile nuget.config
+        dotnet restore dRofusClient/dRofusClient.csproj
         dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
         dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
 
-        dotnet restore dRofusClient.Windows/dRofusClient.Windows.csproj --configfile nuget.config
+        dotnet restore dRofusClient.Windows/dRofusClient.Windows.csproj
         dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
         dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
 
-        dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --configfile nuget.config
+        dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj
         dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
         dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
 
