@@ -22,7 +22,7 @@ jobs:
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -53,17 +53,18 @@ jobs:
       working-directory: src
 
     - name: Upload NuGet packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: revit-${{ matrix.revit_config }}-packages
         path: src/nupkgs/${{ matrix.revit_config }}/*.nupkg
+        retention-days: 1
 
   # Non-matrix dependent libraries
   build-core:
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -97,10 +98,11 @@ jobs:
       working-directory: src
 
     - name: Upload NuGet packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: core-packages
         path: src/nupkgs/*.nupkg
+        retention-days: 1
 
   # Push all packages at once
   publish:
@@ -115,10 +117,17 @@ jobs:
     - name: Authenticate nuget feed
       run: dotnet nuget add source --username kristoffer-tungland --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/kristoffer-tungland/index.json"
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v3
+    - name: Download Revit packages
+      uses: actions/download-artifact@v4
       with:
-        path: all-packages
+        pattern: revit-*-packages
+        path: all-packages/revit-packages
+
+    - name: Download Core packages
+      uses: actions/download-artifact@v4
+      with:
+        name: core-packages
+        path: all-packages/core-packages
 
     - name: Push all packages
       run: |
