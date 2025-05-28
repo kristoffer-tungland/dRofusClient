@@ -81,20 +81,43 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    # Build and pack the other projects
-    - name: Build and Pack Core Libraries
-      run: |
-        dotnet restore dRofusClient/dRofusClient.csproj
-        dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
-        dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+    # dRofusClient steps
+    - name: Restore dRofusClient
+      run: dotnet restore dRofusClient/dRofusClient.csproj
+      working-directory: src
+      
+    - name: Build dRofusClient
+      run: dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      working-directory: src
+      
+    - name: Pack dRofusClient
+      run: dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      working-directory: src
 
-        dotnet restore dRofusClient.Windows/dRofusClient.Windows.csproj
-        dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
-        dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+    # dRofusClient.Windows steps
+    - name: Restore dRofusClient.Windows
+      run: dotnet restore dRofusClient.Windows/dRofusClient.Windows.csproj
+      working-directory: src
+      
+    - name: Build dRofusClient.Windows
+      run: dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      working-directory: src
+      
+    - name: Pack dRofusClient.Windows
+      run: dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      working-directory: src
 
-        dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj
-        dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
-        dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+    # dRofusClient.WindowsCredentials steps
+    - name: Restore dRofusClient.WindowsCredentials
+      run: dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj
+      working-directory: src
+      
+    - name: Build dRofusClient.WindowsCredentials
+      run: dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      working-directory: src
+      
+    - name: Pack dRofusClient.WindowsCredentials
+      run: dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
       working-directory: src
 
     - name: Upload NuGet packages
