@@ -22,22 +22,19 @@ public static class dRofusClientOccurenceExtensions
     public static async Task<dRofusOccurence> UpdateOccurrenceAsync(this IdRofusClient client, dRofusOccurence occurence, CancellationToken cancellationToken = default)
     {
         var patchOptions = occurence.ToPatchOption();
-        var copiedOccurence = JsonSerializer.Deserialize<dRofusOccurence>(JsonSerializer.Serialize(occurence))!;
-        List<dRofusStatusPatchResult>? statusResults = null;
-        
+
+        dRofusOccurence? occurenceResult = null;
+
+        if (patchOptions.Body is not null && patchOptions.Body.Equals("{}") == false)
+            occurenceResult = await client.PatchAsync<dRofusOccurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions, cancellationToken);
+
+        occurenceResult ??= occurence with { Id = occurence.Id, AdditionalProperties = occurence.AdditionalProperties };
+
         if (patchOptions.StatusFields is not null)
         { 
-            statusResults = await client.UpdateStatusesAsync(occurence.Id, patchOptions.StatusFields, cancellationToken);
-            UpdateStatusesOnOccurence(copiedOccurence, statusResults);
-        }
-
-        if (patchOptions.Body is null || patchOptions.Body.Equals("{}"))
-            return copiedOccurence;
-
-        var occurenceResult = await client.PatchAsync<dRofusOccurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions, cancellationToken);
-
-        if (statusResults is not null)
+            var statusResults = await client.UpdateStatusesAsync(occurence.Id, patchOptions.StatusFields, cancellationToken);
             UpdateStatusesOnOccurence(occurenceResult, statusResults);
+        }
 
         return occurenceResult;
     }
