@@ -57,7 +57,7 @@ jobs:
       working-directory: src
 
     - name: Push dRofusClient.Revit to GitHub
-      run: dotnet nuget push ./nupkgs/${{ matrix.revit_config }}/*.nupkg --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+      run: dotnet nuget push "./nupkgs/${{ matrix.revit_config }}/*.nupkg" --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
       working-directory: src
 
     # Build, pack, and push the other projects (only once, not in matrix)
