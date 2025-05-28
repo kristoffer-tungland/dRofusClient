@@ -53,7 +53,7 @@ jobs:
       working-directory: src
 
     - name: List nupkgs directory
-      run: dir ./nupkgs/${{ matrix.revit_config }}
+      run: dir "./nupkgs/${{ matrix.revit_config }}"
       working-directory: src
 
     - name: Push dRofusClient.Revit to GitHub
