@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <!-- NuGet properties -->
-    <ProjectName>dRofusClient.Revit</ProjectName>
+    <ExtensionId>dRofusClient.Revit</ExtensionId>
     <Authors>Kristoffer Tungland</Authors>
     <Product>dRofus Client Revit Integration</Product>
     <Description>
@@ -22,11 +22,6 @@
   </PropertyGroup>
   
   <Import Project=".\Configurations.targets" />
-  
-  <PropertyGroup>
-    <PackageId>$(ProjectName).$(MainRevitVersion)</PackageId>
-    <AssemblyName>$(ProjectName).$(MainRevitVersion).$(Version)</AssemblyName>
-  </PropertyGroup>
  
    <ItemGroup>
     <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
