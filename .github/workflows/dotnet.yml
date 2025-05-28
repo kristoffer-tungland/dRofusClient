@@ -19,7 +19,7 @@ jobs:
           - Release 2024
           - Release 2025
           - Release 2026
-
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -43,7 +43,7 @@ jobs:
       run: dotnet nuget add source --username kristoffer-tungland --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/kristoffer-tungland/index.json"
       working-directory: src
 
-    # Build, pack, and push dRofusClient.Revit for each Revit configuration
+    # Build and pack dRofusClient.Revit for each Revit configuration
     - name: Build dRofusClient.Revit
       run: dotnet build dRofusClient.Revit/dRofusClient.Revit.csproj --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }}
       working-directory: src
@@ -52,21 +52,36 @@ jobs:
       run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output "./nupkgs/${{ matrix.revit_config }}"
       working-directory: src
 
-    - name: List nupkgs directory
-      run: dir "./nupkgs/${{ matrix.revit_config }}"
-      working-directory: src
+    - name: Upload NuGet packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: revit-${{ matrix.revit_config }}-packages
+        path: src/nupkgs/${{ matrix.revit_config }}/*.nupkg
 
-    - name: Push dRofusClient.Revit to GitHub
-      run: |
-        Get-ChildItem -Path "./nupkgs/${{ matrix.revit_config }}" -Filter *.nupkg | ForEach-Object {
-            dotnet nuget push $_.FullName --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
-        }
-      shell: pwsh
-      working-directory: src
+  # Non-matrix dependent libraries
+  build-core:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-    # Build, pack, and push the other projects (only once, not in matrix)
-    - name: Restore, Build, Pack, and Push dRofusClient, dRofusClient.Windows, dRofusClient.WindowsCredentials
-      if: matrix.revit_config == 'Release 2021' # Only run once
+    - name: Application Version
+      id: version
+      uses: paulhatch/semantic-version@v5.0.2
+      with:
+        tag_prefix: "v"
+        version_format: "${major}.${minor}.${patch}-prerelease${increment}"
+        search_commit_body: true
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    # Build and pack the other projects
+    - name: Build and Pack Core Libraries
       run: |
         dotnet restore dRofusClient/dRofusClient.csproj
         dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
@@ -79,9 +94,38 @@ jobs:
         dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj
         dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
         dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      working-directory: src
 
-        Get-ChildItem -Path "./nupkgs" -Filter *.nupkg | ForEach-Object {
-            dotnet nuget push $_.FullName --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+    - name: Upload NuGet packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: core-packages
+        path: src/nupkgs/*.nupkg
+
+  # Push all packages at once
+  publish:
+    needs: [build, build-core]
+    runs-on: windows-latest
+    steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Authenticate nuget feed
+      run: dotnet nuget add source --username kristoffer-tungland --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/kristoffer-tungland/index.json"
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: all-packages
+
+    - name: Push all packages
+      run: |
+        $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
+        Write-Host "Found $($packages.Count) packages to publish"
+        foreach ($package in $packages) {
+          Write-Host "Pushing $($package.FullName)"
+          dotnet nuget push $package.FullName --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
         }
       shell: pwsh
-      working-directory: src
