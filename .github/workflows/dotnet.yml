@@ -49,7 +49,7 @@ jobs:
       working-directory: src
 
     - name: Pack dRofusClient.Revit
-      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output "./nupkgs/${{ matrix.revit_config }}""
+      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output "./nupkgs/${{ matrix.revit_config }}"
       working-directory: src
 
     - name: List nupkgs directory
