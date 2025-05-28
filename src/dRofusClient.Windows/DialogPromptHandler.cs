@@ -41,10 +41,12 @@ public class DialogPromptHandler(IdRofusClientFactory clientFactory, ModernLogin
 
         viewModel.Initialize(OnLogin, server: client.GetBaseUrl(), database: database, projectId: projectId);
 
-        _loginWindow = new LoginWindow(viewModel)
+        _loginWindow = new LoginWindow(viewModel);
+
+        if (Application.Current?.MainWindow != null)
         {
-            Owner = Application.Current.MainWindow,
-        };
+            _loginWindow.Owner = Application.Current.MainWindow;
+        }
 
         _loginWindow.Closed += (s, e) =>
         {
