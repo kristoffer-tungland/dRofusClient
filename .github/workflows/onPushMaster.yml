@@ -11,13 +11,23 @@ on:
 
 jobs:
   build:
-
     runs-on: windows-latest
+    strategy:
+      matrix:
+        revit_config:
+          - Release 2019
+          - Release 2020
+          - Release 2021
+          - Release 2022
+          - Release 2023
+          - Release 2024
+          - Release 2025
+          - Release 2026
 
     steps:
     - uses: actions/checkout@v3
       with:
-          fetch-depth: 0
+        fetch-depth: 0
 
     - name: Application Version
       id: version
@@ -35,39 +45,18 @@ jobs:
       run: dotnet nuget add source --username kristoffer-tungland --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/kristoffer-tungland/index.json"
       working-directory: src
 
-    - name: Restore dependencies
-      run: dotnet restore
-      working-directory: src
-    
-    - name: Build
-      run: dotnet build --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
-      working-directory: src
-    
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
-      working-directory: src
-    
-    - name: Pack
-      run: dotnet pack --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }}
+    # Build, pack, and push dRofusClient.Revit for each Revit configuration
+    - name: Restore dRofusClient.Revit
+      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj --configfile nuget.config
       working-directory: src
 
-    - name: Push Package to NuGet.org
-      run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate
+    - name: Build dRofusClient.Revit
+      run: dotnet build dRofusClient.Revit/dRofusClient.Revit.csproj --no-restore --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }}
       working-directory: src
 
-    - id: "release"
-      name: "Automatic Release"
-      uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "v${{ steps.version.outputs.version }}"
-        prerelease: false
-        title: "Release ${{ steps.version.outputs.version }}"
-        files: |
-          LICENSE.txt
-          README.md
-          **\*.nupkg
-
-    - name: Push Package to GitHub
-      run: dotnet nuget push **\*.nupkg --api-key ${{ secrets.TOKEN }}  --source "github"
+    - name: Pack dRofusClient.Revit
+      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
       working-directory: src
+
+    - name: Push dRofusClient.Revit to NuGet.org
+      run: nuget push ./nupkgs/*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{ secrets.NUGET_API_KEY }} -Skip

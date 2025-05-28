@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.github\copilot-instructions.md = .github\copilot-instructions.md
 		..\.github\workflows\dotnet.yml = ..\.github\workflows\dotnet.yml
 		..\.github\workflows\onPushMaster.yml = ..\.github\workflows\onPushMaster.yml
-		README.md = README.md
+		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dRofusClient.Demo", "dRofusClient.Demo\dRofusClient.Demo.csproj", "{15321B6A-EEA2-4AB5-B739-B228F71D67C0}"
