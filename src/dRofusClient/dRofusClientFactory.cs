@@ -5,15 +5,17 @@ using System.Collections.Concurrent;
 namespace dRofusClient;
 
 [GenerateInterface]
-public class dRofusClientFactory : IdRofusClientFactory
+public class dRofusClientFactory() : IdRofusClientFactory
 {
+    private ILoginPromptHandler _defaultLoginPromtHandler = new NonePromptHandler();
+
     // Make the cache static so it is shared across all instances
     private static readonly ConcurrentDictionary<(string baseAddress, string database, string projectId), HttpClient> _httpClientCache
         = new();
 
     public IdRofusClient Create(dRofusConnectionArgs connectionArgs, ILoginPromptHandler? loginPromptHandler = default)
     {
-        loginPromptHandler ??= new NonePromptHandler();
+        loginPromptHandler ??= _defaultLoginPromtHandler;
         var baseAddress = connectionArgs.BaseUrl?.TrimEnd('/');
         var database = connectionArgs.Database;
         var projectId = connectionArgs.ProjectId;
@@ -40,5 +42,22 @@ public class dRofusClientFactory : IdRofusClientFactory
         var httpClient = new HttpClient();
         var client = new dRofusClient(httpClient, loginPromptHandler);
         return client;
+    }
+
+    public void SetDefaultLoginPromptHandler(ILoginPromptHandler loginPromptHandler)
+    {
+        _defaultLoginPromtHandler = loginPromptHandler ?? throw new ArgumentNullException(nameof(loginPromptHandler), "Login prompt handler cannot be null.");
+    }
+}
+
+public static class dRofusClientFactoryExtensions
+{
+    public static dRofusClientFactory ConfigureLoginPromptHandler(this dRofusClientFactory factory, Func<dRofusClientFactory, ILoginPromptHandler> setupAction)
+    {
+        if (setupAction == null)
+            throw new ArgumentNullException(nameof(setupAction), "Setup action cannot be null.");
+        var handler = setupAction(factory);
+        factory.SetDefaultLoginPromptHandler(handler);
+        return factory;
     }
 }

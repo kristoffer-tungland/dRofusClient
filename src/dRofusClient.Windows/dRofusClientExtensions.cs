@@ -1,9 +1,5 @@
-﻿using dRofusClient.Windows;
-using dRofusClient.Windows.Registries;
-using System;
-using System.Linq;
+﻿using dRofusClient.Windows.Registries;
 using System.Security.Authentication;
-using System.Windows;
 
 namespace dRofusClient.Windows;
 
@@ -13,11 +9,12 @@ public static class dRofusClientExtensions
         this dRofusClientFactory dRofusClientFactory, 
         string server, 
         string database, 
-        string? projectId = default)
+        string? projectId = default,
+        ILoginPromptHandler? loginPromtHandler = default)
     {
         projectId ??= RegistryExtensions.GetStoredProjects(server, database).FirstOrDefault() ?? "01";
         var args = dRofusClientFactory.GetConnectionArgs(server, database, projectId);
-        return dRofusClientFactory.Create(args);
+        return dRofusClientFactory.Create(args, loginPromtHandler);
     }
 
     public static IdRofusClient CreateActive(

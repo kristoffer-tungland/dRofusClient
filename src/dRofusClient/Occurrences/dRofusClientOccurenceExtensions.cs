@@ -62,7 +62,7 @@ public static class dRofusClientOccurenceExtensions
         }
     }
 
-    private static async Task<List<dRofusStatusPatchResult>> UpdateStatusesAsync(this IdRofusClient client, int? id, List<JsonProperty> statusFields, CancellationToken cancellationToken)
+    private static async Task<List<dRofusStatusPatchResult>> UpdateStatusesAsync(this IdRofusClient client, int? id, Dictionary<string, object> statusFields, CancellationToken cancellationToken)
     {
         var results = new List<dRofusStatusPatchResult>();
 
@@ -71,6 +71,7 @@ public static class dRofusClientOccurenceExtensions
 
         foreach (var prop in statusFields)
         {
+            // Use the new extension method for KeyValuePair<string, object>
             var options = prop.ToStatusPatchOption();
 
             var result = await client.UpdateOccurrenceStatusAsync(id.Value, options, cancellationToken);
