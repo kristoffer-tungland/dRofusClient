@@ -47,7 +47,7 @@ jobs:
 
     # Build, pack, and push dRofusClient.Revit for each Revit configuration
     - name: Restore dRofusClient.Revit
-      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj
+      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj --configuration "${{ matrix.revit_config }}"
       working-directory: src
 
     - name: Build dRofusClient.Revit
@@ -59,4 +59,40 @@ jobs:
       working-directory: src
 
     - name: Push dRofusClient.Revit to NuGet.org
-      run: nuget push ./nupkgs/*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{ secrets.NUGET_API_KEY }} -Skip
+      run: nuget push ./nupkgs/*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate
+      working-directory: src
+
+    - id: "release"
+      name: "Automatic Release"
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "v${{ steps.version.outputs.version }}"
+        prerelease: false
+        title: "Release ${{ steps.version.outputs.version }}"
+        files: |
+          LICENSE.txt
+          README.md
+          ./src/nupkgs/*.nupkg
+
+    - name: Push dRofusClient.Revit to GitHub
+      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+      working-directory: src
+
+    # Build, pack, and push the other projects (only once, not in matrix)
+    - name: Restore, Build, Pack, and Push dRofusClient, dRofusClient.Windows, dRofusClient.WindowsCredentials
+      if: matrix.revit_config == 'Release 2019' # Only run once
+      run: |
+        dotnet restore dRofusClient/dRofusClient.csproj
+        dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+        dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+
+        dotnet restore dRofusClient.Windows/dRofusClient.Windows.csproj
+        dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+        dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+
+        dotnet restore dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj
+        dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+        dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+
+        nuget push ./nupkgs/*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{ secrets.NUGET_API_KEY }} -Skip

@@ -46,7 +46,7 @@ jobs:
 
     # Build, pack, and push dRofusClient.Revit for each Revit configuration
     - name: Restore dRofusClient.Revit
-      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj
+      run: dotnet restore dRofusClient.Revit/dRofusClient.Revit.csproj --configuration "${{ matrix.revit_config }}"
       working-directory: src
 
     - name: Build dRofusClient.Revit
