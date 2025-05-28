@@ -289,21 +289,8 @@ internal sealed class dRofusClient : IdRofusClient
 
         var request = new HttpRequestMessage(method, url);
 
-        switch (options)
-        {
-            case dRofusBodyPatchOptions bodyPatchOptions:
-                {
-                    var body = bodyPatchOptions.Body;
-                    request.Content = new StringContent(body, Encoding.UTF8, "application/merge-patch+json");
-                    break;
-                }
-            case dRofusBodyPostOptions bodyPostOptions:
-                {
-                    var body = bodyPostOptions.Body;
-                    request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-                    break;
-                }
-        }
+        if (options is dRofusOptionsBodyBase bodyOptions)
+            request.Content = new StringContent(bodyOptions.GetBody(), Encoding.UTF8, bodyOptions.Accept);
 
         return request;
     }

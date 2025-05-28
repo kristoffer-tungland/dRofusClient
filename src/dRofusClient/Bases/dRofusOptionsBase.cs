@@ -15,3 +15,10 @@ public abstract record dRofusOptionsBase
         return parameters.Any() ? string.Join("&", parameters) : null;
     }
 }
+
+public abstract record dRofusOptionsBodyBase : dRofusOptionsBase
+{
+    public abstract string GetBody();
+    
+    public abstract string Accept { get; }
+}

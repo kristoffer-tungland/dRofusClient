@@ -63,7 +63,7 @@ public static class dRofusClientExtensions
         if (string.IsNullOrWhiteSpace(serverAddress))
             throw new InvalidOperationException("dRofus client has no server address.");
 
-        BasicCredentialsExtensions.SaveCredential(serverAddress, username, password);
+        BasicCredentialsExtensions.SaveCredential(serverAddress!, username, password);
     }
 
     public static string? ReadPassword(this IdRofusClient client, string username)
@@ -73,7 +73,7 @@ public static class dRofusClientExtensions
         if (string.IsNullOrWhiteSpace(serverAddress))
             return null;
 
-        var credential = BasicCredentialsExtensions.ReadCredential(serverAddress, username);
+        var credential = BasicCredentialsExtensions.ReadCredential(serverAddress!, username);
         return credential?.Password;
     }
 }
