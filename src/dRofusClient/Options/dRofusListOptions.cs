@@ -1,5 +1,7 @@
 namespace dRofusClient.Options;
 
+
+
 public record dRofusListOptions : dRofusFieldsOptions
 {
     internal readonly List<string> _orderBy = [];
@@ -8,7 +10,7 @@ public record dRofusListOptions : dRofusFieldsOptions
     internal int? _top;
     internal int? _skip;
 
-    dRofusRequestParameter? GetOrderByParameter()
+    private dRofusRequestParameter? GetOrderByParameter()
     {
         if (!_orderBy.Any())
             return null;
@@ -16,7 +18,7 @@ public record dRofusListOptions : dRofusFieldsOptions
         return new dRofusRequestParameter("orderby", _orderBy.ToCommaSeparated() + " " + _orderByDirection.ToQuery());
     }
 
-    dRofusRequestParameter? GetComparisonParameter()
+    private dRofusRequestParameter? GetComparisonParameter()
     {
         if (!_comparisons.Any())
             return null;
@@ -26,12 +28,12 @@ public record dRofusListOptions : dRofusFieldsOptions
         return new dRofusRequestParameter("filter", comparisons);
     }
 
-    dRofusRequestParameter? GetTopParameter()
+    private dRofusRequestParameter? GetTopParameter()
     {
         return _top is null ? null : new dRofusRequestParameter("top", _top.ToString());
     }
 
-    dRofusRequestParameter? GetSkipParameter()
+    private dRofusRequestParameter? GetSkipParameter()
     {
         return _skip is null ? null : new dRofusRequestParameter("skip", _skip.ToString());
     }

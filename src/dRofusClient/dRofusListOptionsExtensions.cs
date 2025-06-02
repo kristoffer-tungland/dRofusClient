@@ -3,7 +3,7 @@ namespace dRofusClient;
 
 public static class dRofusListOptionsExtensions
 {
-    static TOption OrderBy<TOption>(this TOption option, string field, dRofusOrderBy orderBy)
+    private static TOption OrderBy<TOption>(this TOption option, string field, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
         option._orderBy.Add(field.ToSnakeCase());
@@ -11,7 +11,7 @@ public static class dRofusListOptionsExtensions
         return option;
     }
 
-    static TOption OrderBy<TOption>(this TOption option, IEnumerable<string> fields, dRofusOrderBy orderBy)
+    private static TOption OrderBy<TOption>(this TOption option, IEnumerable<string> fields, dRofusOrderBy orderBy)
         where TOption : dRofusListOptions
     {
         option._orderBy.AddRange(fields.Select(x => x.ToSnakeCase()));

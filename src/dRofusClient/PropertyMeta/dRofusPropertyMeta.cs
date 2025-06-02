@@ -1,4 +1,6 @@
 // ReSharper disable InconsistentNaming
+
+
 namespace dRofusClient.PropertyMeta;
 
 /// <summary>
@@ -16,11 +18,11 @@ namespace dRofusClient.PropertyMeta;
 /// ]
 /// </schema>
 public record dRofusPropertyMeta(
-    [property: JsonProperty("id")] string Id,
-    [property: JsonProperty("name")] string Name,
-    [property: JsonProperty("propertyGroup")] string PropertyGroup,
-    [property: JsonProperty("dataType")] string DataType,
-    [property: JsonProperty("unit")] string Unit
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("propertyGroup")] string PropertyGroup,
+    [property: JsonPropertyName("dataType")] string DataType,
+    [property: JsonPropertyName("unit")] string Unit
 ) : dRofusDto
 {
     public string GetTitle()

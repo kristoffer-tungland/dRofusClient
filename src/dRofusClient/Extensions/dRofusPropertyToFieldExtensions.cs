@@ -4,7 +4,7 @@ namespace dRofusClient.Extensions;
 
 internal static class dRofusPropertyToFieldExtensions
 {
-    static readonly Regex _regex = new("(?<=[a-z])([A-Z])");
+    private static readonly Regex _regex = new("(?<=[a-z])([A-Z])");
 
     public static string ToSnakeCase(this string field)
     {

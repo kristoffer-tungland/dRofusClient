@@ -1,0 +1,21 @@
+﻿<Window x:Class="dRofusClient.UI.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:dRofusClient.UI.Demo"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" d:DataContext="{d:DesignInstance local:MainViewModel}">
+    <StackPanel>
+        <Button Command="{Binding ShowLoginCommand}" Content="Login" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+
+        <TextBlock Text="{Binding ProjectName}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" FontSize="16"/>
+
+        <Button Command="{Binding GetProjectNameCommand}" Content="Show Project" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+        
+        <Button Command="{Binding ClearAuthenticationCommand}" Content="Clear Authentication" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+
+        <Button Command="{Binding LogoutCommand}" Content="Logout" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+        <Button Command="{Binding UseModernSignInCommand}" Content="Use Modern Sign In" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="30"/>
+    </StackPanel>
+</Window>

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- NuGet properties -->
+    <ExtensionId>dRofusClient.Revit</ExtensionId>
+    <Authors>Kristoffer Tungland</Authors>
+    <Product>dRofus Client Revit Integration</Product>
+    <Description>
+      Revit integration library for dRofus API. Provides tools and helpers for synchronizing Revit models with dRofus project data.
+    </Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kristoffer-tungland/dRofusClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kristoffer-tungland/dRofusClient.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dRofus;API;Revit;BIM;Integration;Synchronization;Addin</PackageTags>
+    <PackageReleaseNotes>Initial release of the dRofus Revit integration library.</PackageReleaseNotes>
+    <Version>0.0.1</Version>
+    <MainRevitVersion Condition="'$(Configuration)' == 'Design'">2025</MainRevitVersion>
+  </PropertyGroup>
+  
+  <Import Project=".\Configurations.targets" />
+ 
+   <ItemGroup>
+    <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

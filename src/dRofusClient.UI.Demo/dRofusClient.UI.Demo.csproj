@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UserSecretsId>9a317e62-4dc9-48e2-841d-a3eaa2ebdb88</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.5" />
+    <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

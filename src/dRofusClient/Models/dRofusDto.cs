@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 // ReSharper disable InconsistentNaming
 
@@ -22,23 +23,40 @@ public record dRofusDto
         if (value is null)
             return default;
 
+        // If the target type is string, just cast or call ToString
+        if (typeof(T) == typeof(string))
+        {
+            // If value is already a string, return it directly
+            if (value is string s)
+                return (T)(object)s;
+
+            // Otherwise, use ToString
+            return (T)(object)value.ToString();
+        }
+
         return (T)Convert.ChangeType(value, typeof(T));
     }
 
     public object? GetProperty(string property)
     {
-        return AdditionalProperties[property] ?? GetPropertyByReflection(property);
+        if (string.IsNullOrEmpty(property))
+            return null;
+
+        if (AdditionalProperties.ContainsKey(property))
+            return AdditionalProperties[property];
+
+        return GetPropertyByReflection(property);
     }
 
-    object? GetPropertyByReflection(string property)
+    private object? GetPropertyByReflection(string property)
     {
         var type = this.GetType();
-        var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonProperty(type, property);
+        var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonPropertyName(type, property);
         return propertyInfo?.GetValue(this);
 
     }
 
-    static PropertyInfo? GetPropertyByJsonProperty(Type type, string property)
+    private static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)
     {
         var properties = type.GetProperties();
         foreach (var propertyInfo in properties)

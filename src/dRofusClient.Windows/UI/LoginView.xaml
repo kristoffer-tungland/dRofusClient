@@ -1,0 +1,175 @@
+﻿<UserControl x:Class="dRofusClient.Windows.UI.LoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:dRofusClient.Windows.UI"
+             xmlns:conv="clr-namespace:dRofusClient.Windows.UI.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance local:LoginViewModel}">
+    <UserControl.Resources>
+        <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <conv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:BooleanToVisibilityConverter x:Key="InverseBoolToVis" Invert="True"/>
+        <!-- Modern ToggleButton Style -->
+        <Style x:Key="ModernToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <!-- Track -->
+                            <Border x:Name="SwitchTrack"
+                                    CornerRadius="10"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="#DDD"
+                                    BorderThickness="1"
+                                    Height="20"
+                                    Width="40"/>
+                            <!-- Thumb -->
+                            <Border x:Name="SwitchThumb"
+                                    Background="White"
+                                    CornerRadius="10"
+                                    Height="16"
+                                    Width="16"
+                                    Margin="2,2,0,2"
+                                    HorizontalAlignment="Left"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="ThumbTransform" />
+                                </Border.RenderTransform>
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="2" ShadowDepth="0" Opacity="0.2"/>
+                                </Border.Effect>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="#009FE3"/>
+                                <Setter TargetName="SwitchThumb" Property="Background" Value="White"/>
+                                <Setter TargetName="SwitchThumb" Property="Margin" Value="0,2,2,2"/>
+                                <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="#EEE"/>
+                                <Setter TargetName="SwitchThumb" Property="Background" Value="#CCC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="#CCC"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="50,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Logo and Title -->
+        <StackPanel Grid.Row="0" Margin="0,30,0,0" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                <Image Source="/Resources/drofus_logo.png" Width="64" Height="64" Margin="0,0,8,0"/>
+                <TextBlock Text="dRofus" FontSize="36" FontWeight="Bold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Use modern sign in -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,16" 
+                    Visibility="{Binding ModernLoginAvailable, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="Use modern sign in" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ToggleButton Style="{StaticResource ModernToggleButtonStyle}"
+                  Width="40" Height="20"
+                  IsChecked="{Binding UseModernSignIn, Mode=TwoWay}"
+                  VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Main Form -->
+        <StackPanel Grid.Row="2" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+            <StackPanel.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="FontSize" Value="14" />
+                    <Setter Property="Padding" Value="5,10" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+                <Style TargetType="ComboBox">
+                    <Setter Property="FontSize" Value="14" />
+                    <Setter Property="Padding" Value="5,10" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+                <Style TargetType="PasswordBox">
+                    <Setter Property="FontSize" Value="14" />
+                    <Setter Property="Padding" Value="5,8" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </StackPanel.Resources>
+
+            <!-- Modern Server ComboBox (only visible when UseModernSignIn is true) -->
+            <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Server" Margin="0,0,0,2"/>
+                <ComboBox ItemsSource="{Binding ModernServers}" DisplayMemberPath="Name" SelectedItem="{Binding ModernServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                          Margin="0,0,0,12" />
+            </StackPanel>
+
+            <!-- Legacy fields (hidden when UseModernSignIn is true) -->
+            <StackPanel>
+
+                <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource InverseBoolToVis}}">
+                    <!-- Server -->
+                    <TextBlock Text="Server" Margin="0,0,0,2"/>
+                    <ComboBox ItemsSource="{Binding Servers}" SelectedItem="{Binding Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ServerIsEnabled, Mode=OneWay}" />
+                </StackPanel>
+
+
+                <!-- Database -->
+                <TextBlock Text="Database" Margin="0,0,0,2"/>
+                <ComboBox ItemsSource="{Binding Databases}" SelectedItem="{Binding Database, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                          Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding DatabaseIsEnabled, Mode=OneWay}" />
+
+                <!-- Database -->
+                <TextBlock Text="Project" Margin="0,0,0,2"/>
+                <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding ProjectId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" IsEditable="True" IsEnabled="{Binding ProjectIsEnabled, Mode=OneWay}" />
+
+                <StackPanel Visibility="{Binding UseModernSignIn, Converter={StaticResource InverseBoolToVis}}">
+                    <!-- Username -->
+                    <TextBlock Text="Username" Margin="0,0,0,2"/>
+                    <TextBox Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Margin="0,0,0,12" />
+
+                    <!-- Password -->
+                    <TextBlock Text="Password" Margin="0,0,0,2"/>
+                    <PasswordBox x:Name="PasswordBox" Margin="0,0,0,4"
+                            PasswordChanged="PasswordBox_PasswordChanged"/>
+                    <!-- Bind PasswordBox in code-behind to ViewModel.Password -->
+
+                    <!-- Remember Password and Forgot Password -->
+                    <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                        <CheckBox Content="Remember Password" IsChecked="{Binding RememberMe, Mode=TwoWay}" VerticalAlignment="Center" />
+                        <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
+                            <Hyperlink NavigateUri="https://www.drofus.com/en/reset-password" RequestNavigate="ForgotPassword_RequestNavigate">Forgot your password?</Hyperlink>
+                        </TextBlock>
+                    </DockPanel>
+
+                    <!-- Error Message -->
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                </StackPanel>
+
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Sign in Button -->
+        <Button Grid.Row="3" Content="Sign in" Command="{Binding Login}" Height="40" Margin="0,8,0,20" 
+                    HorizontalAlignment="Center" Padding="60,10"
+                    Background="#009FE3" Foreground="White" FontWeight="Bold"/>
+    </Grid>
+</UserControl>

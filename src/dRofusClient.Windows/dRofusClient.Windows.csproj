@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Configurations>Debug;Release;Design</Configurations>
+    <!-- NuGet properties -->
+    <PackageId>dRofusClient.Windows</PackageId>
+    <Authors>Kristoffer Tungland</Authors>
+    <Product>dRofus Client Windows Library</Product>
+    <Description>
+      Windows-specific helpers and UI components for dRofus API clients, including credential management and WPF integration.
+    </Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kristoffer-tungland/dRofusClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kristoffer-tungland/dRofusClient.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dRofus;API;Windows;WPF;Credentials;UI;Integration</PackageTags>
+    <PackageReleaseNotes>Initial release of the dRofus Windows integration library.</PackageReleaseNotes>
+    <Version>0.0.1</Version>
+    <AssemblyName>$(PackageId).$(Version)</AssemblyName>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(Configuration)' == 'Design'">
+      <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <XamlDebuggingInformation>True</XamlDebuggingInformation>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <ItemGroup>
+    <PackageReference Include="MVVMFluent.WPF" Version="0.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Meziantou.Framework.Win32.CredentialManager" Version="1.3.3" />
+  </ItemGroup>
+
+  <Choose>
+    <When Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+      <ItemGroup>
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <UseWPF>true</UseWPF>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dRofusClient\dRofusClient.csproj" />
+  </ItemGroup>
+
+</Project>
