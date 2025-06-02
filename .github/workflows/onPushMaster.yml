@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     strategy:
       matrix:
         revit_config:
@@ -63,6 +65,8 @@ jobs:
 
   build-core:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -152,13 +156,23 @@ jobs:
         name: core-packages
         path: all-packages/core-packages
 
-    - name: Push all packages
+    - name: Push all packages to GitHub
       run: |
         $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
         Write-Host "Found $($packages.Count) packages to publish"
         foreach ($package in $packages) {
-          Write-Host "Pushing $($package.FullName)"
+          Write-Host "Pushing $($package.FullName) to GitHub"
           dotnet nuget push $package.FullName --api-key ${{ secrets.TOKEN }} --source "github" --skip-duplicate
+        }
+      shell: pwsh
+
+    - name: Push all packages to NuGet.org
+      run: |
+        $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
+        Write-Host "Found $($packages.Count) packages to publish"
+        foreach ($package in $packages) {
+          Write-Host "Pushing $($package.FullName) to NuGet.org"
+          dotnet nuget push $package.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
       shell: pwsh
 
