@@ -19,6 +19,7 @@
     <PackageTags>dRofus;API;Windows;WPF;Credentials;UI;Integration</PackageTags>
     <PackageReleaseNotes>Initial release of the dRofus Windows integration library.</PackageReleaseNotes>
     <Version>0.0.1</Version>
+    <AssemblyName>$(PackageId).$(Version)</AssemblyName>
   </PropertyGroup>
 
   <Choose>
