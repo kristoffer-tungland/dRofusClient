@@ -1,4 +1,5 @@
 using System.Text;
+using System.IO;
 
 namespace dRofusClient;
 
@@ -294,4 +295,123 @@ internal sealed class dRofusClient : IdRofusClient
 
         return request;
     }
+
+    /// <summary>
+    /// Gets binary data from the specified route
+    /// </summary>
+    /// <param name="route">API route</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Binary data as byte array</returns>
+    public async Task<byte[]> GetBytesAsync(string route, CancellationToken cancellationToken = default)
+    {
+        var response = await SendResponse(HttpMethod.Get, route, null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync();
+    }
+
+    /// <summary>
+    /// Gets a stream from the specified route
+    /// </summary>
+    /// <param name="route">API route</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Data stream</returns>
+    public async Task<Stream> GetStreamAsync(string route, CancellationToken cancellationToken = default)
+    {
+        var response = await SendResponse(HttpMethod.Get, route, null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync();
+    }
+
+    /// <summary>
+    /// Posts a file to the specified route
+    /// </summary>
+    /// <typeparam name="TResult">Result type</typeparam>
+    /// <param name="route">API route</param>
+    /// <param name="options">File upload options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>API response</returns>
+    public async Task<TResult> PostFileAsync<TResult>(string route, object options, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
+    {
+        // Extract file information from the options object using reflection
+        var fileContentProp = options.GetType().GetProperty("FileContent") ?? options.GetType().GetProperty("ImageContent");
+        var fileNameProp = options.GetType().GetProperty("FileName");
+        
+        if (fileContentProp == null || fileNameProp == null)
+            throw new ArgumentException("The options object must have FileContent/ImageContent and FileName properties", nameof(options));
+
+        var fileContent = fileContentProp.GetValue(options) as Stream;
+        var fileName = fileNameProp.GetValue(options) as string;
+
+        if (fileContent == null || string.IsNullOrEmpty(fileName))
+            throw new ArgumentException("FileContent/ImageContent and FileName must be provided", nameof(options));
+
+        // Create form content
+        using var content = new MultipartFormDataContent();
+        
+        // Add file content
+        var fileStreamContent = new StreamContent(fileContent);
+        content.Add(fileStreamContent, "file", fileName);
+        
+        // Add any additional properties as form fields
+        foreach (var prop in options.GetType().GetProperties())
+        {
+            if (prop.Name != "FileContent" && prop.Name != "ImageContent" && prop.Name != "FileName")
+            {
+                var value = prop.GetValue(options)?.ToString();
+                if (value != null)
+                    content.Add(new StringContent(value), prop.Name);
+            }
+        }
+
+        // Create request
+        var url = route;
+        if (!url.StartsWith("/api"))
+        {
+            var (database, projectId) = GetDatabaseAndProjectId();
+            url = $"/api/{database}/{projectId}/" + url.TrimStart('/');
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = content
+        };
+
+        // Send request
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        
+        // Parse response
+        return await response.Content.ReadFromJsonAsync<TResult>(cancellationToken) ??
+               throw new NullReferenceException("Failed to read content from response.");
+    }
+
+    /// <summary>
+    /// Deletes a resource (with a result DTO)
+    /// </summary>
+    /// <typeparam name="TResult">Result type</typeparam>
+    /// <param name="route">API route</param>
+    /// <param name="options">Request options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result of the operation</returns>
+    public async Task<TResult> DeleteAsync<TResult>(string route, dRofusOptionsBase? options = default, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
+    {
+        return await SendAsync<TResult>(HttpMethod.Delete, route, options, cancellationToken);
+    }
+
+    /// <summary>
+    /// Deletes a resource (with no return value)
+    /// </summary>
+    /// <param name="route">API route</param>
+    /// <param name="options">Request options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task representing the completion of the operation</returns>
+    public async Task DeleteAsync(string route, dRofusOptionsBase? options = default, CancellationToken cancellationToken = default)
+    {
+        await SendAsync<dRofusBaseResponse>(HttpMethod.Delete, route, options, cancellationToken);
+    }
+
+    /// <summary>
+    /// Base response type for void operations
+    /// </summary>
+    private record dRofusBaseResponse : dRofusDto { }
 }

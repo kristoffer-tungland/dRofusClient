@@ -101,7 +101,30 @@ public class FakeRofusClient : IdRofusClient
         throw new NotImplementedException();
     }
 
-    // Implement other interface members as needed (throw NotImplementedException if not used)
+    public Task<byte[]> GetBytesAsync(string route, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Stream> GetStreamAsync(string route, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<TResult> PostFileAsync<TResult>(string route, object options, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<TResult> DeleteAsync<TResult>(string route, dRofusOptionsBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteAsync(string route, dRofusOptionsBase? options = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class dRofusClientOccurenceExtensionsTests

@@ -5,6 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace dRofusClient.Models;
 
+/// <summary>
+/// Base data transfer object for dRofus API entities
+/// </summary>
 public record dRofusDto
 {
     // Dictionary to hold additional properties
@@ -68,3 +71,8 @@ public record dRofusDto
         return null;
     }
 }
+
+/// <summary>
+/// Empty DTO for operations that don't need a specific return type
+/// </summary>
+public record EmptyDto : dRofusDto { }
