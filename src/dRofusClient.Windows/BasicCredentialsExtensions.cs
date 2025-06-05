@@ -14,8 +14,22 @@ public static class BasicCredentialsExtensions
         CredentialManager.WriteCredential(CreateTarget(server, username), username, password, "dRofus login credentials", CredentialPersistence.LocalMachine);
     }
 
+    public static void DeleteCredentials(string server, string username)
+    {
+        try
+        {
+            CredentialManager.DeleteCredential(CreateTarget(server, username));
+        }
+        catch
+        { 
+            //Ignore}
+        }
+    }
+
     private static string CreateTarget(string server, string username)
     {
+        server = server.TrimEnd('/');
+
         if (server == "https://api-no.drofus.com")
             server = "db2.nosyko.no";
         else

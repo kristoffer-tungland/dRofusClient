@@ -80,9 +80,9 @@ public class LoginViewModel : ViewModelBase
 
         var credential = string.IsNullOrEmpty(Username) ?
             null :
-            BasicCredentialsExtensions.ReadCredential(Server, Username);
+            BasicCredentialsExtensions.ReadCredential(Server, Username!);
 
-        RememberMe = credential != null;
+        RememberMe = string.IsNullOrEmpty(credential?.Password) == false;
 
         if (string.IsNullOrEmpty(Password) && credential != null)
             Password = credential.Password;
@@ -141,7 +141,8 @@ public class LoginViewModel : ViewModelBase
             }
             else
             {
-                client.SaveCredentials(Username!, string.Empty);
+                if (string.IsNullOrWhiteSpace(Username) == false)
+                    client.DeleteCredentials(Username!);
             }
 
             _onLogin?.Invoke(args);

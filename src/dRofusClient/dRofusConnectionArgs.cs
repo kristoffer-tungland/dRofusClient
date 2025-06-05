@@ -16,8 +16,8 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
         if (baseUrl.Equals(dRofusServers.GetDefaultServer(), StringComparison.OrdinalIgnoreCase))
             return dRofusServers.GetNoServer();
 
-        if (baseUrl.StartsWith("https://api.", StringComparison.OrdinalIgnoreCase) == false)
-            baseUrl = "https://api." + baseUrl;
+        if (baseUrl.StartsWith("https://api-", StringComparison.OrdinalIgnoreCase) == false)
+            baseUrl = "https://api-" + baseUrl;
 
         return baseUrl;
     }
