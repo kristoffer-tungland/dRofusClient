@@ -6,5 +6,6 @@
         xmlns:local="clr-namespace:dRofusClient.Windows.UI"
         mc:Ignorable="d"
         Topmost="True"
+        WindowStartupLocation="CenterScreen"
         Title="Sign in" Height="626" Width="460">
 </Window>
