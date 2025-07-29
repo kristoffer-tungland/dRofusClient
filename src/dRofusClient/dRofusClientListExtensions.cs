@@ -4,7 +4,7 @@ public static class dRofusClientListExtensions
 {
     public static Task<List<TResult>> GetListAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto
     {
@@ -13,7 +13,7 @@ public static class dRofusClientListExtensions
 
     public static Task<List<TResult>> OptionsListAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto
     {

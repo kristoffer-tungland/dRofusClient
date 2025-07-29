@@ -3,7 +3,7 @@
 /// <summary>
 /// Helper class to run async methods within a sync process.
 /// </summary>
-public static class AsyncUtil
+internal static class AsyncUtil
 {
     private static readonly TaskFactory _taskFactory = new TaskFactory(CancellationToken.None,
                     TaskCreationOptions.None,

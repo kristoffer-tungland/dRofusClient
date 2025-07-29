@@ -8,7 +8,7 @@ namespace dRofusClient.Revit.PropertyMeta
     {
         public static List<dRofusPropertyMeta> GetPropertyMeta(this IdRofusClient client,
             dRofusType dRofusType,
-            dRofusPropertyMetaOptions? options = default,
+            MetadataQuery? options = default,
             CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>

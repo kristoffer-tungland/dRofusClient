@@ -8,13 +8,13 @@ public sealed class dRofusPropertyToFieldExtensionsTests
     [Fact]
     internal void ToLowerUnderscore()
     {
-        Assert.Equal("id", nameof(dRofusOccurence.Id).ToSnakeCase());
+        Assert.Equal("id", nameof(Occurence.Id).ToSnakeCase());
     }
 
     [Fact]
     internal void ToLowerUnderscore_ConvertsCamelCase_ToUnderscore()
     {
-        Assert.Equal("addition_order_quantity", nameof(dRofusOccurence.AdditionOrderQuantity).ToSnakeCase());
+        Assert.Equal("addition_order_quantity", nameof(Occurence.AdditionOrderQuantity).ToSnakeCase());
     }
 
     [Fact]

@@ -26,5 +26,9 @@
    <ItemGroup>
     <ProjectReference Include="..\dRofusClient.Windows\dRofusClient.Windows.csproj" />
   </ItemGroup>
+ 
+   <ItemGroup>
+     <Folder Include="Extensions\" />
+   </ItemGroup>
 
 </Project>

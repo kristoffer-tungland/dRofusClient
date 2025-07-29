@@ -1,23 +1,23 @@
+using dRofusClient.AttributeConfigurations;
 using System.Collections;
 
 namespace dRofusClient.Filters;
-
-public record dRofusFilterItem(string Field, dRofusComparison Comparison, object? Value)
+public record FilterItem(string Field, Comparison Comparison, object? Value)
 {
     public override string ToString()
     {
         return Comparison switch
         {
-            dRofusComparison.Eq => ReturnComparison("eq"),
-            dRofusComparison.Ne => ReturnComparison("ne"),
-            dRofusComparison.Lt => ReturnComparison("lt"),
-            dRofusComparison.Gt => ReturnComparison("gt"),
-            dRofusComparison.Le => ReturnComparison("le"),
-            dRofusComparison.Ge => ReturnComparison("ge"),
-            dRofusComparison.In => $"{Field} in ({ReturnInValues(Value)})",
-            dRofusComparison.Contains => $"contains({Field},{ConvertValue(Value)})",
-            dRofusComparison.StartsWith => $"startswith({Field},{ConvertValue(Value)})",
-            dRofusComparison.EndsWith => $"endswith({Field},{ConvertValue(Value)})",
+            Comparison.Eq => ReturnComparison("eq"),
+            Comparison.Ne => ReturnComparison("ne"),
+            Comparison.Lt => ReturnComparison("lt"),
+            Comparison.Gt => ReturnComparison("gt"),
+            Comparison.Le => ReturnComparison("le"),
+            Comparison.Ge => ReturnComparison("ge"),
+            Comparison.In => $"{Field} in ({ReturnInValues(Value)})",
+            Comparison.Contains => $"contains({Field},{ConvertValue(Value)})",
+            Comparison.StartsWith => $"startswith({Field},{ConvertValue(Value)})",
+            Comparison.EndsWith => $"endswith({Field},{ConvertValue(Value)})",
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -46,7 +46,9 @@ public record dRofusFilterItem(string Field, dRofusComparison Comparison, object
         return value switch
         {
             DateTime dateTime => ConvertValue(dateTime.ToString("yyyy-M-d")),
+            bool boolValue => boolValue.ToString().ToLower(),
             string stringValue => $"'{stringValue}'",
+            AttributeConfigType attributeConfigType => attributeConfigType.ToRequest(),
             _ => value.ToString()
         };
     }

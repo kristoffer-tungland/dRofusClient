@@ -22,6 +22,11 @@ public class FakeRofusClient : IdRofusClient
         throw new NotImplementedException();
     }
 
+    public void Dispose()
+    {
+        throw new NotImplementedException();
+    }
+
     public string? GetBaseUrl()
     {
         throw new NotImplementedException();
@@ -53,7 +58,7 @@ public class FakeRofusClient : IdRofusClient
     }
 
     // PatchAsync extension calls this method
-    public Task<TResult> SendAsync<TResult>(HttpMethod method, string route, dRofusOptionsBase options, CancellationToken cancellationToken) where TResult : dRofusDto, new()
+    public Task<TResult> SendAsync<TResult>(HttpMethod method, string route, RequestBase options, CancellationToken cancellationToken) where TResult : dRofusDto, new()
     {
         // Only handle PATCH for this test
         if (method == HttpMethod.Patch)
@@ -66,7 +71,7 @@ public class FakeRofusClient : IdRofusClient
         throw new NotImplementedException();
     }
 
-    public Task<TResult> SendAsync<TResult>(HttpMethod method, dRofusType dRofusType, dRofusOptionsBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
+    public Task<TResult> SendAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
     {
         throw new NotImplementedException();
     }
@@ -76,12 +81,12 @@ public class FakeRofusClient : IdRofusClient
         throw new NotImplementedException();
     }
 
-    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, dRofusType dRofusType, dRofusOptionsBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
+    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
     {
         throw new NotImplementedException();
     }
 
-    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, string route, dRofusOptionsBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
+    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, string route, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
     {
         throw new NotImplementedException();
     }
@@ -113,13 +118,13 @@ public class dRofusClientOccurenceExtensionsTests
         var fakeClient = new FakeRofusClient();
         int occurrenceId = 123;
         var propertyName = "occurrence_classification_156_classification_entry_id_code";
-        var options = new dRofusStatusPatchOptions
+        var options = new StatusPatchRequest
         {
             PropertyName = propertyName,
-            Body = new dRofusStatusPatchBody { Code = "CODE123" }
+            Body = new StatusPatchBody { Code = "CODE123" }
         };
         var expectedRequest = dRofusType.Occurrences.CombineToRequest(occurrenceId, "statuses", options.StatusTypeId.ToString());
-        var expectedResult = new dRofusStatusPatchBody { Code = "CODE123" };
+        var expectedResult = new StatusPatchBody { Code = "CODE123" };
         fakeClient.PatchAsyncResult = expectedResult;
 
         // Act
@@ -141,13 +146,13 @@ public class dRofusClientOccurenceExtensionsTests
         var fakeClient = new FakeRofusClient();
         int occurrenceId = 456;
         var propertyName = "occurrence_classification_42_classification_entry_id_id";
-        var options = new dRofusStatusPatchOptions
+        var options = new StatusPatchRequest
         {
             PropertyName = propertyName,
-            Body = new dRofusStatusPatchBody { StatusId = 99 }
+            Body = new StatusPatchBody { StatusId = 99 }
         };
         var expectedRequest = dRofusType.Occurrences.CombineToRequest(occurrenceId, "statuses", options.StatusTypeId.ToString());
-        var expectedResult = new dRofusStatusPatchBody { StatusId = 99 };
+        var expectedResult = new StatusPatchBody { StatusId = 99 };
         var cancellationToken = new CancellationTokenSource().Token;
         fakeClient.PatchAsyncResult = expectedResult;
 

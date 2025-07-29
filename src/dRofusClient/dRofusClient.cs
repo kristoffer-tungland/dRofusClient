@@ -3,7 +3,7 @@ using System.Text;
 namespace dRofusClient;
 
 [GenerateInterface]
-internal sealed class dRofusClient : IdRofusClient
+internal sealed class dRofusClient : IdRofusClient, IDisposable
 {
     private readonly HttpClient _httpClient;
     private string? _database;
@@ -138,7 +138,7 @@ internal sealed class dRofusClient : IdRofusClient
     public Task<TResult> SendAsync<TResult>(
         HttpMethod method,
         dRofusType dRofusType,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto, new()
     {
@@ -148,7 +148,7 @@ internal sealed class dRofusClient : IdRofusClient
     public async Task<TResult> SendAsync<TResult>(
         HttpMethod method,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto, new()
     {
@@ -165,7 +165,7 @@ internal sealed class dRofusClient : IdRofusClient
     public Task<List<TResult>> SendListAsync<TResult>(
         HttpMethod method,
         dRofusType dRofusType,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto
     {
@@ -175,7 +175,7 @@ internal sealed class dRofusClient : IdRofusClient
     public async Task<List<TResult>> SendListAsync<TResult>(
         HttpMethod method,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto
     {
@@ -183,7 +183,7 @@ internal sealed class dRofusClient : IdRofusClient
         var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken)
             ?? throw new NullReferenceException("Failed to read content from response.");
 
-        if (options is dRofusListOptions listOptions && listOptions.GetNextItems())
+        if (options is ListQuery listOptions && listOptions.GetNextItems())
             await GetNextItems(method, response, items, cancellationToken);
 
         return items;
@@ -214,7 +214,7 @@ internal sealed class dRofusClient : IdRofusClient
     private async Task<HttpResponseMessage> SendResponse(
         HttpMethod method,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
         )
     {
@@ -272,7 +272,7 @@ internal sealed class dRofusClient : IdRofusClient
         }
     }
 
-    internal HttpRequestMessage BuildRequest(HttpMethod method, string route, dRofusOptionsBase? options)
+    internal HttpRequestMessage BuildRequest(HttpMethod method, string route, RequestBase? options)
     {
         var url = route;
 
@@ -289,9 +289,17 @@ internal sealed class dRofusClient : IdRofusClient
 
         var request = new HttpRequestMessage(method, url);
 
-        if (options is dRofusOptionsBodyBase bodyOptions)
+        if (options is RequestBodyBase bodyOptions)
             request.Content = new StringContent(bodyOptions.GetBody(), Encoding.UTF8, bodyOptions.Accept);
 
         return request;
+    }
+
+    public void Dispose()
+    {
+        _httpClient?.Dispose();
+        _modernLoginResult = null;
+        _database = null;
+        _projectId = null;
     }
 }

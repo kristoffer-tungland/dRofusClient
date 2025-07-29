@@ -1,15 +1,15 @@
 namespace dRofusClient.Options;
 
-public record dRofusFieldsOptions : dRofusOptionsBase
+public record ItemQuery : RequestBase
 {
     internal readonly List<string> _fieldsToSelect = [];
 
-    private dRofusRequestParameter? GetSelectParameters()
+    private RequestParameter? GetSelectParameters()
     {
-        return !_fieldsToSelect.Any() ? null : new dRofusRequestParameter("select", _fieldsToSelect);
+        return !_fieldsToSelect.Any() ? null : new RequestParameter("select", _fieldsToSelect);
     }
 
-    public override void AddParametersToRequest(List<dRofusRequestParameter> parameters)
+    public override void AddParametersToRequest(List<RequestParameter> parameters)
     {
         parameters.AddIfNotNull(GetSelectParameters());
     }

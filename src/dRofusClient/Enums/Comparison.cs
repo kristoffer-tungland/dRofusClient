@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace dRofusClient.Enums;
 
-public enum dRofusComparison
+public enum Comparison
 {
     /// <summary>
     /// Equality comparison.
@@ -11,7 +11,7 @@ public enum dRofusComparison
     Eq, // Equals
 
     /// <summary>
-    /// Inequality comparison.
+    /// Not equal comparison.
     /// </summary>
     [Description("Not equal")]
     Ne, // Not equal

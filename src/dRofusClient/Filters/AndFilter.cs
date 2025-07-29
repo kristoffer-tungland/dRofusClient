@@ -1,14 +1,14 @@
 namespace dRofusClient.Filters;
 
-public record dRofusAndFilter(ICollection<dRofusFilterItem> Filters)
+public record AndFilter(ICollection<FilterItem> Filters)
 {
-    public dRofusAndFilter And(dRofusFilterItem filterItem)
+    public AndFilter And(FilterItem filterItem)
     {
         And([filterItem]);
         return this;
     }
 
-    public dRofusAndFilter And(IEnumerable<dRofusFilterItem> filters)
+    public AndFilter And(IEnumerable<FilterItem> filters)
     {
         foreach (var filter in filters)
             Filters.Add(filter);

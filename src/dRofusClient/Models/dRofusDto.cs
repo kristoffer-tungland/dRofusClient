@@ -7,6 +7,12 @@ namespace dRofusClient.Models;
 
 public record dRofusDto
 {
+    [JsonPropertyName("id")]
+    public int? Id { get; init; }
+    /// <summary>Field name for Id, used in filters and order by clauses.</summary>
+    /// <returns>"id"</returns> 
+    public static string IdField => "id";
+
     // Dictionary to hold additional properties
     [JsonExtensionData]
     public Dictionary<string, object> AdditionalProperties { get; set; } = [];
@@ -53,7 +59,6 @@ public record dRofusDto
         var type = this.GetType();
         var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonPropertyName(type, property);
         return propertyInfo?.GetValue(this);
-
     }
 
     private static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)

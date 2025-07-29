@@ -1,13 +1,12 @@
-using dRofusClient.Occurrences;
 using dRofusClient.Options;
 using dRofusClient.Revit.Utils;
 
-namespace dRofusClient.Revit.Occurrences
+namespace dRofusClient.Occurrences
 {
     public static class dRofusClientRevitOccurenceExtensions
     {
-        public static List<dRofusOccurence> GetOccurrences(this IdRofusClient client,
-            dRofusListOptions options,
+        public static List<Occurence> GetOccurrences(this IdRofusClient client,
+            ListQuery options,
             CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>
@@ -15,8 +14,8 @@ namespace dRofusClient.Revit.Occurrences
             );
         }
 
-        public static dRofusOccurence CreateOccurrence(this IdRofusClient client,
-            dRofusOccurence occurence,
+        public static Occurence CreateOccurrence(this IdRofusClient client,
+            Occurence occurence,
             CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>
@@ -24,9 +23,9 @@ namespace dRofusClient.Revit.Occurrences
             );
         }
 
-        public static dRofusOccurence GetOccurrence(this IdRofusClient client,
+        public static Occurence GetOccurrence(this IdRofusClient client,
             int id,
-            dRofusFieldsOptions options,
+            ItemQuery options,
             CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>
@@ -34,8 +33,8 @@ namespace dRofusClient.Revit.Occurrences
             );
         }
 
-        public static dRofusOccurence UpdateOccurrence(this IdRofusClient client,
-            dRofusOccurence occurence,
+        public static Occurence UpdateOccurrence(this IdRofusClient client,
+            Occurence occurence,
             CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>

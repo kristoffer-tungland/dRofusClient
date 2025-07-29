@@ -25,8 +25,8 @@ public sealed class dRofusClientTests
     [Fact]
     internal async Task RequestUri_Patch()
     {
-        var occurence = new dRofusOccurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
-        var patchOptions = occurence.ToPatchOption();
+        var occurence = new Occurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
+        var patchOptions = occurence.ToPatchRequest();
 
         var client = CreateClient();
         var requestMessage = client.BuildRequest(HttpMethod.Patch, dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions);
@@ -45,8 +45,8 @@ public sealed class dRofusClientTests
     [Fact]
     internal async Task RequestUri_Post()
     {
-        var occurence = new dRofusOccurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
-        var patchOptions = occurence.ToPostOption();
+        var occurence = new Occurence { Id = 65, AdditionalProperties = { { "prop1", "val1" } } };
+        var patchOptions = occurence.ToPostRequest();
 
         var client = CreateClient();
         var requestMessage = client.BuildRequest(HttpMethod.Post, dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions);
