@@ -49,7 +49,6 @@ public static class Filter
         return And(result);
     }
 
-    public static FilterItem In<T>(string field, IEnumerable<T> values) => new(field, Comparison.In, values);
     public static FilterItem In<T>(string field, params T[] values) => new(field, Comparison.In, values);
 
     public static AndFilter And(ICollection<FilterItem> filters) => new(filters);

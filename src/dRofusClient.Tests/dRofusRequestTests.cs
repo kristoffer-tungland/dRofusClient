@@ -100,6 +100,13 @@ public class dRofusRequestTests
     }
 
     [Fact]
+    public void GetParametersListQuery_ForListType_Includes_FilterInString()
+    {
+        var parameters = Query.List().Filter(Filter.In("name", new List<string> { "kitchen", "office" })).GetParameters();
+        Assert.Equal("$filter=name in ('kitchen','office')", parameters);
+    }
+
+    [Fact]
     public void GetParametersListQuery_Includes_FilterContains()
     {
         var parameters = Query.List().Filter(Filter.Contains("name", "kitch")).GetParameters();

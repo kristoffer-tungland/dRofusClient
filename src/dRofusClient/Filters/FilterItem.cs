@@ -29,11 +29,34 @@ public record FilterItem(string Field, Comparison Comparison, object? Value)
 
     private string ReturnInValues(object? value)
     {
+        // Prevent treating string as IEnumerable
+        if (value is null || value is string)
+            return ConvertValue(value);
+
         if (value is not IEnumerable enumerable)
             return ConvertValue(value);
 
         var results = new List<string>();
-        results.AddRange(from object? item in enumerable select ConvertValue(item));
+
+        foreach (var item in enumerable)
+        {
+            if (item is null)
+                continue;
+
+            // Prevent treating string as IEnumerable
+            if (item is string)
+            {
+                results.Add(ConvertValue(item));
+            }
+            else if (item is IEnumerable innerEnumerable && item is not string)
+            {
+                results.AddRange(innerEnumerable.Cast<object>().Select(ConvertValue));
+            }
+            else
+            {
+                results.Add(ConvertValue(item));
+            }
+        }
 
         return string.Join(",", results);
     }

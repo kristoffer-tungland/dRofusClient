@@ -10,3 +10,5 @@ applyTo: '**/dRofusClient*Extensions.cs'
 - The sync wrapper **must** include XML documentation that matches the async method's documentation, with wording adapted for synchronous context.
 - This ensures that all dRofusClient extension APIs are available in both async and sync forms for Revit integration and scripting scenarios.
 - When adding a new extension method, always check for and implement the corresponding sync wrapper in the Revit project.
+
+---
