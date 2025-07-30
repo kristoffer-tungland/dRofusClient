@@ -25,22 +25,57 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
         Assert.Equal(fixture.Occurence.GetId(), occurence.GetId());
     }
 
+    [Fact]
+    public async Task CanGetOccurrence()
+    {
+        var occurence = await _client.GetOccurrenceAsync(fixture.Occurence.GetId());
+        Assert.NotNull(occurence);
+        Assert.True(occurence.Id.HasValue,
+            "Expected the occurrence to have an ID assigned.");
+        Assert.Equal(fixture.Occurence.GetId(), occurence.GetId());
+    }
 
     [Fact]
-    public async Task CanCreateAndDeleteOccurrence()
+    public async Task CanCreateOccurrence()
+    {
+        var createdOccurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
+        
+        try
+        {
+            Assert.NotNull(createdOccurence);
+            Assert.True(createdOccurence.Id.HasValue,
+                "Expected the created occurrence to have an ID assigned.");
+
+            Assert.Equal(fixture.Item.GetId(), createdOccurence.ArticleId);
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(createdOccurence.GetId());
+        }
+    }
+
+    [Fact]
+    public async Task CanEditOccurrence()
     {
         var occurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
+        try
+        {
+            occurence.OccurrenceName = "Updated Occurrence Name " + DateTime.Now.ToString("yyyyMMddHHmmss");
+            var updatedOccurence = await _client.UpdateOccurrenceAsync(occurence);
+            Assert.NotNull(updatedOccurence);
+            Assert.Equal(occurence.GetId(), updatedOccurence.GetId());
+            Assert.Equal(occurence.OccurrenceName, updatedOccurence.OccurrenceName);
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(occurence.GetId());
+        }
+    }
 
-        Assert.True(occurence.Id.HasValue,
-            "Expected the created occurrence to have an ID assigned.");
-
-        var query = Query.List()
-            .Filter(Filter.Eq(Occurence.IdField, occurence.GetId()));
-
-        var recievedOccurence = await _client.GetOccurrencesAsync(query);
-
-        Assert.True(recievedOccurence.Count == 1,
-            "Expected to receive at least one occurrence from the query.");
+    [Fact]
+    public async Task CanDeleteOccurrence()
+    {
+        var occurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
 
         try
         {

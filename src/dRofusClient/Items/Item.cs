@@ -103,4 +103,18 @@ public record Item : dRofusIdDto
     [JsonPropertyName("created")]
     public DateTime? Created { get; init; }
     public const string CreatedField = "created";
+
+    public Item ClearReadOnlyFields()
+    {
+        return this with
+        {
+            ClassificationNumber = null,
+            Number = null,
+            PriceDate = null,
+            Responsibility = null,
+            CreatedBy = null,
+            NumberName = null,
+            Created = null
+        };
+    }
 }

@@ -7,7 +7,7 @@ public static class dRofusDtoExtensions
     public static PatchRequest ToPatchRequest(this dRofusDto dto)
     {
         var json = Json.Serialize(dto);
-        json = RemoveIdField(json, out var statusFields);
+        json = RemoveIdAndStatusFields(json, out var statusFields);
 
         return new PatchRequest
         {
@@ -19,7 +19,7 @@ public static class dRofusDtoExtensions
     public static PostRequest ToPostRequest(this dRofusDto dto)
     {
         var json = Json.Serialize(dto);
-        json = RemoveIdField(json, out var statusFields);
+        json = RemoveIdAndStatusFields(json, out var statusFields);
 
         return new PostRequest
         {
@@ -28,7 +28,7 @@ public static class dRofusDtoExtensions
         };
     }
 
-    private static string RemoveIdField(string json, out Dictionary<string, object>? statusFields)
+    private static string RemoveIdAndStatusFields(string json, out Dictionary<string, object>? statusFields)
     {
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;

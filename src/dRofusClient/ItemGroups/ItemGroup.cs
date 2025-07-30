@@ -46,4 +46,13 @@ public record ItemGroup : dRofusIdDto
     [JsonPropertyName("parent")]
     public int? Parent { get; set; }
     public const string ParentField = "parent";
+
+    public ItemGroup ClearReadOnlyFields()
+    {
+        return this with
+        {
+            ArticleLevelDepth = null,
+            FullNo = null,
+        };
+    }
 }

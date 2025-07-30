@@ -57,6 +57,8 @@ public static class dRofusClientOccurenceExtensions
     /// <returns>The updated <see cref="Occurence"/> object.</returns>
     public static async Task<Occurence> UpdateOccurrenceAsync(this IdRofusClient client, Occurence occurence, CancellationToken cancellationToken = default)
     {
+        occurence = occurence.ClearReadOnlyFields();
+
         var patchOptions = occurence.ToPatchRequest();
 
         Occurence? occurenceResult = null;

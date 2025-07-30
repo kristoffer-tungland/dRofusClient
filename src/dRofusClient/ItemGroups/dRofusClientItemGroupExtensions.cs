@@ -62,11 +62,7 @@ public static class dRofusClientItemGroupExtensions
     /// <returns>The updated <see cref="ItemGroup"/> object.</returns>
     public static async Task<ItemGroup> UpdateItemGroupAsync(this IdRofusClient client, ItemGroup itemGroup, CancellationToken cancellationToken = default)
     {
-        itemGroup = itemGroup with
-        {
-            FullNo = null,
-            ArticleLevelDepth = null,
-        };
+        itemGroup = itemGroup.ClearReadOnlyFields();
 
         var patchOptions = itemGroup.ToPatchRequest();
         ItemGroup? result = null;

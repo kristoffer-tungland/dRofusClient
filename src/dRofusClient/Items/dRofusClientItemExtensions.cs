@@ -52,17 +52,7 @@ public static class dRofusClientItemExtensions
     /// <returns>The updated <see cref="Item"/> object.</returns>
     public static async Task<Item> UpdateItemAsync(this IdRofusClient client, Item item, CancellationToken cancellationToken = default)
     {
-        item = item with
-        {
-            ClassificationNumber = null,
-            Number = null,
-            PriceDate = null,
-            Responsibility = null,
-            CreatedBy = null,
-            NumberName = null,
-            Created = null,
-        };
-
+        item = item.ClearReadOnlyFields();
 
         var patchOptions = item.ToPatchRequest();
         Item? itemResult = null;
