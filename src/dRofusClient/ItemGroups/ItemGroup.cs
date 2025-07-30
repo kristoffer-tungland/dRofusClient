@@ -37,8 +37,8 @@ public record ItemGroup : dRofusIdDto
     /// General: Full number
     /// </summary>
     [JsonPropertyName("full_no")]
-    public string? FullNo { get; init; }
-    public const string FullNoField = "full_no";
+    public string? FullNumber { get; init; }
+    public const string FullNumberField = "full_no";
 
     /// <summary>
     /// General: Parent ID
@@ -52,7 +52,7 @@ public record ItemGroup : dRofusIdDto
         return this with
         {
             ArticleLevelDepth = null,
-            FullNo = null,
+            FullNumber = null,
         };
     }
 }
