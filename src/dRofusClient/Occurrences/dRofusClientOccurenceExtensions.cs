@@ -30,18 +30,9 @@ public static class dRofusClientOccurenceExtensions
     /// <param name="roomId">The room ID for the occurrence (optional).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The created <see cref="Occurence"/> object.</returns>
-    public static Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, int articleId, int? categoryId = default, int? equipmentListTypeId = default, int? quantity = default, int? roomId = default, CancellationToken cancellationToken = default)
+    public static Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
     {
-        var occurence = new Occurence
-        {
-            ArticleId = articleId,
-            CategoryId = categoryId,
-            EquipmentListTypeId = equipmentListTypeId,
-            Quantity = quantity,
-            RoomId = roomId,
-        };
-
-        return client.PostAsync<Occurence>(dRofusType.Occurrences.ToRequest(), occurence.ToPostRequest(), cancellationToken);
+        return client.PostAsync<Occurence>(dRofusType.Occurrences.ToRequest(), occurenceToCreate.ToPostRequest(), cancellationToken);
     }
 
     /// <summary>
@@ -76,7 +67,7 @@ public static class dRofusClientOccurenceExtensions
         occurenceResult ??= occurence with { Id = occurence.Id, AdditionalProperties = occurence.AdditionalProperties };
 
         if (patchOptions.StatusFields is not null)
-        { 
+        {
             var statusResults = await client.UpdateStatusesAsync(occurence.Id, patchOptions.StatusFields, cancellationToken);
             UpdateStatusesOnOccurence(occurenceResult, statusResults);
         }

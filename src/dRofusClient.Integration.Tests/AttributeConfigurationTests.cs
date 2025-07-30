@@ -2,7 +2,7 @@ using dRofusClient.AttributeConfigurations;
 
 namespace dRofusClient.Integration.Tests;
 
-public class AttributeConfigurationTests(SetupFixture fixture) : IClassFixture<SetupFixture>
+public class AttributeConfigurationTests(ClientSetupFixture fixture) : IClassFixture<ClientSetupFixture>
 {
     private readonly IdRofusClient _client = fixture.Client;
 

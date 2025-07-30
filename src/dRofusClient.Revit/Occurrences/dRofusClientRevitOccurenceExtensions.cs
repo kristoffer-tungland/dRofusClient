@@ -14,12 +14,10 @@ namespace dRofusClient.Occurrences
             );
         }
 
-        public static Occurence CreateOccurrence(this IdRofusClient client,
-            Occurence occurence,
-            CancellationToken cancellationToken = default)
+        public static Occurence CreateOccurrence(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() =>
-                client.CreateOccurrenceAsync(occurence, cancellationToken)
+                client.CreateOccurrenceAsync(occurenceToCreate, cancellationToken)
             );
         }
 

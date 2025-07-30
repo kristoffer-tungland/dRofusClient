@@ -23,48 +23,33 @@
 //    "name": "string"
 //  }
 //]
-public record AttributeConfiguration : dRofusDto
+public record AttributeConfiguration : dRofusIdDto
 {
     [JsonPropertyName("available_to_users")]
     public bool? AvailableToUsers { get; init; }
-    /// <summary>Field name for AvailableToUsers, used in filters and order by clauses.</summary>
-    /// <returns>"available_to_users"</returns>
-    public static string AvailableToUsersField => "available_to_users";
+    public const string AvailableToUsersField = "available_to_users";
 
     [JsonPropertyName("is_default")]
     public bool? IsDefault { get; init; }
-    /// <summary>Field name for IsDefault, used in filters and order by clauses.</summary>
-    /// <returns>"is_default"</returns>
-    public static string IsDefaultField => "is_default";
+    public const string IsDefaultField = "is_default";
 
     [JsonPropertyName("name")]
     public string? Name { get; init; }
-    /// <summary>Field name for Name, used in filters and order by clauses.</summary>
-    /// <returns>"name"</returns>
-    public static string NameField => "name";
+    public const string NameField = "name";
 
     [JsonPropertyName("config_type")]
     public string? ConfigType { get; init; }
-    /// <summary>Field name for ConfigType, used in filters and order by clauses.</summary>
-    /// <returns>"config_type"</returns>
-    public static string ConfigTypeField => "config_type";
+    public const string ConfigTypeField = "config_type";
 
     public AttributeConfigType ConfigTypeEnum => AttributeConfigTypeExtensions.FromRequest(ConfigType ?? string.Empty);
 
     [JsonPropertyName("applicable_to")]
     public List<string>? ApplicableTo { get; init; }
-    /// <summary>Field name for ApplicableTo, used in filters and order by clauses.</summary>
-    /// <returns>"applicable_to"</returns>
-    public static string ApplicableToField => "applicable_to";
-
-    public bool IsApplicableToAny =>
-        ApplicableTo != null && ApplicableTo.Count > 0;
+    public const string ApplicableToField = "applicable_to";
 
     [JsonPropertyName("elements")]
     public List<AttributeConfigurationElement>? Elements { get; init; }
-    /// <summary>Field name for Elements, used in filters and order by clauses.</summary>
-    /// <returns>"elements"</returns>
-    public static string ElementsField => "elements";
+    public const string ElementsField = "elements";
 }
 
 
@@ -162,44 +147,32 @@ public static class AttributeConfigTypeExtensions
     }
 }
 
-public record AttributeConfigurationElement : dRofusDto
+public record AttributeConfigurationElement : dRofusIdDto
 {
     [JsonPropertyName("configuration")]
     public int? Configuration { get; init; }
-    /// <summary>Field name for Configuration, used in filters and order by clauses.</summary>
-    /// <returns>"configuration"</returns>
-    public static string ConfigurationField => "configuration";
+    public const string ConfigurationField = "configuration";
 
     [JsonPropertyName("drofus_attribute_id")]
     public string? DrofusAttributeId { get; init; }
-    /// <summary>Field name for DrofusAttributeId, used in filters and order by clauses.</summary>
-    /// <returns>"drofus_attribute_id"</returns>
-    public static string DrofusAttributeIdField => "drofus_attribute_id";
+    public const string DrofusAttributeIdField = "drofus_attribute_id";
 
     [JsonPropertyName("drofus_attribute_label")]
     public string? DrofusAttributeLabel { get; init; }
-    /// <summary>Field name for DrofusAttributeLabel, used in filters and order by clauses.</summary>
-    /// <returns>"drofus_attribute_label"</returns>
-    public static string DrofusAttributeLabelField => "drofus_attribute_label";
+    public const string DrofusAttributeLabelField = "drofus_attribute_label";
 
     [JsonPropertyName("direction")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public AttributeConfigurationDirection Direction { get; init; }
-    /// <summary>Field name for Direction, used in filters and order by clauses.</summary>
-    /// <returns>"direction"</returns>
-    public static string DirectionField => "direction";
+    public const string DirectionField = "direction";
 
     [JsonPropertyName("external_attribute_id")]
     public string? ExternalAttributeId { get; init; }
-    /// <summary>Field name for ExternalAttributeId, used in filters and order by clauses.</summary>
-    /// <returns>"external_attribute_id"</returns>
-    public static string ExternalAttributeIdField => "external_attribute_id";
+    public const string ExternalAttributeIdField = "external_attribute_id";
 
     [JsonPropertyName("external_attribute_label")]
     public string? ExternalAttributeLabel { get; init; }
-    /// <summary>Field name for ExternalAttributeLabel, used in filters and order by clauses.</summary>
-    /// <returns>"external_attribute_label"</returns>
-    public static string ExternalAttributeLabelField => "external_attribute_label";
+    public const string ExternalAttributeLabelField = "external_attribute_label";
 }
 
 public enum AttributeConfigurationDirection

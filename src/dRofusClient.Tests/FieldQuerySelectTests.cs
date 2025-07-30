@@ -26,7 +26,7 @@ public sealed class FieldQuerySelectTests
     internal void Select_FromType()
     {
         var fieldQuery = Query.Field();
-        fieldQuery.Select(typeof(dRofusProject));
+        fieldQuery.Select(typeof(Project));
         var parameters = fieldQuery.GetParameters();
         Assert.Equal("$select=constructor,name,planned_gross_area,project_designed_gross_area,project_gross_net_factor,room_level_gross_net_factor,id", 
             parameters);

@@ -24,7 +24,7 @@ public class RofusClientDemo
         return new dRofusClientFactory().Create(dRofusServers.GetNoServer(), database);
     }
 
-    public async Task<dRofusProject> GetProject(IdRofusClient client)
+    public async Task<Project> GetProject(IdRofusClient client)
     {
          return await client.GetProjectAsync();
     }
@@ -34,9 +34,9 @@ public class RofusClientDemo
         return await client.GetPropertyMetaAsync(dRofusType.Projects);
     }
 
-    public async Task<dRofusProject> GetProjectWithIdAndName(IdRofusClient client)
+    public async Task<Project> GetProjectWithIdAndName(IdRofusClient client)
     {
-        var options = dRofusOptions.Field()
+        var options = Query.Field()
             .Select(["id", "name"]);
 
         return await client.GetProjectAsync(options);
@@ -47,7 +47,7 @@ public class RofusClientDemo
         var propertyMetadata = await client.GetPropertyMetaAsync(dRofusType.Projects);
         var customProperty = propertyMetadata.First(p => p.Name == customPropertyName);
         
-        var options = dRofusOptions.Field()
+        var options = Query.Field()
             .Select(customProperty.Id);
 
         var project = await client.GetProjectAsync(options);

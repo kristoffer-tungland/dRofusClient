@@ -2,22 +2,40 @@ using dRofusClient.Occurrences;
 
 namespace dRofusClient.Integration.Tests;
 
-public class OccurrenceTests(SetupFixture fixture) : IClassFixture<SetupFixture>
+//[Collection(nameof(OccurenceTestCollection))]
+public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<OccurenceFixture>
 {
     private readonly IdRofusClient _client = fixture.Client;
 
     [Fact]
-    public async Task OccurenceTests()
+    public async Task CanGetOccurrences()
     {
-        var article = await _client.Create
+        var query = Query.List()
+            .Filter(Filter.Eq(Occurence.IdField, fixture.Occurence.GetId()));
+        var occurrences = await _client.GetOccurrencesAsync(query);
+        Assert.NotNull(occurrences);
+        Assert.True(occurrences.Count != 0,
+            "Expected to receive at least one occurrence from the query.");
 
-        var occurence = await _client.CreateOccurrenceAsync(articleId: 15936);
+        var occurence = occurrences[0];
+
+        Assert.True(occurence.Id.HasValue,
+            "Expected the occurrence to have an ID assigned.");
+
+        Assert.Equal(fixture.Occurence.GetId(), occurence.GetId());
+    }
+
+
+    [Fact]
+    public async Task CanCreateAndDeleteOccurrence()
+    {
+        var occurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
 
         Assert.True(occurence.Id.HasValue,
             "Expected the created occurrence to have an ID assigned.");
 
         var query = Query.List()
-            .Filter(Filter.Eq(Occurence.IdField, occurence.Id.Value));
+            .Filter(Filter.Eq(Occurence.IdField, occurence.GetId()));
 
         var recievedOccurence = await _client.GetOccurrencesAsync(query);
 
@@ -26,16 +44,16 @@ public class OccurrenceTests(SetupFixture fixture) : IClassFixture<SetupFixture>
 
         try
         {
-            await _client.DeleteOccurrenceAsync(occurence.Id.Value);
+            await _client.DeleteOccurrenceAsync(occurence.GetId());
         }
         catch (Exception ex)
         {
-            Assert.Fail($"Failed to delete occurrence with ID {occurence.Id.Value}: {ex.Message}");
+            Assert.Fail($"Failed to delete occurrence with ID {occurence.GetId()}: {ex.Message}");
         }
 
         await Assert.ThrowsAsync<HttpRequestException>(async () =>
         {
-            await _client.GetOccurrenceAsync(occurence.Id.Value);
+            await _client.GetOccurrenceAsync(occurence.GetId());
         });
     }
 }

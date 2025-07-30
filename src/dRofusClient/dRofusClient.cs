@@ -77,7 +77,7 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
 
     public async Task Login(CancellationToken cancellationToken = default)
     {
-        dRofusProject? project;
+        Project? project;
 
         try
         {

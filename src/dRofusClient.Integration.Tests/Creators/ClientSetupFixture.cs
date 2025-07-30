@@ -1,15 +1,17 @@
 using Microsoft.Extensions.Configuration;
 
-namespace dRofusClient.Integration.Tests;
+namespace dRofusClient.Integration.Tests.Creators;
 
-public class SetupFixture : IDisposable
+public class ClientSetupFixture : IAsyncLifetime
 {
+    private bool _isDisposed;
+
     public IdRofusClient Client { get; }
 
-    public SetupFixture()
+    public ClientSetupFixture()
     {
         var config = new ConfigurationBuilder()
-            .AddUserSecrets<SetupFixture>()
+            .AddUserSecrets<ClientSetupFixture>()
             .Build();
 
         var connectionArgs = dRofusConnectionArgs.Create(
@@ -22,8 +24,18 @@ public class SetupFixture : IDisposable
         Client = new dRofusClientFactory().Create(connectionArgs);
     }
 
-    public void Dispose()
+    public virtual Task InitializeAsync()
     {
+        return Task.CompletedTask;
+    }
+
+    public virtual Task DisposeAsync()
+    {
+        if (_isDisposed)
+            return Task.CompletedTask;
+
         Client?.Dispose();
+        _isDisposed = true;
+        return Task.CompletedTask;
     }
 }
