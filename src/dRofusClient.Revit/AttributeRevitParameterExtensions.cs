@@ -5,9 +5,9 @@ namespace dRofusClient.Revit;
 
 public static class AttributeRevitParameterExtensions
 {
-    public static AttributeRevitParameter GetDRofusKeyParameter(this Document document, dRofusAttributeConfiguration configuration)
+    public static AttributeRevitParameter GetDRofusKeyParameter(this Document document, AttributeConfiguration configuration)
     {
-        var parameterName = configuration.Elements?.FirstOrDefault(x => x.Direction == "Key")?.ExternalAttributeId
+        var parameterName = configuration.Elements?.FirstOrDefault(x => x.Direction == AttributeConfigurationDirection.Key)?.ExternalAttributeId
             ?? throw new InvalidOperationException("Failed to get key parameter name from configuration");
 
         return document.GetDRofusAttributeRevitParameter(parameterName);

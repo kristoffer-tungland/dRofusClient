@@ -9,10 +9,6 @@ public class dRofusClientFactory() : IdRofusClientFactory
 {
     private ILoginPromptHandler _defaultLoginPromtHandler = new NonePromptHandler();
 
-    // Make the cache static so it is shared across all instances
-    private static readonly ConcurrentDictionary<(string baseAddress, string database, string projectId), HttpClient> _httpClientCache
-        = new();
-
     public IdRofusClient Create(dRofusConnectionArgs connectionArgs, ILoginPromptHandler? loginPromptHandler = default)
     {
         loginPromptHandler ??= _defaultLoginPromtHandler;
@@ -20,15 +16,10 @@ public class dRofusClientFactory() : IdRofusClientFactory
         var database = connectionArgs.Database;
         var projectId = connectionArgs.ProjectId;
 
-        var key = (baseAddress, database, projectId);
+        var httpClient = new HttpClient();
 
-        var httpClient = _httpClientCache.GetOrAdd(key, _ =>
-        {
-            var client = new HttpClient();
-            if (!string.IsNullOrEmpty(baseAddress))
-                client.BaseAddress = new Uri(baseAddress);
-            return client;
-        });
+        if (!string.IsNullOrEmpty(baseAddress))
+            httpClient.BaseAddress = new Uri(baseAddress);
 
         // Pass the loginPromptHandler to dRofusClient
         var clientInstance = new dRofusClient(httpClient, loginPromptHandler);

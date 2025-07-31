@@ -4,25 +4,25 @@ namespace dRofusClient.Extensions;
 
 public static class JsonPropertyStatusExtensions
 {
-    public static dRofusStatusPatchOptions ToStatusPatchOption(this JsonProperty property)
+    public static StatusPatchRequest ToStatusPatchOption(this JsonProperty property)
     {
         var body = property.GetStatusPatchBody();
 
         if (body is null)
             throw new ArgumentException($"Invalid status body for property: {property.Name}", nameof(property));
 
-        return new dRofusStatusPatchOptions
+        return new StatusPatchRequest
         {
             PropertyName = property.Name,
             Body = body
         };
     }
 
-    public static dRofusStatusPatchBody? GetStatusPatchBody(this JsonProperty property)
+    public static StatusPatchBody? GetStatusPatchBody(this JsonProperty property)
     {
         if (property.Name.EndsWith("id_code", StringComparison.OrdinalIgnoreCase))
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 Code = property.Value.GetString() ?? string.Empty
             };
@@ -30,7 +30,7 @@ public static class JsonPropertyStatusExtensions
 
         if (property.Name.EndsWith("id_id", StringComparison.OrdinalIgnoreCase))
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 StatusId = property.Value.GetInt32()
             };
@@ -38,7 +38,7 @@ public static class JsonPropertyStatusExtensions
 
         if (property.Value.ValueKind == JsonValueKind.String)
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 Code = property.Value.GetString() ?? string.Empty
             };
@@ -46,7 +46,7 @@ public static class JsonPropertyStatusExtensions
 
         if (property.Value.ValueKind == JsonValueKind.Number)
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 StatusId = property.Value.GetInt32()
             };
@@ -55,25 +55,25 @@ public static class JsonPropertyStatusExtensions
         return null;
     }
 
-    public static dRofusStatusPatchOptions ToStatusPatchOption(this KeyValuePair<string, object> property)
+    public static StatusPatchRequest ToStatusPatchOption(this KeyValuePair<string, object> property)
     {
         var body = property.GetStatusPatchBody();
 
         if (body is null)
             throw new ArgumentException($"Invalid status body for property: {property.Key}", nameof(property));
 
-        return new dRofusStatusPatchOptions
+        return new StatusPatchRequest
         {
             PropertyName = property.Key,
             Body = body
         };
     }
 
-    public static dRofusStatusPatchBody? GetStatusPatchBody(this KeyValuePair<string, object> property)
+    public static StatusPatchBody? GetStatusPatchBody(this KeyValuePair<string, object> property)
     {
         if (property.Key.EndsWith("id_code", StringComparison.OrdinalIgnoreCase))
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 Code = property.Value?.ToString() ?? string.Empty
             };
@@ -83,14 +83,14 @@ public static class JsonPropertyStatusExtensions
         {
             if (property.Value is int intVal)
             {
-                return new dRofusStatusPatchBody
+                return new StatusPatchBody
                 {
                     StatusId = intVal
                 };
             }
             if (int.TryParse(property.Value?.ToString(), out var parsed))
             {
-                return new dRofusStatusPatchBody
+                return new StatusPatchBody
                 {
                     StatusId = parsed
                 };
@@ -99,7 +99,7 @@ public static class JsonPropertyStatusExtensions
 
         if (property.Value is string strVal)
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 Code = strVal
             };
@@ -107,7 +107,7 @@ public static class JsonPropertyStatusExtensions
 
         if (property.Value is int intVal2)
         {
-            return new dRofusStatusPatchBody
+            return new StatusPatchBody
             {
                 StatusId = intVal2
             };

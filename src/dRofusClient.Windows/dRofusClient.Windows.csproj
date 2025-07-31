@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks Condition="'$(Configuration)' != 'Design'">net48;net8.0-windows</TargetFrameworks>    
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -22,19 +23,10 @@
     <AssemblyName>$(PackageId).$(Version)</AssemblyName>
   </PropertyGroup>
 
-  <Choose>
-    <When Condition="'$(Configuration)' == 'Design'">
-      <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
-        <XamlDebuggingInformation>True</XamlDebuggingInformation>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
+  <PropertyGroup Condition="'$(Configuration)' == 'Design'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <XamlDebuggingInformation>True</XamlDebuggingInformation>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MVVMFluent.WPF" Version="0.0.2">

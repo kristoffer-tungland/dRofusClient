@@ -1,6 +1,3 @@
-// ReSharper disable InconsistentNaming
-
-
 namespace dRofusClient.PropertyMeta;
 
 /// <summary>
@@ -17,14 +14,23 @@ namespace dRofusClient.PropertyMeta;
 ///   }
 /// ]
 /// </schema>
-public record dRofusPropertyMeta(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("propertyGroup")] string PropertyGroup,
-    [property: JsonPropertyName("dataType")] string DataType,
-    [property: JsonPropertyName("unit")] string Unit
-) : dRofusDto
+public record dRofusPropertyMeta : dRofusDto
 {
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("propertyGroup")]
+    public string? PropertyGroup { get; init; }
+
+    [JsonPropertyName("dataType")]
+    public required string DataType { get; init; }
+
+    [JsonPropertyName("unit")]
+    public string? Unit { get; init; }
+
     public string GetTitle()
     {
         return string.IsNullOrEmpty(PropertyGroup) ? Name : $"{PropertyGroup}: {Name}";

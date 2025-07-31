@@ -3,8 +3,8 @@ namespace dRofusClient.Projects;
 
 public static class dRofusClientProjectExtensions
 {
-    public static async Task<dRofusProject> GetProjectAsync(this IdRofusClient client, dRofusFieldsOptions? options = null, CancellationToken cancellationToken = default)
+    public static async Task<Project> GetProjectAsync(this IdRofusClient client, ItemQuery? options = null, CancellationToken cancellationToken = default)
     {
-        return await client.SendAsync<dRofusProject>(HttpMethod.Get, dRofusType.Projects, options, cancellationToken);
+        return await client.SendAsync<Project>(HttpMethod.Get, dRofusType.Projects, options, cancellationToken);
     }
 }

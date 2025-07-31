@@ -17,7 +17,7 @@ public class JsonPropertyStatusExtensionsTests
         var property = new KeyValuePair<string, object>(propertyName, value);
 
         // Act
-        int statusTypeId = dRofusStatusPatchOptions.GetStatusTypeId(propertyName);
+        int statusTypeId = StatusPatchRequest.GetStatusTypeId(propertyName);
         var body = property.GetStatusPatchBody();
 
         // Assert
@@ -40,7 +40,7 @@ public class JsonPropertyStatusExtensionsTests
         }
 
         // Additional: dRofusStatusPatchOptions compatibility check
-        var options = new dRofusStatusPatchOptions
+        var options = new StatusPatchRequest
         {
             PropertyName = propertyName,
             Body = body!

@@ -2,20 +2,22 @@
 using dRofusClient.Revit;
 using dRofusClient.Windows;
 
-namespace dRofusClient.Revit;
+namespace dRofusClient;
 
 public static class dRofusRevitClientExtensions
 {
     public static IdRofusClient Create(
         this dRofusClientFactory dRofusClientFactory,
-        dRofusConnectionDetails connectionInformation)
+        dRofusConnectionDetails connectionInformation,
+        ILoginPromptHandler? loginPromtHandler = default)
     {
         return dRofusClientFactory.Create(connectionInformation.Server, connectionInformation.DataBase, connectionInformation.ProjectId);
     }
 
     public static IdRofusClient Create(
         this dRofusClientFactory dRofusClientFactory,
-        Document document)
+        Document document,
+        ILoginPromptHandler? loginPromtHandler = default)
     {
         var connectionInformation = document.ExtractdRofusConnectionDetails();
         return dRofusClientFactory.Create(connectionInformation.Server, connectionInformation.DataBase, connectionInformation.ProjectId);

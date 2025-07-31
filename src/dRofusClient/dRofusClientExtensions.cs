@@ -4,7 +4,7 @@ public static class dRofusClientExtensions
 {
     public static Task<TResult> GetAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto, new()
     {
@@ -13,7 +13,7 @@ public static class dRofusClientExtensions
 
     public static Task<TResult> PostAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto, new()
     {
@@ -22,7 +22,7 @@ public static class dRofusClientExtensions
 
     public static Task<TResult> PatchAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto, new()
     {
@@ -31,7 +31,7 @@ public static class dRofusClientExtensions
 
     public static Task<TResult> DeleteAsync<TResult>(this IdRofusClient client,
         string route,
-        dRofusOptionsBase? options = default,
+        RequestBase? options = default,
         CancellationToken cancellationToken = default
     ) where TResult : dRofusDto, new()
     {

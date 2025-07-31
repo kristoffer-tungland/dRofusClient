@@ -1,9 +1,25 @@
 using System.Reflection;
-using System.Text.Json.Serialization;
 
 // ReSharper disable InconsistentNaming
 
 namespace dRofusClient.Models;
+
+public record dRofusIdDto : dRofusDto
+{
+    [JsonPropertyName("id")]
+    public int? Id { get; init; }
+    /// <summary>Field name for Id, used in filters and order by clauses.</summary>
+    /// <returns>"id"</returns> 
+    public const string IdField = "id";
+
+    public int GetId()
+    {
+        if (Id.HasValue)
+            return Id.Value;
+        throw new InvalidOperationException("Id is not set.");
+    }
+}
+
 
 public record dRofusDto
 {
@@ -53,7 +69,6 @@ public record dRofusDto
         var type = this.GetType();
         var propertyInfo = type.GetProperty(property) ?? GetPropertyByJsonPropertyName(type, property);
         return propertyInfo?.GetValue(this);
-
     }
 
     private static PropertyInfo? GetPropertyByJsonPropertyName(Type type, string property)
