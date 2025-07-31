@@ -99,7 +99,7 @@ namespace dRofusClient.Items
         /// <summary>
         /// Retrieves file metadata for a specific item.
         /// </summary>
-        public static List<File> GetItemFiles(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+        public static List<FileDetails> GetItemFiles(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetItemFilesAsync(itemId, query, cancellationToken));
         }
