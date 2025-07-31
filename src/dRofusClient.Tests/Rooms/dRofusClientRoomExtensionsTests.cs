@@ -2,7 +2,7 @@ using System.Net.Http;
 using dRofusClient.Rooms;
 using dRofusClient.Tests.Occurrences; // reuse FakeRofusClient
 using dRofusClient.Extensions;
-using FileMeta = dRofusClient.Files.File;
+using FileMeta = dRofusClient.Files.FileDetails;
 
 namespace dRofusClient.Tests.Rooms;
 

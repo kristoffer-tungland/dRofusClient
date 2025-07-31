@@ -188,10 +188,10 @@ public static class dRofusClientOccurenceExtensions
     /// <summary>
     /// Retrieves file metadata for the specified occurrence.
     /// </summary>
-    public static Task<List<Files.File>> GetOccurrenceFilesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+    public static Task<List<Files.FileDetails>> GetOccurrenceFilesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Occurrences.CombineToRequest(id, "files");
-        return client.GetListAsync<Files.File>(request, query, cancellationToken);
+        return client.GetListAsync<Files.FileDetails>(request, query, cancellationToken);
     }
 
     /// <summary>

@@ -123,7 +123,7 @@ namespace dRofusClient.Occurrences
         /// <summary>
         /// Retrieves file metadata for a specific occurrence.
         /// </summary>
-        public static List<File> GetOccurrenceFiles(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+        public static List<FileDetails> GetOccurrenceFiles(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetOccurrenceFilesAsync(id, query, cancellationToken));
         }

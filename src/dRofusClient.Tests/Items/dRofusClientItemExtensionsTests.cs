@@ -5,7 +5,7 @@ using dRofusClient.Items;
 using dRofusClient.Extensions;
 using dRofusClient.Tests.Occurrences; // reuse FakeRofusClient
 using dRofusClient.ApiLogs;
-using FileMeta = dRofusClient.Files.File;
+using FileMeta = dRofusClient.Files.FileDetails;
 using ImageMeta = dRofusClient.Files.Image;
 
 namespace dRofusClient.Tests.Items;

@@ -107,10 +107,10 @@ public static class dRofusClientItemExtensions
     /// <summary>
     /// Retrieves file metadata for the specified item.
     /// </summary>
-    public static Task<List<Files.File>> GetItemFilesAsync(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+    public static Task<List<Files.FileDetails>> GetItemFilesAsync(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Items.CombineToRequest(itemId, "files");
-        return client.GetListAsync<Files.File>(request, query, cancellationToken);
+        return client.GetListAsync<Files.FileDetails>(request, query, cancellationToken);
     }
 
     /// <summary>

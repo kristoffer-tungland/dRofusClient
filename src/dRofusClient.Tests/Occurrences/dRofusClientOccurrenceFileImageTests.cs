@@ -3,7 +3,7 @@ using dRofusClient.Files;
 using dRofusClient.Occurrences;
 using dRofusClient.Extensions;
 using dRofusClient.ApiLogs;
-using FileMeta = dRofusClient.Files.File;
+using FileMeta = dRofusClient.Files.FileDetails;
 using ImageMeta = dRofusClient.Files.Image;
 
 namespace dRofusClient.Tests.Occurrences;

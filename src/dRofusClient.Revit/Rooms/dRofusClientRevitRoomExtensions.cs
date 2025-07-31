@@ -39,7 +39,7 @@ namespace dRofusClient.Rooms
             return AsyncUtil.RunSync(() => client.UpdateRoomEquipmentListStatusAsync(id, equipmentListTypeId, body, cancellationToken));
         }
 
-        public static List<Files.File> GetRoomFiles(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+        public static List<Files.FileDetails> GetRoomFiles(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetRoomFilesAsync(id, query, cancellationToken));
         }

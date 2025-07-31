@@ -1,3 +1,4 @@
+using dRofusClient.Files;
 using dRofusClient.Items;
 
 namespace dRofusClient.Integration.Tests;
@@ -85,6 +86,48 @@ public class ItemTests(ItemFixture fixture) : IClassFixture<ItemFixture>
                 // Attempting to update an item with an invalid ID should throw an exception
                 await _client.DeleteItemAsync(item.GetId());
             });
+        }
+        finally
+        {
+            await Assert.ThrowsAsync<NotImplementedException>(async () =>
+            {
+                // Attempting to update an item with an invalid ID should throw an exception
+                await _client.DeleteItemAsync(item.GetId());
+            });
+        }
+    }
+
+    [Fact]
+    public async Task AddFileToItem()
+    {
+        var createdItem = CreateItem.With(fixture.ItemGroup, "Test Item With File " + DateTime.Now.ToString("yyyyMMddHHmmss"));
+        var item = await _client.CreateItemAsync(createdItem);
+        try
+        {
+            Assert.NotNull(item);
+            Assert.NotEqual(0, item.Id);
+            // Add a file to the item
+            var fileContent = new byte[] { 1, 2, 3, 4 }; // Example file content
+            var fileName = "TestFile.txt";
+            var fileDescription = "This is a test file for the item.";
+
+            var fileStream = new MemoryStream(fileContent);
+
+            var uploadedFile = await _client.UploadItemFileAsync(item.GetId(), fileStream, fileName, fileDescription);
+            Assert.NotNull(uploadedFile);
+
+            var fileQuery = Query.List()
+                .Filter(Filter.Eq(FileDetails.IdField, uploadedFile.FileId));
+
+            var files = await _client.GetItemFilesAsync(item.GetId(), fileQuery);
+
+            Assert.NotEmpty(files);
+            Assert.Single(files);
+
+            var file = files[0];
+            Assert.Equal(fileName, file.Name);
+            Assert.Equal(fileDescription, file.Description);
+            Assert.Equal(fileContent.Length, file.Size);
         }
         finally
         {

@@ -27,6 +27,12 @@ public static class dRofusClientRoomExtensions
         return result;
     }
 
+    [Obsolete("Deleting rooms is not supported in dRofus. Use UpdateRoomAsync with a null value for the room to delete it instead.")]
+    public static Task DeleteRoomAsync(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
+    {
+        throw new NotSupportedException("Deleting rooms is not supported in dRofus.");
+    }
+
     public static Task<TemplateConnectionStatus> GetRoomEquipmentListStatusAsync(this IdRofusClient client, int id, int equipmentListTypeId, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Rooms.CombineToRequest(id, "equipmentliststatus", equipmentListTypeId.ToString());
@@ -39,10 +45,10 @@ public static class dRofusClientRoomExtensions
         return client.PatchAsync<TemplateConnectionStatus>(request, body.ToPatchRequest(), cancellationToken);
     }
 
-    public static Task<List<Files.File>> GetRoomFilesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+    public static Task<List<Files.FileDetails>> GetRoomFilesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Rooms.CombineToRequest(id, "files");
-        return client.GetListAsync<Files.File>(request, query, cancellationToken);
+        return client.GetListAsync<Files.FileDetails>(request, query, cancellationToken);
     }
 
     public static Task<RoomGroup> GetRoomGroupAsync(this IdRofusClient client, int id, int groupTypeId, CancellationToken cancellationToken = default)
