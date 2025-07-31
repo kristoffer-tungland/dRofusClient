@@ -1,6 +1,5 @@
 ﻿using dRofusClient.AttributeConfigurations;
 using Microsoft.Win32;
-using System;
 
 namespace dRofusClient.Windows.Registries;
 
@@ -37,8 +36,9 @@ public class ProjectRegistry(string server, string database, string projectId)
 
     private static int? GetConfigurationId(string server, string dataBase, string projectId, string registryKey)
     {
-        var address = RegistryExtensions.GetProjectRegistryPath(server, dataBase, projectId);
-        using var key = Registry.CurrentUser.OpenSubKey(address);
+        var registryPath = RegistryExtensions.GetProjectRegistryPath(server, dataBase, projectId);
+        using var key = Registry.CurrentUser.OpenSubKey(registryPath);
+        
         var value = key?.GetValue(registryKey);
         if (int.TryParse(value as string, out var result))
         {
