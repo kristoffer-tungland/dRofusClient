@@ -1,3 +1,7 @@
+using dRofusClient.ApiLogs;
+using dRofusClient.Files;
+using System.IO;
+
 namespace dRofusClient.Items;
 
 /// <summary>
@@ -73,5 +77,91 @@ public static class dRofusClientItemExtensions
     public static Task DeleteItemAsync(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("It's not possible to delete items in dRofus, so this method is not implemented.");
+    }
+
+    /// <summary>
+    /// Retrieves log entries for items.
+    /// </summary>
+    /// <param name="client">The dRofus client instance.</param>
+    /// <param name="query">Query parameters for filtering and paging.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    public static Task<List<ItemLog>> GetItemLogsAsync(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Items.CombineToRequest("logs");
+        return client.GetListAsync<ItemLog>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves log entries for the specified item.
+    /// </summary>
+    /// <param name="client">The dRofus client instance.</param>
+    /// <param name="itemId">ID of the item.</param>
+    /// <param name="query">Query parameters for filtering and paging.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    public static Task<List<ItemLog>> GetItemLogsAsync(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Items.CombineToRequest(itemId, "logs");
+        return client.GetListAsync<ItemLog>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves file metadata for the specified item.
+    /// </summary>
+    public static Task<List<Files.File>> GetItemFilesAsync(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Items.CombineToRequest(itemId, "files");
+        return client.GetListAsync<Files.File>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Uploads a new file to the specified item.
+    /// </summary>
+    public static async Task<Files.FileUploadResponse> UploadItemFileAsync(this IdRofusClient client, int itemId, Stream fileStream, string fileName, string? description = null, CancellationToken cancellationToken = default)
+    {
+        var (db, pr) = client.GetDatabaseAndProjectId();
+        var url = $"/api/{db}/{pr}/" + dRofusType.Items.CombineToRequest(itemId, "files");
+
+        using var form = new MultipartFormDataContent();
+        form.Add(new StreamContent(fileStream), "file", fileName);
+        if (!string.IsNullOrEmpty(description))
+            form.Add(new StringContent(description), "description");
+
+        var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = form };
+        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<Files.FileUploadResponse>(cancellationToken) ?? new Files.FileUploadResponse();
+    }
+
+    /// <summary>
+    /// Adds a link to an existing file for the specified item.
+    /// </summary>
+    public static async Task AddItemFileLinkAsync(this IdRofusClient client, int itemId, int fileId, CancellationToken cancellationToken = default)
+    {
+        var (db, pr) = client.GetDatabaseAndProjectId();
+        var url = $"/api/{db}/{pr}/" + dRofusType.Items.CombineToRequest(itemId, "files", fileId.ToString());
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Removes a file link from the specified item.
+    /// </summary>
+    public static async Task RemoveItemFileLinkAsync(this IdRofusClient client, int itemId, int fileId, CancellationToken cancellationToken = default)
+    {
+        var (db, pr) = client.GetDatabaseAndProjectId();
+        var url = $"/api/{db}/{pr}/" + dRofusType.Items.CombineToRequest(itemId, "files", fileId.ToString());
+        var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Retrieves image metadata for the specified item.
+    /// </summary>
+    public static Task<List<Files.Image>> GetItemImagesAsync(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Items.CombineToRequest(itemId, "images");
+        return client.GetListAsync<Files.Image>(request, query, cancellationToken);
     }
 }

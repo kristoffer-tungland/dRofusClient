@@ -1,5 +1,7 @@
 using dRofusClient.Options;
 using dRofusClient.Revit.Utils;
+using dRofusClient.Files;
+using dRofusClient.ApiLogs;
 
 namespace dRofusClient.Occurrences
 {
@@ -100,6 +102,38 @@ namespace dRofusClient.Occurrences
             AsyncUtil.RunSync(() =>
                 client.DeleteOccurrenceAsync(id, cancellationToken)
             );
+        }
+
+        /// <summary>
+        /// Retrieves logs for all occurrences.
+        /// </summary>
+        public static List<OccurrenceLog> GetOccurrenceLogs(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetOccurrenceLogsAsync(query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves logs for a specific occurrence.
+        /// </summary>
+        public static List<OccurrenceLog> GetOccurrenceLogs(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetOccurrenceLogsAsync(id, query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves file metadata for a specific occurrence.
+        /// </summary>
+        public static List<File> GetOccurrenceFiles(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetOccurrenceFilesAsync(id, query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves image metadata for a specific occurrence.
+        /// </summary>
+        public static List<Image> GetOccurrenceImages(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetOccurrenceImagesAsync(id, query, cancellationToken));
         }
     }
 }

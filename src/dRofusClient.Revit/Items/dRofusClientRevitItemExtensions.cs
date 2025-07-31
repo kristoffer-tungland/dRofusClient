@@ -1,5 +1,8 @@
 using dRofusClient.Options;
 using dRofusClient.Revit.Utils;
+using dRofusClient.Files;
+using dRofusClient.ApiLogs;
+using System.IO;
 
 namespace dRofusClient.Items
 {
@@ -75,6 +78,62 @@ namespace dRofusClient.Items
         public static void DeleteItem(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException("It's not possible to delete items in dRofus, so this method is not implemented.");
+        }
+
+        /// <summary>
+        /// Retrieves logs for all items.
+        /// </summary>
+        public static List<ItemLog> GetItemLogs(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetItemLogsAsync(query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves logs for a specific item.
+        /// </summary>
+        public static List<ItemLog> GetItemLogs(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetItemLogsAsync(itemId, query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves file metadata for a specific item.
+        /// </summary>
+        public static List<File> GetItemFiles(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetItemFilesAsync(itemId, query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Uploads a file to a specific item.
+        /// </summary>
+        public static FileUploadResponse UploadItemFile(this IdRofusClient client, int itemId, Stream fileStream, string fileName, string? description = null, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.UploadItemFileAsync(itemId, fileStream, fileName, description, cancellationToken));
+        }
+
+        /// <summary>
+        /// Adds an existing file link to a specific item.
+        /// </summary>
+        public static void AddItemFileLink(this IdRofusClient client, int itemId, int fileId, CancellationToken cancellationToken = default)
+        {
+            AsyncUtil.RunSync(() => client.AddItemFileLinkAsync(itemId, fileId, cancellationToken));
+        }
+
+        /// <summary>
+        /// Removes a file link from a specific item.
+        /// </summary>
+        public static void RemoveItemFileLink(this IdRofusClient client, int itemId, int fileId, CancellationToken cancellationToken = default)
+        {
+            AsyncUtil.RunSync(() => client.RemoveItemFileLinkAsync(itemId, fileId, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves image metadata for a specific item.
+        /// </summary>
+        public static List<Image> GetItemImages(this IdRofusClient client, int itemId, ListQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetItemImagesAsync(itemId, query, cancellationToken));
         }
     }
 }
