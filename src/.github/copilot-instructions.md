@@ -1,6 +1,3 @@
----
-applyTo: '**/dRofusClient*Extensions.cs'
----
 # Extension Methods Sync Pattern Guidance
 
 **dRofusClient*Extensions Sync Method Policy**
@@ -12,3 +9,13 @@ applyTo: '**/dRofusClient*Extensions.cs'
 - When adding a new extension method, always check for and implement the corresponding sync wrapper in the Revit project.
 
 ---
+
+# dRofus*Dto Class Implementation Guidance
+
+**dRofus*Dto XML Documentation and Read-Only Policy**
+
+- Any class that derives from a base class matching `dRofus*Dto` (e.g., `dRofusIdDto`, `dRofusDto`) **must** have XML documentation for the class and all its properties.
+- The XML documentation should be based on the property and class descriptions found in the OpenAPI schema (swagger.json). Use the OpenAPI description for each property and the class summary.
+- Properties that are marked as `readOnly` in the OpenAPI schema **must** use `init` accessors instead of `set`.
+- Classes with read-only properties **must** implement a `ClearReadOnlyFields` method, following the pattern in `Occurence.ClearReadOnlyFields`, which returns a copy of the object with all read-only properties set to null.
+- This ensures consistency with the API contract and supports scenarios where read-only fields need to be cleared before updates.

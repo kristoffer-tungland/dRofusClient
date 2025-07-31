@@ -1,8 +1,8 @@
+using dRofusClient.ApiLogs;
 using dRofusClient.Occurrences;
 
 namespace dRofusClient.Integration.Tests;
 
-//[Collection(nameof(OccurenceTestCollection))]
 public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<OccurenceFixture>
 {
     private readonly IdRofusClient _client = fixture.Client;
@@ -90,5 +90,36 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
         {
             await _client.GetOccurrenceAsync(occurence.GetId());
         });
+    }
+
+    [Fact]
+    public async Task CanGetLogsForOccurrence()
+    {
+        var occurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
+        try
+        {
+            var query = Query.List()
+                .Filter(Filter.Eq(OccurrenceLog.OccurrenceIdField, occurence.GetId()))
+                ;
+
+            var logs = await _client.GetOccurrenceLogsAsync(query);
+            Assert.NotNull(logs);
+            Assert.NotEmpty(logs);
+
+            var logForOccurrence = logs.Where(log => log.OccurrenceId == occurence.GetId()).ToList();
+
+            Assert.NotEmpty(logForOccurrence);
+            Assert.All(logForOccurrence, log =>
+            {
+                Assert.NotNull(log);
+                Assert.Contains("New Occurrence", log.Action);
+                Assert.Equal(occurence.GetId(), log.OccurrenceId);
+            });
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(occurence.GetId());
+        }
+
     }
 }

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using dRofusClient.ApiLogs;
+using dRofusClient.Files;
 
 namespace dRofusClient.Occurrences;
 
@@ -163,5 +165,50 @@ public static class dRofusClientOccurenceExtensions
     public static Task DeleteOccurrenceAsync(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
     {
         return client.DeleteAsync<Occurence>(dRofusType.Occurrences.CombineToRequest(id), null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves log entries for occurrences.
+    /// </summary>
+    public static Task<List<OccurrenceLog>> GetOccurrenceLogsAsync(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Occurrences.CombineToRequest("logs");
+        return client.GetListAsync<OccurrenceLog>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves log entries for the specified occurrence.
+    /// </summary>
+    public static Task<List<OccurrenceLog>> GetOccurrenceLogsAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Occurrences.CombineToRequest(id, "logs");
+        return client.GetListAsync<OccurrenceLog>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves file metadata for the specified occurrence.
+    /// </summary>
+    public static Task<List<Files.FileDetails>> GetOccurrenceFilesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Occurrences.CombineToRequest(id, "files");
+        return client.GetListAsync<Files.FileDetails>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves image metadata for the specified occurrence.
+    /// </summary>
+    public static Task<List<Files.Image>> GetOccurrenceImagesAsync(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Occurrences.CombineToRequest(id, "images");
+        return client.GetListAsync<Files.Image>(request, query, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves the systems that the occurrence is a member of.
+    /// </summary>
+    public static Task<List<Systems.System>> GetOccurrenceSystemsAsync(this IdRofusClient client, int id, IsMemberOfSystemsQuery query, CancellationToken cancellationToken = default)
+    {
+        var request = dRofusType.Occurrences.CombineToRequest(id, "is-member-of-systems");
+        return client.GetListAsync<Systems.System>(request, query, cancellationToken);
     }
 }

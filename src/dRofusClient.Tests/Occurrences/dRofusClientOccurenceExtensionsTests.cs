@@ -1,3 +1,6 @@
+using System;
+using System.Net;
+using System.Net.Http;
 using dRofusClient;
 using dRofusClient.Occurrences;
 using dRofusClient.Options;
@@ -11,102 +14,83 @@ namespace dRofusClient.Tests.Occurrences;
 public class FakeRofusClient : IdRofusClient
 {
     public object? LastRequest { get; private set; }
-    public object? LastOptions { get; private set; }
+    public RequestBase? LastOptions { get; private set; }
     public CancellationToken LastToken { get; private set; }
+    public HttpMethod? LastMethod { get; private set; }
+    public HttpRequestMessage? LastHttpRequest => _handler.LastRequest;
+
     public object? PatchAsyncResult { get; set; }
+    public object? ListAsyncResult { get; set; }
 
-    public HttpClient HttpClient => throw new NotImplementedException();
+    private readonly FakeHandler _handler = new();
+    public HttpClient HttpClient { get; }
 
-    public void ClearAuthentication()
+    public FakeRofusClient()
     {
-        throw new NotImplementedException();
+        HttpClient = new HttpClient(_handler)
+        {
+            BaseAddress = new Uri("http://localhost")
+        };
     }
 
-    public void Dispose()
+    private class FakeHandler : HttpMessageHandler
     {
-        throw new NotImplementedException();
+        public HttpRequestMessage? LastRequest { get; private set; }
+        public HttpResponseMessage Response { get; set; } = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{}")
+        };
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(Response);
+        }
     }
 
-    public string? GetBaseUrl()
-    {
-        throw new NotImplementedException();
-    }
+    public void ClearAuthentication() => throw new NotImplementedException();
+    public void Dispose() { }
+    public string? GetBaseUrl() => HttpClient.BaseAddress?.ToString();
+    public (string database, string projectId) GetDatabaseAndProjectId() => ("db", "pr");
+    public Task<bool> IsLoggedIn() => Task.FromResult(true);
+    public Task Login(dRofusConnectionArgs args, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task Login(CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public void Logout() { }
 
-    public (string database, string projectId) GetDatabaseAndProjectId()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> IsLoggedIn()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Login(dRofusConnectionArgs args, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Login(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Logout()
-    {
-        throw new NotImplementedException();
-    }
-
-    // PatchAsync extension calls this method
     public Task<TResult> SendAsync<TResult>(HttpMethod method, string route, RequestBase options, CancellationToken cancellationToken) where TResult : dRofusDto, new()
     {
-        // Only handle PATCH for this test
-        if (method == HttpMethod.Patch)
-        {
-            LastRequest = route;
-            LastOptions = options;
-            LastToken = cancellationToken;
-            return Task.FromResult((TResult)PatchAsyncResult!);
-        }
+        LastMethod = method;
+        LastRequest = route;
+        LastOptions = options;
+        LastToken = cancellationToken;
+        if (method == HttpMethod.Patch && PatchAsyncResult is TResult r)
+            return Task.FromResult(r);
         throw new NotImplementedException();
     }
 
-    public Task<TResult> SendAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto, new()
-    {
-        throw new NotImplementedException();
-    }
+    public Task<TResult> SendAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto, new() =>
+        SendAsync<TResult>(method, dRofusType.ToRequest(), options ?? new ListQuery(), cancellationToken);
 
-    public Task<HttpResponseMessage> SendHttpRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+    public Task<HttpResponseMessage> SendHttpRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken = default) =>
+        HttpClient.SendAsync(request, cancellationToken);
 
-    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
-    {
-        throw new NotImplementedException();
-    }
+    public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, dRofusType dRofusType, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto =>
+        SendListAsync<TResult>(method, dRofusType.ToRequest(), options, cancellationToken);
 
     public Task<List<TResult>> SendListAsync<TResult>(HttpMethod method, string route, RequestBase? options = null, CancellationToken cancellationToken = default) where TResult : dRofusDto
     {
-        throw new NotImplementedException();
+        LastMethod = method;
+        LastRequest = route;
+        LastOptions = options;
+        LastToken = cancellationToken;
+        if (ListAsyncResult is List<TResult> list)
+            return Task.FromResult(list);
+        return Task.FromResult(new List<TResult>());
     }
 
-    public void Setup(dRofusConnectionArgs args)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateAuthentication(string authenticationHeader)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateAuthentication(ModernLoginResult modernLoginResult)
-    {
-        throw new NotImplementedException();
-    }
-
-    // Implement other interface members as needed (throw NotImplementedException if not used)
+    public void Setup(dRofusConnectionArgs args) => throw new NotImplementedException();
+    public void UpdateAuthentication(string authenticationHeader) => throw new NotImplementedException();
+    public void UpdateAuthentication(ModernLoginResult modernLoginResult) => throw new NotImplementedException();
 }
 
 public class dRofusClientOccurenceExtensionsTests

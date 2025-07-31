@@ -2,7 +2,6 @@ using dRofusClient.ItemGroups;
 
 namespace dRofusClient.Integration.Tests;
 
-
 public class ItemGroupTests(ItemGroupFixture fixture) : IClassFixture<ItemGroupFixture>
 {
     private readonly IdRofusClient _client = fixture.Client;
