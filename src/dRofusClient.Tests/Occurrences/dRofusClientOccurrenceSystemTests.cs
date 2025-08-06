@@ -12,7 +12,7 @@ public class dRofusClientOccurrenceSystemTests
     {
         var fake = new FakeRofusClient();
         var query = new IsMemberOfSystemsQuery();
-        fake.ListAsyncResult = new List<dRofusSystem.System>();
+        fake.ListAsyncResult = new List<dRofusSystem.SystemInstance>();
         await fake.GetOccurrenceSystemsAsync(12, query);
         Assert.Equal("occurrences/12/is-member-of-systems", fake.LastRequest);
     }

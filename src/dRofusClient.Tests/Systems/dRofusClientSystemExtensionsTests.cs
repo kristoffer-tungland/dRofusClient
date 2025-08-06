@@ -1,6 +1,6 @@
 using System.Net.Http;
 using dRofusClient.Systems;
-using SystemModel = dRofusClient.Systems.System;
+using SystemModel = dRofusClient.Systems.SystemInstance;
 using SC = dRofusClient.SystemComponents;
 using dRofusClient.Tests.Occurrences;
 using dRofusClient.Extensions;
