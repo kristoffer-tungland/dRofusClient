@@ -3,7 +3,7 @@ namespace dRofusClient.Systems;
 /// <summary>
 /// Represents a system.
 /// </summary>
-public record System : dRofusIdDto
+public record SystemInstance : dRofusIdDto
 {
     /// <summary>
     /// General: Description
@@ -37,17 +37,25 @@ public record System : dRofusIdDto
     /// General: Serial Number
     /// </summary>
     [JsonPropertyName("run_no")]
-    public string? RunNo { get; set; }
-    public const string RunNoField = "run_no";
+    public string? SerialNumber { get; set; }
+    public const string SerialNumberField = "run_no";
+
+    /// <summary>
+    /// General: Base Occurrence Id
+    /// </summary>
+    [JsonPropertyName("base_occurrence_id")]
+    public int? BaseOccurrenceId { get; init; }
+    public const string BaseOccurrenceIdField = "base_occurrence_id";
 
     /// <summary>
     /// Returns a copy of this system with read-only fields cleared.
     /// </summary>
-    public System ClearReadOnlyFields()
+    public SystemInstance ClearReadOnlyFields()
     {
         return this with
         {
-            Number = null
+            Number = null,
+            BaseOccurrenceId = null
         };
     }
 }

@@ -28,7 +28,7 @@ namespace dRofusClient.Systems
         /// <summary>
         /// Retrieves a list of systems.
         /// </summary>
-        public static List<System> GetSystems(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+        public static List<SystemInstance> GetSystems(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetSystemsAsync(query, cancellationToken));
         }
@@ -36,7 +36,7 @@ namespace dRofusClient.Systems
         /// <summary>
         /// Retrieves a specific system.
         /// </summary>
-        public static System GetSystem(this IdRofusClient client, int id, ItemQuery? query = default, CancellationToken cancellationToken = default)
+        public static SystemInstance GetSystem(this IdRofusClient client, int id, ItemQuery? query = default, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetSystemAsync(id, query, cancellationToken));
         }
@@ -44,7 +44,7 @@ namespace dRofusClient.Systems
         /// <summary>
         /// Updates a system.
         /// </summary>
-        public static System UpdateSystem(this IdRofusClient client, System system, CancellationToken cancellationToken = default)
+        public static SystemInstance UpdateSystem(this IdRofusClient client, SystemInstance system, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.UpdateSystemAsync(system, cancellationToken));
         }

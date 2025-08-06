@@ -206,9 +206,9 @@ public static class dRofusClientOccurenceExtensions
     /// <summary>
     /// Retrieves the systems that the occurrence is a member of.
     /// </summary>
-    public static Task<List<Systems.System>> GetOccurrenceSystemsAsync(this IdRofusClient client, int id, IsMemberOfSystemsQuery query, CancellationToken cancellationToken = default)
+    public static Task<List<Systems.SystemInstance>> GetOccurrenceSystemsAsync(this IdRofusClient client, int id, IsMemberOfSystemsQuery query, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Occurrences.CombineToRequest(id, "is-member-of-systems");
-        return client.GetListAsync<Systems.System>(request, query, cancellationToken);
+        return client.GetListAsync<Systems.SystemInstance>(request, query, cancellationToken);
     }
 }

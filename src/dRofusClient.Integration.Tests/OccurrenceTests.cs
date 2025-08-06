@@ -1,5 +1,6 @@
 using dRofusClient.ApiLogs;
 using dRofusClient.Occurrences;
+using dRofusClient.Options;
 
 namespace dRofusClient.Integration.Tests;
 
@@ -39,7 +40,7 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
     public async Task CanCreateOccurrence()
     {
         var createdOccurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
-        
+
         try
         {
             Assert.NotNull(createdOccurence);
@@ -121,5 +122,27 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
             await _client.DeleteOccurrenceAsync(occurence.GetId());
         }
 
+    }
+
+    [Fact]
+    public async Task CanGetIsMemberOfSystems()
+    {
+        var occurenceToTest = 658; // Replace with a valid occurrence ID for testing
+
+        var query = new IsMemberOfSystemsQuery
+        {
+            IncludeSubs = true
+        };
+
+        query.Select(Systems.SystemInstance.IdField, Systems.SystemInstance.NameField);
+
+        var systems = await _client.GetOccurrenceSystemsAsync(occurenceToTest, query);
+        Assert.NotNull(systems);
+        Assert.NotEmpty(systems);
+        Assert.All(systems, system =>
+        {
+            Assert.NotNull(system);
+            Assert.True(system.Id > 0, "Expected system ID to be greater than zero.");
+        });
     }
 }

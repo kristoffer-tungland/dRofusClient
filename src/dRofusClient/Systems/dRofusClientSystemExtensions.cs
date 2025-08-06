@@ -26,29 +26,29 @@ public static class dRofusClientSystemExtensions
     /// <summary>
     /// Retrieves a list of systems.
     /// </summary>
-    public static Task<List<System>> GetSystemsAsync(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
+    public static Task<List<SystemInstance>> GetSystemsAsync(this IdRofusClient client, ListQuery query, CancellationToken cancellationToken = default)
     {
-        return client.GetListAsync<System>(dRofusType.Systems.ToRequest(), query, cancellationToken);
+        return client.GetListAsync<SystemInstance>(dRofusType.Systems.ToRequest(), query, cancellationToken);
     }
 
     /// <summary>
     /// Retrieves the specified system by id.
     /// </summary>
-    public static Task<System> GetSystemAsync(this IdRofusClient client, int id, ItemQuery? query = default, CancellationToken cancellationToken = default)
+    public static Task<SystemInstance> GetSystemAsync(this IdRofusClient client, int id, ItemQuery? query = default, CancellationToken cancellationToken = default)
     {
-        return client.GetAsync<System>(dRofusType.Systems.CombineToRequest(id), query, cancellationToken);
+        return client.GetAsync<SystemInstance>(dRofusType.Systems.CombineToRequest(id), query, cancellationToken);
     }
 
     /// <summary>
     /// Updates an existing system.
     /// </summary>
-    public static async Task<System> UpdateSystemAsync(this IdRofusClient client, System system, CancellationToken cancellationToken = default)
+    public static async Task<SystemInstance> UpdateSystemAsync(this IdRofusClient client, SystemInstance system, CancellationToken cancellationToken = default)
     {
         system = system.ClearReadOnlyFields();
         var patchOptions = system.ToPatchRequest();
-        System? result = null;
+        SystemInstance? result = null;
         if (patchOptions.Body is not null && patchOptions.Body != "{}")
-            result = await client.PatchAsync<System>(dRofusType.Systems.CombineToRequest(system.Id), patchOptions, cancellationToken);
+            result = await client.PatchAsync<SystemInstance>(dRofusType.Systems.CombineToRequest(system.Id), patchOptions, cancellationToken);
         result ??= system with { Id = system.Id };
         return result;
     }
@@ -58,7 +58,7 @@ public static class dRofusClientSystemExtensions
     /// </summary>
     public static Task DeleteSystemAsync(this IdRofusClient client, int id, CancellationToken cancellationToken = default)
     {
-        return client.DeleteAsync<System>(dRofusType.Systems.CombineToRequest(id), null, cancellationToken);
+        return client.DeleteAsync<SystemInstance>(dRofusType.Systems.CombineToRequest(id), null, cancellationToken);
     }
 
     /// <summary>
