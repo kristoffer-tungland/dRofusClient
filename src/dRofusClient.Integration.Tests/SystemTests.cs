@@ -8,7 +8,14 @@ public class SystemTests(SystemFixture fixture) : IClassFixture<SystemFixture>
     [Fact]
     public async Task CanGetSystems()
     {
-        var systems = await _client.GetSystemsAsync(Query.List());
+        var systemComponentId = fixture.System.SystemComponentId!.Value;
+
+        var query = Query.List()
+            .Filter(Filter.Eq(SystemInstance.SystemComponentIdField, systemComponentId))
+            .Select(SystemInstance.IdField, SystemInstance.NumberField, SystemInstance.NameField);
+
+        var systems = await _client.GetSystemsAsync(query);
+
         Assert.NotEmpty(systems);
         Assert.Contains(systems, system => system.Id == fixture.System.Id);
     }

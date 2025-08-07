@@ -145,4 +145,15 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
             Assert.True(system.Id > 0, "Expected system ID to be greater than zero.");
         });
     }
+
+    [Fact]
+    public async Task CanUseLowerLevelApiForOccurrence()
+    {
+        var occurence = await _client.GetAsync<Occurence>("occurrences/" + fixture.Occurence.GetId());
+        Assert.NotNull(occurence);
+        Assert.True(occurence.Id.HasValue,
+            "Expected the occurrence to have an ID assigned.");
+
+        Assert.Equal(fixture.Occurence.GetId(), occurence.GetId());
+    }
 }
