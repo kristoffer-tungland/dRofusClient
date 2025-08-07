@@ -44,8 +44,8 @@ public record SystemInstance : dRofusIdDto
     /// General: Base Occurrence Id
     /// </summary>
     [JsonPropertyName("base_occurrence_id")]
-    public int? BaseOccurrenceId { get; init; }
-    public const string BaseOccurrenceIdField = "base_occurrence_id";
+    public int? SystemComponentId { get; init; }
+    public const string SystemComponentIdField = "base_occurrence_id";
 
     /// <summary>
     /// Returns a copy of this system with read-only fields cleared.
@@ -55,7 +55,7 @@ public record SystemInstance : dRofusIdDto
         return this with
         {
             Number = null,
-            BaseOccurrenceId = null
+            SystemComponentId = null
         };
     }
 }
