@@ -48,7 +48,7 @@ public static class dRofusClientSystemExtensions
         var patchOptions = system.ToPatchRequest();
         SystemInstance? result = null;
         if (patchOptions.Body is not null && patchOptions.Body != "{}")
-            result = await client.PatchAsync<SystemInstance>(dRofusType.Systems.CombineToRequest(system.Id), patchOptions, cancellationToken);
+            result = await client.PatchAsync<SystemInstance>(dRofusType.Systems.CombineToRequest(system.Id), patchOptions, cancellationToken).ConfigureAwait(false);
         result ??= system with { Id = system.Id };
         return result;
     }

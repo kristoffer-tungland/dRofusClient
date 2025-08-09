@@ -67,7 +67,7 @@ public static class dRofusClientItemGroupExtensions
         var patchOptions = itemGroup.ToPatchRequest();
         ItemGroup? result = null;
         if (patchOptions.Body is not null && patchOptions.Body.Equals("{}") == false)
-            result = await client.PatchAsync<ItemGroup>(dRofusType.ItemGroups.CombineToRequest(itemGroup.Id), patchOptions, cancellationToken);
+            result = await client.PatchAsync<ItemGroup>(dRofusType.ItemGroups.CombineToRequest(itemGroup.Id), patchOptions, cancellationToken).ConfigureAwait(false);
         result ??= itemGroup with { Id = itemGroup.Id };
         return result;
     }
