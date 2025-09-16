@@ -52,4 +52,23 @@ public record CreateOccurence : dRofusIdDto
             ArticleId = item.GetId(),
         };
     }
+
+    /// <summary>
+    /// Sets a value in the database using a generated identifier based on the specified database ID.
+    /// </summary>
+    /// <remarks>The method generates a unique identifier by transforming the <paramref name="databaseId"/>
+    /// into a specific format and uses it to store the provided <paramref name="value"/>. The identifier is constructed
+    /// by splitting the database ID into two-digit segments and appending them to a base string.</remarks>
+    /// <param name="databaseId">The ID of the database. Must be a non-negative integer.</param>
+    /// <param name="value">The value to associate with the generated identifier. Cannot be <see langword="null"/>.</param>
+    public void Set(int databaseId, object value)
+    {
+        var databaseIdParts = Enumerable.Range(0, databaseId.ToString("D2").Length / 2)
+            .Select(i => databaseId.ToString("D2").Substring(i * 2, 2))
+            .ToArray();
+
+        var occurrenceDataId = $"occurrence_data_{string.Join("_", databaseIdParts)}";
+
+        Set(occurrenceDataId, value);
+    }
 }

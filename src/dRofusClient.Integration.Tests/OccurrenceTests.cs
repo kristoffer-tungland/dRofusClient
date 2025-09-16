@@ -1,4 +1,5 @@
 using dRofusClient.ApiLogs;
+using dRofusClient.Models;
 using dRofusClient.Occurrences;
 using dRofusClient.Options;
 
@@ -39,6 +40,77 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
     [Fact]
     public async Task CanCreateOccurrence()
     {
+        var createdOccurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
+
+        try
+        {
+            Assert.NotNull(createdOccurence);
+            Assert.True(createdOccurence.Id.HasValue,
+                "Expected the created occurrence to have an ID assigned.");
+
+            Assert.Equal(fixture.Item.GetId(), createdOccurence.ArticleId);
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(createdOccurence.GetId());
+        }
+    }
+
+    [Fact]
+    public async Task CanCreateOccurrenceWithCustomField()
+    {
+        var occurenceToCreate = CreateOccurence.Of(fixture.Item);
+
+        occurenceToCreate.Set("occurrence_data_23_10_01_01", 5.5);
+
+        var createdOccurence = await _client.CreateOccurrenceAsync(occurenceToCreate);
+
+        try
+        {
+            Assert.NotNull(createdOccurence);
+            Assert.True(createdOccurence.Id.HasValue,
+                "Expected the created occurrence to have an ID assigned.");
+
+            Assert.Equal(fixture.Item.GetId(), createdOccurence.ArticleId);
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(createdOccurence.GetId());
+        }
+    }
+    
+
+    [Fact]
+    public async Task CanCreateOccurrenceWithCustomStringField()
+    {
+        var occurenceToCreate = CreateOccurence.Of(fixture.Item);
+
+        occurenceToCreate.Set(23100201, "banan");
+
+        var createdOccurence = await _client.CreateOccurrenceAsync(occurenceToCreate);
+
+        try
+        {
+            Assert.NotNull(createdOccurence);
+            Assert.True(createdOccurence.Id.HasValue,
+                "Expected the created occurrence to have an ID assigned.");
+
+            Assert.Equal(fixture.Item.GetId(), createdOccurence.ArticleId);
+        }
+        finally
+        {
+            await _client.DeleteOccurrenceAsync(createdOccurence.GetId());
+        }
+    }
+
+    [Fact]
+    public async Task CanCreateOccurrenceWithCustomFieldUsingDBId()
+    {
+        // Field occurrence_data_23_10_01_01
+        var occurenceToCreate = CreateOccurence.Of(fixture.Item);
+
+        occurenceToCreate.Set(23100101, 5.5);
+
         var createdOccurence = await _client.CreateOccurrenceAsync(CreateOccurence.Of(fixture.Item));
 
         try
@@ -156,4 +228,5 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
 
         Assert.Equal(fixture.Occurence.GetId(), occurence.GetId());
     }
+
 }
