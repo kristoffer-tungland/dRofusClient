@@ -60,25 +60,23 @@ public class OccurrenceTests(OccurenceFixture fixture) : IClassFixture<Occurence
     public async Task CanCreateOccurrenceWithCustomField()
     {
         var occurenceToCreate = CreateOccurence.Of(fixture.Item);
-
         occurenceToCreate.Set("occurrence_data_23_10_01_01", 5.5);
 
-        var createdOccurence = await _client.CreateOccurrenceAsync(occurenceToCreate);
+        var createdOccurrence = await _client.CreateOccurrenceAsync(occurenceToCreate);
 
         try
         {
-            Assert.NotNull(createdOccurence);
-            Assert.True(createdOccurence.Id.HasValue,
+            Assert.NotNull(createdOccurrence);
+            Assert.True(createdOccurrence.Id.HasValue,
                 "Expected the created occurrence to have an ID assigned.");
 
-            Assert.Equal(fixture.Item.GetId(), createdOccurence.ArticleId);
+            Assert.Equal(fixture.Item.GetId(), createdOccurrence.ArticleId);
         }
         finally
         {
-            await _client.DeleteOccurrenceAsync(createdOccurence.GetId());
+            await _client.DeleteOccurrenceAsync(createdOccurrence.GetId());
         }
-    }
-    
+    }    
 
     [Fact]
     public async Task CanCreateOccurrenceWithCustomStringField()
