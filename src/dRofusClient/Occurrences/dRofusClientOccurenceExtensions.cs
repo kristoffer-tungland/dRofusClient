@@ -32,9 +32,31 @@ public static class dRofusClientOccurenceExtensions
     /// <param name="roomId">The room ID for the occurrence (optional).</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The created <see cref="Occurence"/> object.</returns>
-    public static Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
+    public static async Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
     {
-        return client.PostAsync<Occurence>(dRofusType.Occurrences.ToRequest(), occurenceToCreate.ToPostRequest(), cancellationToken);
+        var additionalProperties = occurenceToCreate.AdditionalProperties;
+
+        var newOccurenceToCreate = occurenceToCreate with
+        {
+            AdditionalProperties = []
+        };
+
+        var createdItem = await client.PostAsync<Occurence>(dRofusType.Occurrences.ToRequest(), newOccurenceToCreate.ToPostRequest(), cancellationToken);
+
+        if (additionalProperties is null || additionalProperties.Count == 0)
+            return createdItem;
+
+        var patchOptions = new Occurence
+        {
+            Id = createdItem.Id,
+            AdditionalProperties = additionalProperties
+        };
+
+        createdItem = await client.UpdateOccurrenceAsync(patchOptions, cancellationToken);
+
+        createdItem.ArticleId = occurenceToCreate.ArticleId;
+
+        return createdItem;
     }
 
     /// <summary>
