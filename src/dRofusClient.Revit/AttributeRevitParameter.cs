@@ -1,15 +1,51 @@
 ﻿using Autodesk.Revit.DB;
+using dRofusClient.AttributeConfigurations;
 
 namespace dRofusClient.Revit;
 
 public class AttributeRevitParameter
 {
     public required string ParameterName { get; init; }
+
+    public string Id => AttributeConfigElement.DrofusAttributeId
+        ?? throw new InvalidOperationException("Attribute ID is null");
+
+    public required AttributeConfigurationElement AttributeConfigElement { get; init; }
     public required List<InternalDefinition> Definitions { get; init; }
     public bool HasMultipleDefinitions => Definitions.Count > 1;
 
+    public BuiltInParameter? BuiltInParameter { get; init; }
+
+    public Parameter GetParameter(Element element)
+    {
+        if (BuiltInParameter.HasValue)
+        {
+            var parameter = element.get_Parameter(BuiltInParameter.Value);
+            if (parameter is not null)
+            {
+                return parameter;
+            }
+        }
+        foreach (var definition in Definitions)
+        {
+            var parameter = element.get_Parameter(definition);
+            if (parameter is not null)
+                return parameter;
+        }   
+        throw new InvalidOperationException($"Parameter '{ParameterName}' not found on element");
+    }
+
     public int? GetValue(Element element)
     {
+        if (BuiltInParameter.HasValue)
+        {
+            var parameter = element.get_Parameter(BuiltInParameter.Value);
+            if (parameter is not null)
+            {
+                return ParseParameterValue(parameter);
+            }
+        }
+
         foreach (var definition in Definitions)
         {
             var value = GetParameterValueAsInt(element, definition);
@@ -68,25 +104,56 @@ public class AttributeRevitParameter
 
     public bool SetValue(Element element, int occurenceId)
     {
+        if (BuiltInParameter.HasValue)
+        {
+            using var parameter = element.get_Parameter(BuiltInParameter.Value);
+            if (parameter is not null && TrySetParameterValue(parameter, occurenceId))
+            {
+                return true;
+            }
+        }
+
         foreach (var definition in Definitions)
         {
             using var parameter = element.get_Parameter(definition);
-            if (parameter is null)
-                continue;
-
-            if (parameter.StorageType == StorageType.String)
+            if (parameter is not null && TrySetParameterValue(parameter, occurenceId))
             {
-                if (parameter.Set(occurenceId.ToString()))
-                    return true;
-            }
-            if (parameter.StorageType == StorageType.Integer)
-            {
-                if (parameter.Set(occurenceId))
-                    return true;
+                return true;
             }
         }
 
         return false;
+    }
+
+    private static bool TrySetParameterValue(Parameter parameter, int occurenceId)
+    {
+        if (parameter.IsReadOnly)
+            return false;
+
+        try
+        {
+            switch (parameter.StorageType)
+            {
+                case StorageType.String:
+                    return parameter.Set(occurenceId.ToString());
+                case StorageType.Integer:
+                    return parameter.Set(occurenceId);
+                case StorageType.Double:
+                    return parameter.Set((double)occurenceId);
+                case StorageType.ElementId:
+#if R2014_OR_GREATER
+                    return parameter.Set(new ElementId(occurenceId), false);
+#else
+                    return parameter.Set(new ElementId((long)occurenceId));
+#endif
+                default:
+                    return false;
+            }
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public Element? GetElementWithOccurenceId(Document document, int occurenceId)
@@ -117,6 +184,12 @@ public class AttributeRevitParameter
     {
         var rules = new List<FilterRule>();
 
+        if (BuiltInParameter.HasValue)
+        {
+            var rule = ParameterFilterRuleFactory.CreateHasValueParameterRule(new ElementId(BuiltInParameter.Value));
+            rules.Add(rule);
+        }
+
         foreach (var definition in Definitions)
         {
             var rule = ParameterFilterRuleFactory.CreateHasValueParameterRule(definition.Id);
@@ -129,11 +202,19 @@ public class AttributeRevitParameter
     public ElementFilter CreateEqualsParameterFilter(int occurenceId)
     {
         var rules = new List<FilterRule>();
+        
+        if (BuiltInParameter.HasValue)
+        {
+          var rule = ParameterFilterRuleFactory.CreateEqualsRule(new ElementId(BuiltInParameter.Value), occurenceId);
+            rules.Add(rule);
+        }
+        
         foreach (var definition in Definitions)
         {
             var rule = ParameterFilterRuleFactory.CreateEqualsRule(definition.Id, occurenceId);
             rules.Add(rule);
         }
+    
         return new ElementParameterFilter(rules);
     }
 }
