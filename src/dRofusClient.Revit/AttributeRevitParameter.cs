@@ -141,10 +141,10 @@ public class AttributeRevitParameter
                 case StorageType.Double:
                     return parameter.Set((double)occurenceId);
                 case StorageType.ElementId:
-#if R2023_OR_GREATER
-                    return parameter.Set(new ElementId(occurenceId));
-#else
+#if R2024_OR_GREATER
                     return parameter.Set(new ElementId((long)occurenceId));
+#else
+                    return parameter.Set(new ElementId(occurenceId));
 #endif
                 default:
                     return false;
