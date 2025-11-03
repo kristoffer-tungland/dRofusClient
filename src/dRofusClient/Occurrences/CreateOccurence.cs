@@ -10,6 +10,7 @@ namespace dRofusClient.Occurrences;
 /// equipment_list_type_id: General: Item List Type ID
 /// quantity: General: Quantity
 /// room_id: General: Room ID
+/// room_schedule_id: General: Room Schedule ID
 ///
 /// See dRofus OpenAPI for details.
 /// </summary>
@@ -44,6 +45,12 @@ public record CreateOccurence : dRofusIdDto
     /// </summary>
     [JsonPropertyName("room_id")]
     public int? RoomId { get; init; }
+
+    /// <summary>
+    /// General: Room Schedule ID
+    /// </summary>
+    [JsonPropertyName("room_schedule_id")]
+    public int? RoomScheduleId { get; init; }
 
     public static CreateOccurence Of(Item item)
     {

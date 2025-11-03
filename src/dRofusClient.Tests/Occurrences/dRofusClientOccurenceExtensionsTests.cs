@@ -151,4 +151,30 @@ public class dRofusClientOccurenceExtensionsTests
         Assert.Equal(cancellationToken, fakeClient.LastToken);
         Assert.Equal(42, options.StatusTypeId);
     }
+
+    [Fact]
+    public async Task CreateOccurrenceAsync_WithRoomWithoutRoomScheduleId_ThrowsArgumentException()
+    {
+        var fakeClient = new FakeRofusClient();
+        var occurenceToCreate = new CreateOccurence
+        {
+            ArticleId = 1,
+            RoomId = 5
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => fakeClient.CreateOccurrenceAsync(occurenceToCreate));
+    }
+
+    [Fact]
+    public async Task UpdateOccurrenceAsync_WithRoomWithoutRoomScheduleId_ThrowsArgumentException()
+    {
+        var fakeClient = new FakeRofusClient();
+        var occurence = new Occurence
+        {
+            Id = 10,
+            RoomId = 3
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => fakeClient.UpdateOccurrenceAsync(occurence));
+    }
 }

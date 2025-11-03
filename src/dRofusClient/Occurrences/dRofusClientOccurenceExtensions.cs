@@ -9,6 +9,8 @@ namespace dRofusClient.Occurrences;
 /// </summary>
 public static class dRofusClientOccurenceExtensions
 {
+    private const string RoomScheduleIdPropertyName = Occurence.RoomScheduleIdField;
+
     /// <summary>
     /// Retrieves a list of occurrences matching the specified query.
     /// </summary>
@@ -34,6 +36,8 @@ public static class dRofusClientOccurenceExtensions
     /// <returns>The created <see cref="Occurence"/> object.</returns>
     public static async Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
     {
+        EnsureRoomScheduleIdProvided(occurenceToCreate);
+
         var additionalProperties = occurenceToCreate.AdditionalProperties;
 
         var newOccurenceToCreate = occurenceToCreate with
@@ -84,6 +88,8 @@ public static class dRofusClientOccurenceExtensions
         occurence = occurence.ClearReadOnlyFields();
 
         var patchOptions = occurence.ToPatchRequest();
+
+        EnsureRoomScheduleIdForUpdate(occurence, patchOptions.Body);
 
         Occurence? occurenceResult = null;
 
@@ -154,6 +160,80 @@ public static class dRofusClientOccurenceExtensions
         }
 
         return results;
+    }
+
+    private static void EnsureRoomScheduleIdProvided(CreateOccurence occurence)
+    {
+        if (!IsRoomSpecified(occurence.RoomId, occurence.AdditionalProperties))
+            return;
+
+        if (HasRoomScheduleId(occurence.RoomScheduleId, occurence.AdditionalProperties))
+            return;
+
+        throw new ArgumentException("Room schedule ID must be specified when assigning a room to an occurrence.", nameof(occurence));
+    }
+
+    private static void EnsureRoomScheduleIdForUpdate(Occurence occurence, string? patchBody)
+    {
+        if (!IsRoomIncludedInPatch(patchBody))
+            return;
+
+        if (HasRoomScheduleId(occurence.RoomScheduleId, occurence.AdditionalProperties))
+            return;
+
+        throw new ArgumentException("Room schedule ID must be specified when assigning a room to an occurrence.", nameof(occurence));
+    }
+
+    private static bool IsRoomIncludedInPatch(string? patchBody)
+    {
+        if (string.IsNullOrWhiteSpace(patchBody) || patchBody == "{}")
+            return false;
+
+        using var document = JsonDocument.Parse(patchBody);
+        var root = document.RootElement;
+
+        if (!root.TryGetProperty(Occurence.RoomIdField, out var roomIdElement))
+            return false;
+
+        return roomIdElement.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined;
+    }
+
+    private static bool IsRoomSpecified(int? roomId, Dictionary<string, object>? additionalProperties)
+    {
+        if (roomId.HasValue)
+            return true;
+
+        if (additionalProperties is null)
+            return false;
+
+        if (!additionalProperties.TryGetValue(Occurence.RoomIdField, out var value))
+            return false;
+
+        return value switch
+        {
+            null => false,
+            JsonElement element => element.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined,
+            _ => true
+        };
+    }
+
+    private static bool HasRoomScheduleId(int? roomScheduleId, Dictionary<string, object>? additionalProperties)
+    {
+        if (roomScheduleId.HasValue)
+            return true;
+
+        if (additionalProperties is null)
+            return false;
+
+        if (!additionalProperties.TryGetValue(RoomScheduleIdPropertyName, out var value))
+            return false;
+
+        return value switch
+        {
+            null => false,
+            JsonElement element => element.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined,
+            _ => true
+        };
     }
 
     /// <summary>
