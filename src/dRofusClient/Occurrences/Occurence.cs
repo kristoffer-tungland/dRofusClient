@@ -139,14 +139,6 @@ public record Occurence : dRofusIdDto
     public const string RoomIdField = "room_id";
 
     /// <summary>
-    /// Room Schedule ID.
-    /// </summary>
-    [JsonPropertyName("room_schedule_id")]
-    public int? RoomScheduleId { get; set; }
-    /// <summary>Field name for RoomScheduleId, used in filters and order by clauses.</summary>
-    public const string RoomScheduleIdField = "room_schedule_id";
-
-    /// <summary>
     /// Serial number (run_no).
     /// </summary>
     [JsonPropertyName("run_no")]

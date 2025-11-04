@@ -9,7 +9,7 @@ namespace dRofusClient.Occurrences;
 /// </summary>
 public static class dRofusClientOccurenceExtensions
 {
-    private const string RoomScheduleIdPropertyName = Occurence.RoomScheduleIdField;
+    private const string EquipmentListTypeIdPropertyName = Occurence.EquipmentListTypeIdField;
 
     /// <summary>
     /// Retrieves a list of occurrences matching the specified query.
@@ -36,7 +36,7 @@ public static class dRofusClientOccurenceExtensions
     /// <returns>The created <see cref="Occurence"/> object.</returns>
     public static async Task<Occurence> CreateOccurrenceAsync(this IdRofusClient client, CreateOccurence occurenceToCreate, CancellationToken cancellationToken = default)
     {
-        EnsureRoomScheduleIdProvided(occurenceToCreate);
+        EnsureRoomScheduleReferenceProvided(occurenceToCreate);
 
         var additionalProperties = occurenceToCreate.AdditionalProperties;
 
@@ -89,7 +89,7 @@ public static class dRofusClientOccurenceExtensions
 
         var patchOptions = occurence.ToPatchRequest();
 
-        EnsureRoomScheduleIdForUpdate(occurence, patchOptions.Body);
+        EnsureRoomScheduleReferenceForUpdate(occurence, patchOptions.Body);
 
         Occurence? occurenceResult = null;
 
@@ -162,23 +162,23 @@ public static class dRofusClientOccurenceExtensions
         return results;
     }
 
-    private static void EnsureRoomScheduleIdProvided(CreateOccurence occurence)
+    private static void EnsureRoomScheduleReferenceProvided(CreateOccurence occurence)
     {
         if (!IsRoomSpecified(occurence.RoomId, occurence.AdditionalProperties))
             return;
 
-        if (HasRoomScheduleId(occurence.RoomScheduleId, occurence.AdditionalProperties))
+        if (HasEquipmentListTypeId(occurence.EquipmentListTypeId, occurence.AdditionalProperties))
             return;
 
         throw new ArgumentException("Room schedule ID must be specified when assigning a room to an occurrence.", nameof(occurence));
     }
 
-    private static void EnsureRoomScheduleIdForUpdate(Occurence occurence, string? patchBody)
+    private static void EnsureRoomScheduleReferenceForUpdate(Occurence occurence, string? patchBody)
     {
         if (!IsRoomIncludedInPatch(patchBody))
             return;
 
-        if (HasRoomScheduleId(occurence.RoomScheduleId, occurence.AdditionalProperties))
+        if (HasEquipmentListTypeId(occurence.EquipmentListTypeId, occurence.AdditionalProperties))
             return;
 
         throw new ArgumentException("Room schedule ID must be specified when assigning a room to an occurrence.", nameof(occurence));
@@ -217,15 +217,15 @@ public static class dRofusClientOccurenceExtensions
         };
     }
 
-    private static bool HasRoomScheduleId(int? roomScheduleId, Dictionary<string, object>? additionalProperties)
+    private static bool HasEquipmentListTypeId(int? equipmentListTypeId, Dictionary<string, object>? additionalProperties)
     {
-        if (roomScheduleId.HasValue)
+        if (equipmentListTypeId.HasValue)
             return true;
 
         if (additionalProperties is null)
             return false;
 
-        if (!additionalProperties.TryGetValue(RoomScheduleIdPropertyName, out var value))
+        if (!additionalProperties.TryGetValue(EquipmentListTypeIdPropertyName, out var value))
             return false;
 
         return value switch

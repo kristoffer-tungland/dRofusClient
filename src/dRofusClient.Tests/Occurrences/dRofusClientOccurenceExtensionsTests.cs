@@ -153,7 +153,7 @@ public class dRofusClientOccurenceExtensionsTests
     }
 
     [Fact]
-    public async Task CreateOccurrenceAsync_WithRoomWithoutRoomScheduleId_ThrowsArgumentException()
+    public async Task CreateOccurrenceAsync_WithRoomWithoutEquipmentListTypeId_ThrowsArgumentException()
     {
         var fakeClient = new FakeRofusClient();
         var occurenceToCreate = new CreateOccurence
@@ -166,7 +166,7 @@ public class dRofusClientOccurenceExtensionsTests
     }
 
     [Fact]
-    public async Task UpdateOccurrenceAsync_WithRoomWithoutRoomScheduleId_ThrowsArgumentException()
+    public async Task UpdateOccurrenceAsync_WithRoomWithoutEquipmentListTypeId_ThrowsArgumentException()
     {
         var fakeClient = new FakeRofusClient();
         var occurence = new Occurence
