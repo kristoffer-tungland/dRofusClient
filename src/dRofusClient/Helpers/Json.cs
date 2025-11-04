@@ -14,7 +14,7 @@ public static class Json
     public static string Serialize(object obj) => JsonSerializer.Serialize(obj, Options);
 
     public static async Task<T?> DeserializeAsync<T>(Stream json, CancellationToken cancellationToken) 
-        => await JsonSerializer.DeserializeAsync<T>(json, Options, cancellationToken);
+        => await JsonSerializer.DeserializeAsync<T>(json, Options, cancellationToken).ConfigureAwait(false);
 }
 
 // Custom naming policy for snake_case

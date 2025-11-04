@@ -83,7 +83,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
         var baseUrl = client.GetBaseUrl();
         var server = dRofusServer.FromBaseUrl(baseUrl!);
 
-        var result = await HandleOidcAuthenticationAsync(server, db, pr, cancellationToken);
+        var result = await HandleOidcAuthenticationAsync(server, db, pr, cancellationToken).ConfigureAwait(false);
         client.UpdateAuthentication(result);
     }
 
@@ -93,7 +93,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
         var authority = server.Authority;
         var browser = new SystemBrowser(new Uri(modernLoginOptions.RedirectUri).Port);
 
-        var discoveryDocument = await GetDiscoveryDocument(new HttpClient(), server);
+        var discoveryDocument = await GetDiscoveryDocument(new HttpClient(), server).ConfigureAwait(false);
 
         var options = new OidcClientOptions
         {
@@ -112,15 +112,15 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
         if (!string.IsNullOrEmpty(db)) parameters.Add("db", db!);
         if (!string.IsNullOrEmpty(pr)) parameters.Add("pr", pr!);
 
-        var loginState = await oidcClient.PrepareLoginAsync(parameters, cancellationToken);
+        var loginState = await oidcClient.PrepareLoginAsync(parameters, cancellationToken).ConfigureAwait(false);
 
         // Use the browser instance directly, not loginState.Browser
         var browserResult = await browser.InvokeAsync(
             new BrowserOptions(loginState.StartUrl, options.RedirectUri),
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
-        var result = await oidcClient.ProcessResponseAsync(browserResult.Response, loginState, parameters, cancellationToken);
+        var result = await oidcClient.ProcessResponseAsync(browserResult.Response, loginState, parameters, cancellationToken).ConfigureAwait(false);
 
         if (result.IsError)
             throw new dRofusClientModernLoginException(result.Error)
@@ -131,7 +131,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
 
     public async Task<ModernLoginResult> HandleRefreshToken(IdRofusClient client, dRofusServer server, string refreshToken, CancellationToken cancellationToken)
     {
-        var discoveryDocument = await GetDiscoveryDocument(client.HttpClient, server);
+        var discoveryDocument = await GetDiscoveryDocument(client.HttpClient, server).ConfigureAwait(false);
         var modernClient = client.HttpClient;
 
         var options = new OidcClientOptions
@@ -145,7 +145,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
             LoadProfile = false
         };
         var oidcClient = new OidcClient(options);
-        var result = await oidcClient.RefreshTokenAsync(refreshToken, scope: modernLoginOptions.Scope, cancellationToken: cancellationToken);
+        var result = await oidcClient.RefreshTokenAsync(refreshToken, scope: modernLoginOptions.Scope, cancellationToken: cancellationToken).ConfigureAwait(false);
         
         if (result.IsError)
             throw new dRofusClientModernLoginException(result.Error)
@@ -156,7 +156,7 @@ public class ModernPromptHandler(ModernLoginOptions modernLoginOptions, ILogger?
 
     private async Task<DiscoveryDocumentResponse> GetDiscoveryDocument(HttpClient client, dRofusServer server)
     {
-        var discoveryDocument = await client.GetDiscoveryDocumentAsync(server.Authority);
+        var discoveryDocument = await client.GetDiscoveryDocumentAsync(server.Authority).ConfigureAwait(false);
         
         if (discoveryDocument.IsError)
             throw new dRofusClientLoginException(discoveryDocument.Error ?? "Failed to retrieve discovery document.");
