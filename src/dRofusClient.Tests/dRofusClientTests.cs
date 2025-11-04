@@ -61,4 +61,13 @@ public sealed class dRofusClientTests
         Assert.NotNull(requestMessage.RequestUri);
         Assert.Equal("/api/test_database/01/occurrences/65", requestMessage.RequestUri.ToString());
     }
+
+    [Fact]
+    internal void BaseUrl_NormalizeServerAddress_WithApiPrefix()
+    {
+        // Test that "api-no.drofus.com" is normalized to "https://api-no.drofus.com"
+        // without adding an extra "https://api-" prefix
+        var connection = dRofusConnectionArgs.Create("api-no.drofus.com", "test_database", "01", "username", "password");
+        Assert.Equal("https://api-no.drofus.com", connection.BaseUrl);
+    }
 }

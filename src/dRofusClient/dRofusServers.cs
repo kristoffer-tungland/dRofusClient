@@ -2,6 +2,7 @@
 
 
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace dRofusClient;
 
@@ -34,10 +35,10 @@ public static class dRofusServers
     {
         server = server.TrimEnd('/');
 
-        if (server == GetNoServer())
+        if (GetNoServer().EndsWith(server, StringComparison.OrdinalIgnoreCase))
             server = GetDefaultServer();
         else
-            server = server.Replace("http://", string.Empty).Replace("https://", string.Empty);
+            server = Regex.Replace(Regex.Replace(server, "http://", string.Empty, RegexOptions.IgnoreCase), "https://", string.Empty, RegexOptions.IgnoreCase);
 
         return server;
     }
