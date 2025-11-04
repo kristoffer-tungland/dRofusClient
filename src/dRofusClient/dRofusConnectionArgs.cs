@@ -13,6 +13,8 @@ public record dRofusConnectionArgs(string BaseUrl, string Database, string Proje
 
     private static string NormalizeServerAddress(string baseUrl)
     {
+        baseUrl = dRofusServers.UriAdressToServer(baseUrl);
+
         if (baseUrl.Equals(dRofusServers.GetDefaultServer(), StringComparison.OrdinalIgnoreCase))
             return dRofusServers.GetNoServer();
 

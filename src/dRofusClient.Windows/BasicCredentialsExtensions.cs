@@ -28,13 +28,7 @@ public static class BasicCredentialsExtensions
 
     private static string CreateTarget(string server, string username)
     {
-        server = server.TrimEnd('/');
-
-        if (server == "https://api-no.drofus.com")
-            server = "db2.nosyko.no";
-        else
-            server = server.Replace("http://", string.Empty).Replace("https://", string.Empty);
-
+        server = dRofusServers.UriAdressToServer(server);
         return "drofus://" + username + "@" + server;
     }
 }
