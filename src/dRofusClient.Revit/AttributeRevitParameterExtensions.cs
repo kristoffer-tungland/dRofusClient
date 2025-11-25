@@ -74,17 +74,29 @@ public static class AttributeRevitParameterExtensions
         }
         else
         {
+            using var collector = new FilteredElementCollector(document).OfClass(typeof(ParameterElement));
 
-            using var iterator = document.ParameterBindings.ForwardIterator();
+            using var iterator = collector.GetElementIterator();
 
             while (iterator.MoveNext())
             {
-                if (iterator.Key is not InternalDefinition definition)
+                var element = iterator.Current;
+
+                if (element is not ParameterElement parameterElement)
                     continue;
 
-                if (definition.Name == revitParameterName)
+
+                if (revitParameterName.EndsWith(parameterElement.Name, StringComparison.OrdinalIgnoreCase))
                 {
-                    definitions.Add(definition);
+                    var definition = parameterElement.GetDefinition();
+
+                    if (definition is null)
+                        continue;
+
+                    if (definition.Name.Equals(revitParameterName, StringComparison.OrdinalIgnoreCase) == false)
+                        continue;
+
+                    definitions.Add(parameterElement.GetDefinition());
                     break;
                 }
             }
