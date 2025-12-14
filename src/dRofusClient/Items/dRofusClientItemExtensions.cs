@@ -43,7 +43,7 @@ public static class dRofusClientItemExtensions
     /// <returns>The <see cref="Item"/> object with the specified ID.</returns>
     public static async Task<Item> GetItemAsync(this IdRofusClient client, int id, ItemQuery? query = default, CancellationToken cancellationToken = default)
     {
-        var item = await client.GetAsync<Item>(dRofusType.Items.CombineToRequest(id), query, cancellationToken);
+        var item = await client.GetAsync<Item>(dRofusType.Items.CombineToRequest(id), query, cancellationToken).ConfigureAwait(false);
         return item;
     }
 
@@ -61,7 +61,7 @@ public static class dRofusClientItemExtensions
         var patchOptions = item.ToPatchRequest();
         Item? itemResult = null;
         if (patchOptions.Body is not null && patchOptions.Body.Equals("{}") == false)
-            itemResult = await client.PatchAsync<Item>(dRofusType.Items.CombineToRequest(item.Id), patchOptions, cancellationToken);
+            itemResult = await client.PatchAsync<Item>(dRofusType.Items.CombineToRequest(item.Id), patchOptions, cancellationToken).ConfigureAwait(false);
         itemResult ??= item with { Id = item.Id, AdditionalProperties = item.AdditionalProperties };
         return itemResult;
     }
@@ -127,9 +127,9 @@ public static class dRofusClientItemExtensions
             form.Add(new StringContent(description), "description");
 
         var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = form };
-        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        var response = await client.HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Files.FileUploadResponse>(cancellationToken) ?? new Files.FileUploadResponse();
+        return await response.Content.ReadFromJsonAsync<Files.FileUploadResponse>(cancellationToken).ConfigureAwait(false) ?? new Files.FileUploadResponse();
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public static class dRofusClientItemExtensions
         var (db, pr) = client.GetDatabaseAndProjectId();
         var url = $"/api/{db}/{pr}/" + dRofusType.Items.CombineToRequest(itemId, "files", fileId.ToString());
         var request = new HttpRequestMessage(HttpMethod.Post, url);
-        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        var response = await client.HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -152,7 +152,7 @@ public static class dRofusClientItemExtensions
         var (db, pr) = client.GetDatabaseAndProjectId();
         var url = $"/api/{db}/{pr}/" + dRofusType.Items.CombineToRequest(itemId, "files", fileId.ToString());
         var request = new HttpRequestMessage(HttpMethod.Delete, url);
-        var response = await client.HttpClient.SendAsync(request, cancellationToken);
+        var response = await client.HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 

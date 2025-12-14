@@ -94,13 +94,13 @@ public static class dRofusClientOccurenceExtensions
         Occurence? occurenceResult = null;
 
         if (patchOptions.Body is not null && patchOptions.Body.Equals("{}") == false)
-            occurenceResult = await client.PatchAsync<Occurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions, cancellationToken);
+            occurenceResult = await client.PatchAsync<Occurence>(dRofusType.Occurrences.CombineToRequest(occurence.Id), patchOptions, cancellationToken).ConfigureAwait(false);
 
         occurenceResult ??= occurence with { Id = occurence.Id, AdditionalProperties = occurence.AdditionalProperties };
 
         if (patchOptions.StatusFields is not null)
         {
-            var statusResults = await client.UpdateStatusesAsync(occurence.Id, patchOptions.StatusFields, cancellationToken);
+            var statusResults = await client.UpdateStatusesAsync(occurence.Id, patchOptions.StatusFields, cancellationToken).ConfigureAwait(false);
             UpdateStatusesOnOccurence(occurenceResult, statusResults);
         }
 
@@ -155,7 +155,7 @@ public static class dRofusClientOccurenceExtensions
             // Use the new extension method for KeyValuePair<string, object>
             var query = prop.ToStatusPatchOption();
 
-            var result = await client.UpdateOccurrenceStatusAsync(id.Value, query, cancellationToken);
+            var result = await client.UpdateOccurrenceStatusAsync(id.Value, query, cancellationToken).ConfigureAwait(false);
             results.Add(result);
         }
 
@@ -247,7 +247,7 @@ public static class dRofusClientOccurenceExtensions
     public static async Task<StatusPatchResult> UpdateOccurrenceStatusAsync(this IdRofusClient client, int id, StatusPatchRequest query, CancellationToken cancellationToken = default)
     {
         var request = dRofusType.Occurrences.CombineToRequest(id, "statuses", query.StatusTypeId.ToString());
-        var result = await client.PatchAsync<StatusPatchBody>(request, query, cancellationToken);
+        var result = await client.PatchAsync<StatusPatchBody>(request, query, cancellationToken).ConfigureAwait(false);
 
         return new StatusPatchResult
         {
