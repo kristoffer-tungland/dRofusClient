@@ -11,7 +11,7 @@
       "name": "Copyright dRofus AS © 1998-2025",
       "url": "https://drofus.com"
     },
-    "version": "47.2.0"
+    "version": "50.1.1"
   },
   "paths": {
     "/api/{db}/{pr}/attributeconfigurations": {
@@ -795,7 +795,7 @@
           "Items"
         ],
         "summary": "Get list of Items",
-        "description": "Additional filter fields and supported operator: \n* default_search (`contains`)\n* group_or_parent (`in`)\n* classification_or_parent (`in`)",
+        "description": "Additional filter fields and supported operator: \n* default_search (`contains`)\n* group_or_parent (`in`)\n* classification_or_parent (`in`)\n\n\nSupports lambda fielters:\n\n* Occurrences\n* Products\n\nThis allows to filter for 'where exists' a sub/related entity. Syntax is: _relatedEntityName/any(x:x/relatedEntityFilter)_.\nThe **relatedEntityFilter** should have a syntax as if it was searching for related entity only. \n\nExample: If _Occurrences_ has propety _abc_ and you want to filter where there exists any _Occurrences_ for this entity with the\nproperty equals B you can use the following filter: `Occurrences/any(x:x/abc eq 'B')`. Note any valid filter for _Occurrences_ can be used inside the ().",
         "parameters": [
           {
             "$ref": "#/components/parameters/$select"
@@ -3379,6 +3379,7 @@
           "RoomFunctions"
         ],
         "summary": "Get list of Room Functions",
+        "description": "Additional filter fields and supported operator: \n* function_or_descendant_functions_has_function_data (`equal`)",
         "parameters": [
           {
             "$ref": "#/components/parameters/$select"
@@ -4199,7 +4200,7 @@
           "Rooms"
         ],
         "summary": "Get list of Rooms",
-        "description": "Additional filter fields and supported operator: \n* default_search (`contains`)\n* function_or_parent (`in`)\n* group (`in`)\n* classification_or_parent (`in`)\n* using_template (`in`)",
+        "description": "Additional filter fields and supported operator: \n* default_search (`contains`)\n* function_or_parent (`in`)\n* group (`in`)\n* classification_or_parent (`in`)\n* using_template (`in`)\n\n\nSupports lambda fielters:\n\n* Occurrences\n\nThis allows to filter for 'where exists' a sub/related entity. Syntax is: _relatedEntityName/any(x:x/relatedEntityFilter)_.\nThe **relatedEntityFilter** should have a syntax as if it was searching for related entity only. \n\nExample: If _Occurrences_ has propety _abc_ and you want to filter where there exists any _Occurrences_ for this entity with the\nproperty equals B you can use the following filter: `Occurrences/any(x:x/abc eq 'B')`. Note any valid filter for _Occurrences_ can be used inside the ().",
         "parameters": [
           {
             "$ref": "#/components/parameters/$select"
@@ -8362,7 +8363,6 @@
             "title": "General: Log Note",
             "type": "string",
             "description": "General: Log Note",
-            "readOnly": true,
             "x-drofus-group": "General"
           },
           "old_value": {
@@ -9906,7 +9906,7 @@
       "$filter": {
         "name": "$filter",
         "in": "query",
-        "description": "How to filter result. Ie. name eq 'Storage'.\r\nThe literal values can be strings enclosed in single quotes, numbers (with . as decimal separator) and boolean values (true or false).\r\nSimple operators supported\r\n'eq', 'ne', 'lt', 'gt', 'le', 'ge' and 'in'\r\nFunctions supported\r\n'contains', 'notcontains', 'startswith' and 'endswith'\r\nOperators 'and' and 'or' can be used to combine expressions. Use parentheses if needed to group expressions.\r\nThe 'in' operand MUST be a comma-separated list of primitive values enclosed in parentheses.\r\nExample usage\r\n'eq' - Name eq 'dRofus'\r\n'in' - Address in ('Redmond', 'London')\r\n'contains' - contains(CompanyName,'freds')\r\n'notcontains' - notcontains(CompanyName,'freds')\r\n'startswith' - startswith(Name, 'dR')\r\n'endswith' - endswith(Name, 'fus')\r\nSpecify literal 'null' (without quotes) to search for item equal to or not equal to null.\r\nQuotes in strings must be represented as two consecutive quotes, ie name eq 'O''Brian'",
+        "description": "How to filter result. Ie. _name eq 'Storage'_.\r\n            \r\nThe literal values can be strings enclosed in single quotes, numbers (with . as decimal separator) and boolean values (true or false).\r\n            \r\nSimple operators supported:\r\n'eq', 'ne', 'lt', 'gt', 'le', 'ge' and 'in'\r\n            \r\nFunctions supported:\r\n'contains', 'notcontains', 'startswith' and 'endswith'\r\n            \r\nOperators 'and' and 'or' can be used to combine expressions. Use parentheses if needed to group expressions.\r\n            \r\nThe 'in' operand MUST be a comma-separated list of primitive values enclosed in parentheses.\r\n            \r\nExample usage\r\n* 'eq' - Name eq 'dRofus'\r\n* 'in' - Address in ('Redmond', 'London')\r\n* 'contains' - contains(CompanyName,'freds')\r\n* 'notcontains' - notcontains(CompanyName,'freds')\r\n* 'startswith' - startswith(Name, 'dR')\r\n* 'endswith' - endswith(Name, 'fus')\r\n            \r\nSpecify literal 'null' (without quotes) to search for item equal to or not equal to null.\r\nQuotes in strings must be represented as two consecutive quotes, ie name eq 'O''Brian'",
         "schema": {
           "type": "string"
         }
