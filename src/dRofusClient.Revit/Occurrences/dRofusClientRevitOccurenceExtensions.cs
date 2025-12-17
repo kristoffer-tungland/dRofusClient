@@ -2,6 +2,7 @@ using dRofusClient.Options;
 using dRofusClient.Revit.Utils;
 using dRofusClient.Files;
 using dRofusClient.ApiLogs;
+using dRofusClient.Systems;
 
 namespace dRofusClient.Occurrences
 {
@@ -134,6 +135,14 @@ namespace dRofusClient.Occurrences
         public static List<Image> GetOccurrenceImages(this IdRofusClient client, int id, ListQuery query, CancellationToken cancellationToken = default)
         {
             return AsyncUtil.RunSync(() => client.GetOccurrenceImagesAsync(id, query, cancellationToken));
+        }
+
+        /// <summary>
+        /// Retrieves the systems that the occurrence is a member of.
+        /// </summary>
+        public static List<SystemInstance> GetOccurrenceSystems(this IdRofusClient client, int id, IsMemberOfSystemsQuery query, CancellationToken cancellationToken = default)
+        {
+            return AsyncUtil.RunSync(() => client.GetOccurrenceSystemsAsync(id, query, cancellationToken));
         }
     }
 }
