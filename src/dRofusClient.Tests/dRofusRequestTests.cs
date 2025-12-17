@@ -1,4 +1,5 @@
 using dRofusClient.Occurrences;
+using dRofusClient.Options;
 
 namespace dRofusClient.Tests;
 
@@ -276,5 +277,27 @@ public class dRofusRequestTests
         var parameters = Query.List().Filter(
             Filter.IsNotEmpty("number")).GetParameters();
         Assert.Equal("$filter=number ne null", parameters);
+    }
+
+    [Fact]
+    public void IsMemberOfSystemsQuery_Includes_IncludeSubsFlag()
+    {
+        var parameters = new IsMemberOfSystemsQuery
+        {
+            IncludeSubs = true
+        }.GetParameters();
+
+        Assert.Equal("includeSubs=true", parameters);
+    }
+
+    [Fact]
+    public void IsMemberOfSystemsQuery_Handles_FalseIncludeSubsFlag()
+    {
+        var parameters = new IsMemberOfSystemsQuery
+        {
+            IncludeSubs = false
+        }.GetParameters();
+
+        Assert.Equal("includeSubs=false", parameters);
     }
 }
