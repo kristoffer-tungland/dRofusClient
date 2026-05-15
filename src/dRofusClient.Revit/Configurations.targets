@@ -75,7 +75,7 @@
     </When>
     <When Condition="$(Configuration.Contains('2027')) or $([System.String]::Equals('$(MainRevitVersion)', '2027'))">
       <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <MainRevitVersion>2027</MainRevitVersion>
         <RevitVersion>2027.0.0</RevitVersion>
         <DefineConstants>R2027;R2019_OR_GREATER;R2020_OR_GREATER;R2021_OR_GREATER;R2022_OR_GREATER;R2023_OR_GREATER;R2024_OR_GREATER;R2025_OR_GREATER;R2026_OR_GREATER;R2027_OR_GREATER;R2027_OR_LESS</DefineConstants>
