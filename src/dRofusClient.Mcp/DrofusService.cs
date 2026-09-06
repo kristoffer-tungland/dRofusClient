@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.Text.Json;
 using dRofusClient.Enums;
+using dRofusClient.Exceptions;
 using dRofusClient.Filters;
 using dRofusClient.Items;
 using dRofusClient.Models;
 using dRofusClient.Occurrences;
 using dRofusClient.Options;
+using dRofusClient.Parameters;
 using dRofusClient.PropertyMeta;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -112,7 +114,10 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         if (entity == "occurrences" && changes.TryGetValue("room_id", out var room) && room.ValueKind != JsonValueKind.Null &&
             (!changes.TryGetValue("equipment_list_type_id", out var schedule) || schedule.ValueKind != JsonValueKind.Number))
             throw new McpException("Assigning a room requires equipment_list_type_id (room schedule) in the same update.");
-        var selected = changes.Keys.Concat(statuses.Select(s => $"ce{s.StatusTypeId}_id")).Append("id").Distinct().ToArray();
+        if (changes.Keys.Any(f => f.StartsWith("ce", StringComparison.Ordinal) ||
+            f.StartsWith("occurrence_classification_", StringComparison.Ordinal)))
+            throw new McpException("Pass occurrence status changes through statuses, not changes.");
+        var selected = changes.Keys.Concat(statuses.Select(s => FindStatusField(s.StatusTypeId, definitions))).Append("id").Distinct().ToArray();
         await _writeLock.WaitAsync(cancellationToken);
         try
         {
@@ -204,7 +209,7 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         ValidateFields(fields);
         if (filters?.Length > 20)
             throw new McpException("At most 20 filters are supported.");
-        var query = Query.List().Top(limit + 1).Skip(offset).Select(fields);
+        var query = new EncodedListQuery().Top(limit + 1).Skip(offset).Select(fields);
         foreach (var filter in filters ?? [])
         {
             if (!FieldCatalog.IsFieldName(filter.Field))
@@ -276,6 +281,14 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         return fields.Select(field => json.TryGetProperty(field, out var property) ? property.GetRawText() : "null");
     }
 
+    private static string FindStatusField(int typeId, IReadOnlyDictionary<string, FieldDefinition> fields)
+    {
+        string[] candidates = [$"ce{typeId}_id", $"ce{typeId}_id_or_parents",
+            $"occurrence_classification_{typeId}_classification_entry_id_id"];
+        return candidates.FirstOrDefault(fields.ContainsKey) ??
+            throw new McpException("Status type is not present in project metadata. Inspect get_field_metadata before updating statuses.");
+    }
+
     private void EnsureWritesEnabled()
     {
         if (!settings.EnableWrites)
@@ -286,7 +299,7 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         logger.LogWarning("dRofus write {Operation} entity {EntityId}: {Outcome}", operation, id, outcome);
 
     private static bool IsUpstreamFailure(Exception exception) =>
-        exception is HttpRequestException or JsonException or OperationCanceledException or NullReferenceException;
+        exception is HttpRequestException or dRofusClientException or JsonException or OperationCanceledException or NullReferenceException;
 
     private static async Task<T> SafeAsync<T>(Func<Task<T>> action)
     {
@@ -297,6 +310,18 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         }
         catch (JsonException) { throw new McpException("dRofus returned an unexpected response. Upstream details were redacted."); }
         catch (NullReferenceException) { throw new McpException("dRofus returned an empty response."); }
+        catch (dRofusClientException) { throw new McpException("dRofus authentication or client request failed. Check the configured account and permissions."); }
+    }
+
+    private sealed record EncodedListQuery : ListQuery
+    {
+        public override void AddParametersToRequest(List<RequestParameter> parameters)
+        {
+            var values = new List<RequestParameter>();
+            base.AddParametersToRequest(values);
+            // The core query builder formats expressions but does not URL-encode parameter values.
+            parameters.AddRange(values.Select(value => value with { Value = Uri.EscapeDataString(value.Value) }));
+        }
     }
 
     public void Dispose() => _writeLock.Dispose();

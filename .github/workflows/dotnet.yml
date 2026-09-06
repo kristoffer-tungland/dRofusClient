@@ -8,6 +8,20 @@ on:
     branches: [ "master" ]
 
 jobs:
+  mcp:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Test client and MCP server
+      run: dotnet test "${{ github.workspace }}/src/dRofusClient.Tests/dRofusClient.Tests.csproj" --configuration Release
+    - name: Publish MCP server
+      run: dotnet publish "${{ github.workspace }}/src/dRofusClient.Mcp/dRofusClient.Mcp.csproj" --configuration Release --no-restore --output "${{ runner.temp }}/drofus-mcp"
+
   build:
     runs-on: windows-latest
     strategy:

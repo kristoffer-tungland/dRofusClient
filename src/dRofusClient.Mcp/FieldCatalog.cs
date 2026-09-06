@@ -1,5 +1,9 @@
 using System.Text.Json;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using dRofusClient.Items;
+using dRofusClient.Occurrences;
 using dRofusClient.PropertyMeta;
 using ModelContextProtocol;
 
@@ -20,6 +24,15 @@ public sealed class FieldCatalog
     {
         var result = new Dictionary<string, FieldDefinition>(StringComparer.Ordinal);
         AddSchema(_schemas.GetProperty(schemaName), result);
+        var dtoType = schemaName switch { "Item" => typeof(Item), "Occurrence" => typeof(Occurence), _ => null };
+        if (dtoType is not null)
+            foreach (var property in dtoType.GetProperties())
+                if (property.GetCustomAttribute<JsonPropertyNameAttribute>() is { } name &&
+                    property.SetMethod?.ReturnParameter.GetRequiredCustomModifiers()
+                        .Any(t => t.FullName == "System.Runtime.CompilerServices.IsExternalInit") == true)
+                    result[name.Name] = result.TryGetValue(name.Name, out var field)
+                        ? field with { ReadOnly = true }
+                        : new(name.Name, null, "unknown", true, null, null);
         return result;
     }
 
@@ -30,13 +43,17 @@ public sealed class FieldCatalog
         {
             if (!IsFieldName(field.Id))
                 continue;
+            bool? readOnly = field.AdditionalProperties.TryGetValue("readOnly", out var value) &&
+                value is JsonElement element && element.ValueKind is JsonValueKind.True or JsonValueKind.False
+                    ? element.GetBoolean() : null;
             if (fields.TryGetValue(field.Id, out var known))
-                fields[field.Id] = known with { Name = field.Name, Unit = field.Unit };
+                fields[field.Id] = known with
+                {
+                    Name = field.Name, Unit = field.Unit,
+                    ReadOnly = known.ReadOnly == true || readOnly == true ? true : known.ReadOnly
+                };
             else
             {
-                bool? readOnly = field.AdditionalProperties.TryGetValue("readOnly", out var value) &&
-                    value is JsonElement element && element.ValueKind is JsonValueKind.True or JsonValueKind.False
-                        ? element.GetBoolean() : null;
                 fields[field.Id] = new(field.Id, field.Name, NormalizeType(field.DataType), readOnly, field.Unit, null);
             }
         }
