@@ -30,7 +30,7 @@ public static class dRofusAttributeConfigurationExtensions
     {
         var options = Query.List()
             .Filter(Filter.Eq("id", attributeConfigurationId));
-        var items = await client.GetListAsync<AttributeConfiguration>(dRofusType.AttributeConfigurations.ToRequest(), options, cancellationToken);
+        var items = await client.GetListAsync<AttributeConfiguration>(dRofusType.AttributeConfigurations.ToRequest(), options, cancellationToken).ConfigureAwait(false);
         return items.FirstOrDefault();
     }
 }

@@ -121,7 +121,7 @@ public class LoginViewModel : ViewModelBase
 
         if (UseModernSignIn)
         {
-            await ExecuteModernLogin(cancellationToken);
+            await ExecuteModernLogin(cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -129,7 +129,7 @@ public class LoginViewModel : ViewModelBase
 
         try
         {
-            await client.Login(args, cancellationToken);
+            await client.Login(args, cancellationToken).ConfigureAwait(false);
 
             if (RememberMe)
             {
@@ -160,7 +160,7 @@ public class LoginViewModel : ViewModelBase
 
         var modernPromptHandler = new ModernPromptHandler(_modernLoginOptions, _logger);
 
-        var result = await modernPromptHandler.HandleOidcAuthenticationAsync(ModernServer!, Database!, ProjectId!, cancellationToken);
+        var result = await modernPromptHandler.HandleOidcAuthenticationAsync(ModernServer!, Database!, ProjectId!, cancellationToken).ConfigureAwait(false);
         var args = ModernConnectionArgs.Create(ModernServer!, Database!, ProjectId!, result);
         _onLogin?.Invoke(args);
     }

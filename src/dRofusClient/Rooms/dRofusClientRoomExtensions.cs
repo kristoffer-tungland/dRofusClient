@@ -22,7 +22,7 @@ public static class dRofusClientRoomExtensions
         var patchOptions = room.ToPatchRequest();
         Room? result = null;
         if (patchOptions.Body is not null && patchOptions.Body != "{}")
-            result = await client.PatchAsync<Room>(dRofusType.Rooms.CombineToRequest(room.Id), patchOptions, cancellationToken);
+            result = await client.PatchAsync<Room>(dRofusType.Rooms.CombineToRequest(room.Id), patchOptions, cancellationToken).ConfigureAwait(false);
         result ??= room with { Id = room.Id };
         return result;
     }
@@ -97,7 +97,7 @@ public static class dRofusClientRoomExtensions
     {
         var (db, pr) = client.GetDatabaseAndProjectId();
         var url = $"/api/{db}/{pr}/" + dRofusType.Rooms.CombineToRequest("images", roomImageId.ToString());
-        return await client.HttpClient.GetByteArrayAsync(url);
+        return await client.HttpClient.GetByteArrayAsync(url).ConfigureAwait(false);
     }
 
     public static Task<Files.Image> GetRoomImageMetaAsync(this IdRofusClient client, int roomImageId, ItemQuery? query = default, CancellationToken cancellationToken = default)

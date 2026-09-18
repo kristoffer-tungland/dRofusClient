@@ -20,7 +20,7 @@ public static class dRofusAttributeConfigurationExtensions
         var options = Query.List()
                     .Filter(Filter.Eq("id", attributeConfigurationId));
 
-        var attributeConfigurations = await client.GetAttributeConfigurationsAsync(options);
+        var attributeConfigurations = await client.GetAttributeConfigurationsAsync(options).ConfigureAwait(false);
 
         if (attributeConfigurations.FirstOrDefault() is not { } attributeConfiguration)
             throw new InvalidOperationException($"Failed to get attribute configurations for id {attributeConfigurationId}");
