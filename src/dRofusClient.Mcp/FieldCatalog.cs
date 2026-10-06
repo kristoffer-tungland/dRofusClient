@@ -60,6 +60,20 @@ public sealed class FieldCatalog
         return fields;
     }
 
+    public List<CustomPropertyDefinition> GetCustomProperties(string schemaName, IReadOnlyList<dRofusPropertyMeta> metadata)
+    {
+        var standardIds = GetFields(schemaName).Keys.ToHashSet(StringComparer.Ordinal);
+        var dtoType = schemaName == "Item" ? typeof(Item) : typeof(Occurence);
+        foreach (var property in dtoType.GetProperties())
+            if (property.GetCustomAttribute<JsonPropertyNameAttribute>() is { } name)
+                standardIds.Add(name.Name);
+        var definitions = WithMetadata(schemaName, metadata);
+        return metadata.Where(field => IsFieldName(field.Id) && !standardIds.Contains(field.Id))
+            .Select(field => new CustomPropertyDefinition(field.Id, field.Name, field.PropertyGroup,
+                field.GetTitle(), definitions[field.Id].Type, field.DataType, definitions[field.Id].ReadOnly, field.Unit))
+            .OrderBy(field => field.Id, StringComparer.Ordinal).ToList();
+    }
+
     public static void ValidateChanges(IReadOnlyDictionary<string, JsonElement> changes,
         IReadOnlyDictionary<string, FieldDefinition> fields, bool creating = false)
     {

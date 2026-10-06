@@ -14,6 +14,10 @@ public sealed record StatusChange(
     string? Code = null);
 
 public sealed record FieldDefinition(string Id, string? Name, string Type, bool? ReadOnly, string? Unit, JsonElement? Schema);
+public sealed record CustomPropertyDefinition(string Id, string Name, string? PropertyGroup,
+    string Title, string Type, string DataType, bool? ReadOnly, string? Unit);
+public sealed record PropertyResolution(string Status, string? ResolvedId, int MatchCount,
+    IReadOnlyList<CustomPropertyDefinition> Candidates);
 public sealed record ReadResult(ProjectContext Project, object Data, int? NextOffset = null,
     bool HasMore = false, string? Notice = null);
 public sealed record WriteResult(ProjectContext Project, string Outcome, int? Id,

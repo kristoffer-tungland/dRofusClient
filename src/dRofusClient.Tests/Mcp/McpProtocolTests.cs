@@ -8,12 +8,25 @@ namespace dRofusClient.Tests.Mcp;
 public sealed class McpProtocolTests
 {
     [Fact]
-    public async Task StdioInitializesListsTenToolsAndReturnsStructuredPreview()
+    public async Task StdioInitializesListsTwelveToolsAndReturnsStructuredPreview()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
-        Assert.Equal(10, tools.Count);
+        Assert.Equal(12, tools.Count);
+        Assert.Contains(tools, t => t.Name == "search_custom_properties");
+        Assert.Contains(tools, t => t.Name == "resolve_custom_property");
+        foreach (var name in new[] { "search_custom_properties", "resolve_custom_property" })
+        {
+            var tool = tools.Single(t => t.Name == name);
+            Assert.Contains("entity", tool.JsonSchema.GetRawText());
+            Assert.Contains("propertyGroup", tool.JsonSchema.GetRawText());
+            var invalid = await client.CallToolAsync(name, new Dictionary<string, object?>
+            {
+                ["entity"] = "rooms", ["property"] = "Power"
+            }, cancellationToken: timeout.Token);
+            Assert.True(invalid.IsError);
+        }
         Assert.Contains(tools, t => t.Name == "get_item_history");
         Assert.Contains(tools, t => t.Name == "get_occurrence_history");
         Assert.Contains(tools, t => t.Name == "create_item");

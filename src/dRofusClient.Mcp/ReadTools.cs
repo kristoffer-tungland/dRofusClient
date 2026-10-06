@@ -45,4 +45,16 @@ public sealed class ReadTools(DrofusService service)
     public Task<ReadResult> GetFieldMetadata(string entity, int limit = 100, int offset = 0,
         CancellationToken cancellationToken = default) =>
         service.MetadataAsync(entity, limit, offset, cancellationToken);
+
+    [McpServerTool(Name = "search_custom_properties", ReadOnly = true, UseStructuredContent = true)]
+    [Description("Discover available project custom/dynamic properties for entity 'items' or 'occurrences'. Search matches ID, label or grouped title (case-insensitive substring); propertyGroup is an optional exact group filter. Omit search to list. Returns API IDs, labels, groups, types, units and known readOnly restrictions. Use pagination; never infer a field ID from a label.")]
+    public Task<ReadResult> SearchCustomProperties(string entity, string? search = null, string? propertyGroup = null,
+        int limit = 25, int offset = 0, CancellationToken cancellationToken = default) =>
+        service.SearchCustomPropertiesAsync(entity, search, propertyGroup, limit, offset, cancellationToken);
+
+    [McpServerTool(Name = "resolve_custom_property", ReadOnly = true, UseStructuredContent = true)]
+    [Description("Resolve a project custom/dynamic property to its API ID for 'items' or 'occurrences'. Matches exact ID first, then exact label or 'group: label' title, case-insensitively. Optional propertyGroup narrows by exact group. Returns resolved, ambiguous or not_found with paginated candidates; ambiguous results never select an ID. Use search_custom_properties for partial names.")]
+    public Task<ReadResult> ResolveCustomProperty(string entity, string property, string? propertyGroup = null,
+        int limit = 25, int offset = 0, CancellationToken cancellationToken = default) =>
+        service.ResolveCustomPropertyAsync(entity, property, propertyGroup, limit, offset, cancellationToken);
 }

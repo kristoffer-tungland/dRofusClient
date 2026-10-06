@@ -167,8 +167,28 @@ one project; tools cannot change the destination or authentication.
 | `search_occurrences`, `get_occurrence` | Search/read Occurrences, including filters on `article_id` and `room_id` |
 | `get_item_history`, `get_occurrence_history` | Per-entity API change log, including time, user, action, field, old/new values and notes |
 | `get_field_metadata` | Project field labels, identifiers, types, units and known read-only restrictions; entity is `items` or `occurrences` |
+| `search_custom_properties` | List/search live custom and dynamic properties by API ID, label or group, with optional exact `propertyGroup` filtering |
+| `resolve_custom_property` | Resolve an exact ID, label or `group: label` to an API ID, reporting ambiguous or missing matches instead of guessing |
 | `create_item` | Create an Item with required `level_id` (existing item group) and `name` |
 | `update_item`, `update_occurrence` | Sparse field updates; occurrence statuses are separate ordered steps |
+
+Both custom-property tools accept `entity` (`items` or `occurrences`), `limit`
+(1–100, default 25) and `offset`. Discovery uses live project metadata and excludes
+standard fields defined in the bundled schema or client DTOs; dynamic status fields
+are included. Use `get_field_metadata` for standard fields. Results retain the
+property group, grouped title, original `dataType`, normalized `type`, unit and
+conservative `readOnly` flag.
+
+Call `search_custom_properties` with no `search` to list properties, or supply a
+case-insensitive substring of the ID or grouped title. To resolve a label, call
+`resolve_custom_property` with `property`, optionally narrowed by an exact
+`propertyGroup`. Matching is case-insensitive: exact IDs take precedence over exact
+labels/titles. Resolution returns `resolved`, `ambiguous` or `not_found`, a
+`resolvedId` only for a unique match, the full `matchCount`, and paginated
+`candidates`. Pagination never turns an ambiguous result into a unique match.
+Use the returned API ID verbatim in `fields`, filters or `changes`; never construct
+IDs from display labels. Unknown writability remains blocked, and occurrence
+status changes still go through `statuses`, not ordinary field patches.
 
 Search/history filters are an array of `{ "field": "article_id", "operator": "eq",
 "value": 123 }` objects, combined with AND. Supported operators are `eq`, `ne`,
