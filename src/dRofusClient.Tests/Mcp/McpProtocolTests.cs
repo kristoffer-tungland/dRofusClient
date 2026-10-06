@@ -30,6 +30,35 @@ public sealed class McpProtocolTests
         Assert.Contains(tools, t => t.Name == "get_item_history");
         Assert.Contains(tools, t => t.Name == "get_occurrence_history");
         Assert.Contains(tools, t => t.Name == "create_item");
+        foreach (var name in new[] { "search_items", "get_item", "search_occurrences", "get_occurrence",
+            "get_item_history", "get_occurrence_history", "create_item", "update_item", "update_occurrence" })
+        {
+            var description = tools.Single(t => t.Name == name).Description!;
+            Assert.Contains("get_field_metadata", description);
+            Assert.Contains("search_custom_properties", description);
+            Assert.Contains("resolve_custom_property", description);
+            Assert.Contains(name.Contains("occurrence") ? "entity='occurrences'" : "entity='items'", description);
+            Assert.Contains("proactively", description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("ambiguous", description);
+        }
+        Assert.Contains("in fields", tools.Single(t => t.Name == "get_item").Description!);
+        Assert.Contains("in fields", tools.Single(t => t.Name == "get_occurrence").Description!);
+        foreach (var name in new[] { "update_item", "update_occurrence" })
+        {
+            var description = tools.Single(t => t.Name == name).Description!;
+            Assert.Contains("changes keys", description);
+            Assert.Contains("readOnly=false", description);
+            Assert.Contains("true or null must not be written", description);
+        }
+        Assert.Contains("statuses, not changes", tools.Single(t => t.Name == "update_occurrence").Description!);
+        Assert.Contains("accepts only the creation fields", tools.Single(t => t.Name == "create_item").Description!);
+        Assert.Contains("update_item", tools.Single(t => t.Name == "create_item").Description!);
+        Assert.Contains("separate preview/approval", tools.Single(t => t.Name == "create_item").Description!);
+        foreach (var name in new[] { "get_item_history", "get_occurrence_history" })
+            Assert.Contains("History filters target log fields, not entity property IDs", tools.Single(t => t.Name == name).Description!);
+        Assert.Contains("get_field_metadata", client.ServerInstructions!);
+        Assert.Contains("search_custom_properties", client.ServerInstructions!);
+        Assert.Contains("resolve_custom_property", client.ServerInstructions!);
         var create = tools.Single(t => t.Name == "create_item");
         Assert.DoesNotContain("server", create.JsonSchema.GetRawText());
         var preview = await client.CallToolAsync("create_item", CreationArguments(), cancellationToken: timeout.Token);
