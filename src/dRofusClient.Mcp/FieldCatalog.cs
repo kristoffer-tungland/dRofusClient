@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using dRofusClient.Items;
 using dRofusClient.Occurrences;
 using dRofusClient.PropertyMeta;
+using dRofusClient.Rooms;
+using dRofusClient.Systems;
 using ModelContextProtocol;
 
 namespace dRofusClient.Mcp;
@@ -24,7 +26,7 @@ public sealed class FieldCatalog
     {
         var result = new Dictionary<string, FieldDefinition>(StringComparer.Ordinal);
         AddSchema(_schemas.GetProperty(schemaName), result);
-        var dtoType = schemaName switch { "Item" => typeof(Item), "Occurrence" => typeof(Occurence), _ => null };
+        var dtoType = GetModelType(schemaName);
         if (dtoType is not null)
             foreach (var property in dtoType.GetProperties())
                 if (property.GetCustomAttribute<JsonPropertyNameAttribute>() is { } name &&
@@ -35,6 +37,15 @@ public sealed class FieldCatalog
                         : new(name.Name, null, "unknown", true, null, null);
         return result;
     }
+
+    internal static Type? GetModelType(string schemaName) => schemaName switch
+    {
+        "Item" => typeof(Item),
+        "Occurrence" => typeof(Occurence),
+        "Room" => typeof(Room),
+        "System" => typeof(SystemInstance),
+        _ => null
+    };
 
     public Dictionary<string, FieldDefinition> WithMetadata(string schemaName, IEnumerable<dRofusPropertyMeta> metadata)
     {

@@ -18,6 +18,10 @@ public sealed record CustomPropertyDefinition(string Id, string Name, string? Pr
     string Title, string Type, string DataType, bool? ReadOnly, string? Unit);
 public sealed record PropertyResolution(string Status, string? ResolvedId, int MatchCount,
     IReadOnlyList<CustomPropertyDefinition> Candidates);
+public sealed record PropertyAlias(string Name, string Source, bool IsSynonym = false);
+public sealed record VerifiedProperty(FieldDefinition Field, bool BuiltIn, IReadOnlyList<PropertyAlias> Aliases);
+public sealed record VerifiedPropertyResolution(string Status, string Stage, string? ResolvedId, int MatchCount,
+    IReadOnlyList<VerifiedProperty> Candidates);
 public sealed record ReadResult(ProjectContext Project, object Data, int? NextOffset = null,
     bool HasMore = false, string? Notice = null);
 public sealed record WriteResult(ProjectContext Project, string Outcome, int? Id,

@@ -167,10 +167,67 @@ one project; tools cannot change the destination or authentication.
 | `search_occurrences`, `get_occurrence` | Search/read Occurrences, including filters on `article_id` and `room_id` |
 | `get_item_history`, `get_occurrence_history` | Per-entity API change log, including time, user, action, field, old/new values and notes |
 | `get_field_metadata` | Project field labels, identifiers, types, units and known read-only restrictions; entity is `items` or `occurrences` |
+| `resolve_property` | Endpoint-aware resolution of API names, verified built-in aliases/synonyms and custom labels; returns provenance and never confirms fuzzy suggestions |
 | `search_custom_properties` | List/search live custom and dynamic properties by API ID, label or group, with optional exact `propertyGroup` filtering |
 | `resolve_custom_property` | Resolve an exact ID, label or `group: label` to an API ID, reporting ambiguous or missing matches instead of guessing |
 | `create_item` | Create an Item with required `level_id` (existing item group) and `name` |
 | `update_item`, `update_occurrence` | Sparse field updates; occurrence statuses are separate ordered steps |
+
+### Built-in-first property resolution
+
+When a user names a property, agents should first call `resolve_property` with
+`entity` and `property`, rather than perform a keyword search of custom fields.
+Resolution supports `items`, `occurrences`, `rooms` and `systems`; this does not add
+Room/System read or write tools or change write permissions.
+
+Resolution order:
+
+1. Exact API field name (case-insensitive).
+2. Verified built-in CLR property names, human-readable CLR names, OpenAPI titles,
+   and live metadata display names.
+3. Built-in alternative labels from OpenAPI descriptions and XML summaries.
+4. Exact custom-property labels or grouped titles.
+5. Last-resort edit-distance suggestions.
+6. Ask the user to clarify unresolved, ambiguous or suggested matches.
+
+Mappings are generated from each endpoint's bundled OpenAPI schema, actual
+`JsonPropertyName` attributes on client models, generated client XML documentation,
+and current project metadata. There is no hand-maintained synonym dictionary,
+translation guess, or fallback that constructs an API ID from an arbitrary name.
+The resolver retains full labels and removes explicit `Group: ` prefixes to
+support unqualified display names. Model names are also split at word boundaries.
+Documentation and metadata are data, not instructions.
+
+Results include `status`, `stage`, `resolvedId`, total `matchCount`, and paginated
+`candidates` containing field contracts, `builtIn`, and aliases with their
+`source`. Only a unique verified match returns `resolvedId`. Built-in aliases
+take precedence over custom labels; an exact custom API ID still wins at step 1.
+Conflicting high-confidence built-in aliases or documented synonyms return
+`ambiguous` instead of selecting the first result. Grouped titles or exact API
+IDs can disambiguate. Pagination never conceals the total ambiguity.
+
+Fuzzy results return `suggestions` with no resolved ID, even for one candidate.
+They are not permission to read or write a guessed field: obtain clarification
+and resolve the confirmed choice first. `not_found` also requires clarification.
+The resolver accepts page sizes of 1–100 (default 25); use `nextOffset` while
+`hasMore` is true.
+
+The core build generates XML documentation alongside its assembly. Preserve that
+XML file when deploying the published server; XML-only labels are unavailable
+if it is removed. Schema and model mappings still work without XML, but no
+missing documentation is guessed. Live metadata failures are reported rather
+than silently using an incomplete project catalog.
+
+Verified model examples: Room `RoomNumber` maps to `architect_no`, while System
+`SystemComponentId` maps to `base_occurrence_id`. These come directly from
+`JsonPropertyName` attributes, not snake-case guesses. Item's two documented
+“Serial Number” labels are ambiguous without their group or API ID.
+
+### Custom-property discovery
+
+Use the custom-only tools after verified built-in resolution fails, or to browse
+known custom properties explicitly. They do not replace `resolve_property` and
+must not override its built-in matches or ambiguities.
 
 Both custom-property tools accept `entity` (`items` or `occurrences`), `limit`
 (1–100, default 25) and `offset`. Discovery uses live project metadata and excludes

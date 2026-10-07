@@ -8,12 +8,20 @@ namespace dRofusClient.Tests.Mcp;
 public sealed class McpProtocolTests
 {
     [Fact]
-    public async Task StdioInitializesListsTwelveToolsAndReturnsStructuredPreview()
+    public async Task StdioInitializesListsThirteenToolsAndReturnsStructuredPreview()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
-        Assert.Equal(12, tools.Count);
+        Assert.Equal(13, tools.Count);
+        var resolver = tools.Single(t => t.Name == "resolve_property");
+        Assert.Contains("rooms", resolver.Description!);
+        Assert.Contains("systems", resolver.Description!);
+        Assert.Contains("entity", resolver.JsonSchema.GetRawText());
+        var invalidResolution = await client.CallToolAsync("resolve_property",
+            new Dictionary<string, object?> { ["entity"] = "unsupported", ["property"] = "Name" },
+            cancellationToken: timeout.Token);
+        Assert.True(invalidResolution.IsError);
         Assert.Contains(tools, t => t.Name == "search_custom_properties");
         Assert.Contains(tools, t => t.Name == "resolve_custom_property");
         foreach (var name in new[] { "search_custom_properties", "resolve_custom_property" })
@@ -37,6 +45,7 @@ public sealed class McpProtocolTests
             Assert.Contains("get_field_metadata", description);
             Assert.Contains("search_custom_properties", description);
             Assert.Contains("resolve_custom_property", description);
+            Assert.Contains("resolve_property", description);
             Assert.Contains(name.Contains("occurrence") ? "entity='occurrences'" : "entity='items'", description);
             Assert.Contains("proactively", description, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("ambiguous", description);
@@ -59,6 +68,7 @@ public sealed class McpProtocolTests
         Assert.Contains("get_field_metadata", client.ServerInstructions!);
         Assert.Contains("search_custom_properties", client.ServerInstructions!);
         Assert.Contains("resolve_custom_property", client.ServerInstructions!);
+        Assert.Contains("first use resolve_property", client.ServerInstructions!);
         var create = tools.Single(t => t.Name == "create_item");
         Assert.DoesNotContain("server", create.JsonSchema.GetRawText());
         var preview = await client.CallToolAsync("create_item", CreationArguments(), cancellationToken: timeout.Token);

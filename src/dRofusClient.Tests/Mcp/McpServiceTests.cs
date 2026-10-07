@@ -9,6 +9,46 @@ namespace dRofusClient.Tests.Mcp;
 
 public sealed class McpServiceTests
 {
+    [Theory]
+    [InlineData("items", "price", "price")]
+    [InlineData("occurrences", "Item ID", "article_id")]
+    [InlineData("rooms", "RoomNumber", "architect_no")]
+    [InlineData("systems", "SystemComponentId", "base_occurrence_id")]
+    public async Task VerifiedResolutionFetchesEndpointMetadata(string entity, string property, string expected)
+    {
+        using var fixture = new Fixture("[]");
+        var result = await fixture.Service.ResolvePropertyAsync(entity, property, 25, 0, default);
+        Assert.Equal(expected, Assert.IsType<VerifiedPropertyResolution>(result.Data).ResolvedId);
+        Assert.Equal("test_db", result.Project.Database);
+        var request = Assert.Single(fixture.Handler.Requests);
+        Assert.Equal(HttpMethod.Options, request.Method);
+        Assert.EndsWith("/" + entity, request.Uri);
+    }
+
+    [Fact]
+    public async Task VerifiedResolutionPagesAmbiguityAndRejectsInvalidInput()
+    {
+        using var fixture = new Fixture("[]");
+        var result = await fixture.Service.ResolvePropertyAsync("items", "Serial Number", 1, 0, default);
+        Assert.Equal("ambiguous", Assert.IsType<VerifiedPropertyResolution>(result.Data).Status);
+        Assert.True(result.HasMore);
+        Assert.Equal(1, result.NextOffset);
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.ResolvePropertyAsync("other", "Name", 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.ResolvePropertyAsync("items", " ", 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.ResolvePropertyAsync("items", new string('a', 257), 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.ResolvePropertyAsync("items", "name", 101, 0, default));
+        Assert.Single(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task ResolvingRoomsDoesNotEnableRoomWrites()
+    {
+        using var fixture = new Fixture(writes: true);
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync("rooms", 1,
+            Fields("""{"name":"Changed"}"""), null, false, Approve, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
     private const string CustomMetadata = """
         [{"id":"name","name":"Standard name","dataType":"string"},
          {"id":"budget_group","name":"Standard DTO field","dataType":"string"},
