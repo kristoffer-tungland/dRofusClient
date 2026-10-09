@@ -43,12 +43,173 @@ public sealed class McpServiceTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task ResolvingRoomsDoesNotEnableRoomWrites(bool preview)
+    public async Task ResolvingSystemsDoesNotEnableSystemWrites(bool preview)
     {
         using var fixture = new Fixture(writes: true);
-        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync("rooms", 1,
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync("systems", 1,
             Fields("""{"name":"Changed"}"""), null, preview, Approve, default));
         Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task RoomPreviewsDoNotApproveOrWriteWithWritesDisabled()
+    {
+        using var fixture = new Fixture("[]", """{"id":8,"name":"Before"}""");
+        var create = await fixture.Service.CreateRoomAsync(Fields("""{"name":"Lab"}"""), true,
+            (_, _) => throw new Exception("Approval must not run"), default);
+        Assert.Equal("preview", create.Outcome);
+        Assert.Empty(fixture.Handler.Requests);
+        var update = await fixture.Service.UpdateAsync("rooms", 8, Fields("""{"name":"Lab"}"""), null, true,
+            (_, _) => throw new Exception("Approval must not run"), default);
+        Assert.Equal("preview", update.Outcome);
+        Assert.All(fixture.Handler.Requests, r => Assert.True(r.Method == HttpMethod.Options || r.Method == HttpMethod.Get));
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("""{"name":null}""")]
+    [InlineData("""{"name":" "}""")]
+    [InlineData("""{"name":42}""")]
+    [InlineData("""{"name":"Lab","room_function_id":0}""")]
+    [InlineData("""{"name":"Lab","id":8}""")]
+    [InlineData("""{"name":"Lab","fixture_sockets":6}""")]
+    [InlineData("""{"name":"Lab","designed_area":"large"}""")]
+    public async Task InvalidRoomCreationIsRejectedBeforeRequests(string fields)
+    {
+        using var fixture = new Fixture(writes: true);
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.CreateRoomAsync(Fields(fields), false, Approve, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task RoomCreationEnforcesNameLength()
+    {
+        using var fixture = new Fixture();
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.CreateRoomAsync(
+            new() { ["name"] = JsonSerializer.SerializeToElement(new string('a', 501)) }, true, Approve, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task ApprovedRoomCreationPreservesAllSupportedSchemaFields()
+    {
+        const string fields = """
+            {"name":"Lab","architect_no":"A1","description":"Test","designed_area":12.5,"drawing_name":"Laboratory",
+             "drawing_no":"D1","note":"Example","programmed_area":14,"room_function_id":3,"user_room_no":"U1"}
+            """;
+        using var fixture = new Fixture(true, """{"id":8}""", """{"id":8,"name":"Lab"}""");
+        var approved = false;
+        var result = await fixture.Service.CreateRoomAsync(Fields(fields), false, (proposal, _) =>
+        {
+            Assert.Equal("create_room", proposal.Operation);
+            Assert.Equal(10, proposal.Changes.Count);
+            approved = true;
+            return Task.FromResult(true);
+        }, default);
+        Assert.True(approved);
+        Assert.Equal("applied", result.Outcome);
+        Assert.Equal(8, result.Id);
+        var post = fixture.Handler.Requests[0];
+        Assert.Equal(HttpMethod.Post, post.Method);
+        Assert.EndsWith("/rooms", post.Uri);
+        var body = Fields(post.Body!);
+        Assert.Equal(10, body.Count);
+        foreach (var (key, value) in Fields(fields))
+            Assert.Equal(value.ToString(), body[key].ToString());
+        Assert.Contains("/rooms/8?", fixture.Handler.Requests[1].Uri);
+        Assert.Contains("designed_area", fixture.Handler.Requests[1].Uri);
+    }
+
+    [Fact]
+    public async Task DeclinedRoomCreationMakesNoRequests()
+    {
+        using var fixture = new Fixture(writes: true);
+        var result = await fixture.Service.CreateRoomAsync(Fields("""{"name":"Lab"}"""), false,
+            (_, _) => Task.FromResult(false), default);
+        Assert.Equal("declined", result.Outcome);
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Theory]
+    [InlineData("""{"id":9}""")]
+    [InlineData("""{"created":"2026-01-01"}""")]
+    [InlineData("""{"deleted":true}""")]
+    [InlineData("""{"full_name":"Lab"}""")]
+    [InlineData("""{"room_func_no":"1"}""")]
+    [InlineData("""{"unknown":1}""")]
+    [InlineData("""{"fixture_unverified":1}""")]
+    [InlineData("""{"fixture_readonly":1}""")]
+    [InlineData("""{"ceiling_height":"tall"}""")]
+    public async Task UnsafeRoomUpdatesAreRejected(string changes)
+    {
+        using var fixture = new Fixture(true, """
+            [{"id":"fixture_unverified","name":"Unknown permission","dataType":"integer"},
+             {"id":"fixture_readonly","name":"Read only","dataType":"integer","readOnly":true},
+             {"id":"id","name":"ID","dataType":"integer","readOnly":false}]
+            """);
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync(
+            "rooms", 8, Fields(changes), null, false, Approve, default));
+        Assert.Equal(HttpMethod.Options, Assert.Single(fixture.Handler.Requests).Method);
+    }
+
+    [Fact]
+    public async Task RoomUpdatesRejectOccurrenceStatuses()
+    {
+        using var fixture = new Fixture(writes: true);
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync(
+            "rooms", 8, Fields("""{"name":"Lab"}"""), [new(1, StatusId: 2)], false, Approve, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task RoomUpdatePreservesCustomRequirementsAndCeilingHeight()
+    {
+        const string changes = """{"ceiling_height":2.7,"fixture_sockets":6,"description":null}""";
+        const string before = """{"id":8,"ceiling_height":2.5,"fixture_sockets":4,"description":"Old"}""";
+        using var fixture = new Fixture(true,
+            """[{"id":"fixture_sockets","name":"Sockets","dataType":"integer","readOnly":false}]""",
+            before, before, """{"id":8}""", """{"id":8,"fixture_sockets":6}""");
+        var result = await fixture.Service.UpdateAsync("rooms", 8, Fields(changes), null, false, (proposal, _) =>
+        {
+            Assert.Equal("update_rooms", proposal.Operation);
+            Assert.Equal(4, JsonSerializer.SerializeToElement(proposal.Before).GetProperty("fixture_sockets").GetInt32());
+            return Task.FromResult(true);
+        }, default);
+        Assert.Equal("applied", result.Outcome);
+        var patch = Assert.Single(fixture.Handler.Requests.Where(r => r.Method == HttpMethod.Patch));
+        Assert.EndsWith("/rooms/8", patch.Uri);
+        Assert.Equal(changes, patch.Body);
+        Assert.Equal("application/merge-patch+json", patch.ContentType);
+        Assert.Contains("/rooms/8?", fixture.Handler.Requests[^1].Uri);
+        Assert.DoesNotContain(fixture.Handler.Requests, r => r.Uri.Contains("/occurrences"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RoomCreationFailuresDoNotInviteRetries(bool readBackFailure)
+    {
+        using var fixture = readBackFailure ? new Fixture(true, """{"id":8}""") : new Fixture(writes: true);
+        fixture.Handler.Responses.Enqueue(new(HttpStatusCode.Unauthorized) { Content = new StringContent("sensitive") });
+        var result = await fixture.Service.CreateRoomAsync(Fields("""{"name":"Lab"}"""), false, Approve, default);
+        Assert.Equal(readBackFailure ? "applied_unverified" : "uncertain", result.Outcome);
+        Assert.Single(fixture.Handler.Requests.Where(r => r.Method == HttpMethod.Post));
+        Assert.DoesNotContain("sensitive", JsonSerializer.Serialize(result));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RoomUpdateFailuresDoNotInviteRetries(bool readBackFailure)
+    {
+        using var fixture = new Fixture(true, "[]", """{"id":8,"name":"Old"}""", """{"id":8,"name":"Old"}""");
+        if (readBackFailure)
+            fixture.Handler.Responses.Enqueue(new(HttpStatusCode.OK) { Content = new StringContent("""{"id":8}""") });
+        fixture.Handler.Responses.Enqueue(new(HttpStatusCode.Forbidden) { Content = new StringContent("sensitive") });
+        var result = await fixture.Service.UpdateAsync("rooms", 8, Fields("""{"name":"Lab"}"""), null, false, Approve, default);
+        Assert.Equal(readBackFailure ? "applied_unverified" : "uncertain", result.Outcome);
+        Assert.Single(fixture.Handler.Requests.Where(r => r.Method == HttpMethod.Patch));
+        Assert.DoesNotContain("sensitive", JsonSerializer.Serialize(result));
     }
 
     [Fact]
@@ -456,6 +617,10 @@ public sealed class McpServiceTests
             Fields("""{"name":"Chair","level_id":7}"""), false, Approve, default));
         await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync(
             "items", 1, Fields("""{"name":"Chair"}"""), null, false, Approve, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.CreateRoomAsync(
+            Fields("""{"name":"Lab"}"""), false, Approve, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync(
+            "rooms", 8, Fields("""{"name":"Lab"}"""), null, false, Approve, default));
         Assert.Empty(fixture.Handler.Requests);
     }
 
@@ -517,20 +682,24 @@ public sealed class McpServiceTests
         Assert.DoesNotContain(fixture.Handler.Requests, r => r.Method == HttpMethod.Patch);
     }
 
-    [Fact]
-    public async Task ChangeDuringApprovalReturnsConflictWithoutPatch()
+    [Theory]
+    [InlineData("items")]
+    [InlineData("rooms")]
+    public async Task ChangeDuringApprovalReturnsConflictWithoutPatch(string entity)
     {
         using var fixture = new Fixture(true, "[]", """{"id":1,"name":"before"}""", """{"id":1,"name":"changed"}""");
-        var result = await fixture.Service.UpdateAsync("items", 1, Fields("""{"name":"new"}"""), null, false, Approve, default);
+        var result = await fixture.Service.UpdateAsync(entity, 1, Fields("""{"name":"new"}"""), null, false, Approve, default);
         Assert.Equal("conflict", result.Outcome);
         Assert.DoesNotContain(fixture.Handler.Requests, r => r.Method == HttpMethod.Patch);
     }
 
-    [Fact]
-    public async Task DeclinedUpdateDoesNotPatch()
+    [Theory]
+    [InlineData("items")]
+    [InlineData("rooms")]
+    public async Task DeclinedUpdateDoesNotPatch(string entity)
     {
         using var fixture = new Fixture(true, "[]", """{"id":1,"name":"before"}""");
-        var result = await fixture.Service.UpdateAsync("items", 1, Fields("""{"name":"new"}"""), null,
+        var result = await fixture.Service.UpdateAsync(entity, 1, Fields("""{"name":"new"}"""), null,
             false, (_, _) => Task.FromResult(false), default);
         Assert.Equal("declined", result.Outcome);
         Assert.DoesNotContain(fixture.Handler.Requests, r => r.Method == HttpMethod.Patch);

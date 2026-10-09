@@ -8,12 +8,12 @@ namespace dRofusClient.Tests.Mcp;
 public sealed class McpProtocolTests
 {
     [Fact]
-    public async Task StdioInitializesListsSeventeenToolsAndReturnsStructuredPreview()
+    public async Task StdioInitializesListsNineteenToolsAndReturnsStructuredPreview()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
-        Assert.Equal(17, tools.Count);
+        Assert.Equal(19, tools.Count);
         var resolver = tools.Single(t => t.Name == "resolve_property");
         Assert.Contains("rooms", resolver.Description!);
         Assert.Contains("systems", resolver.Description!);
@@ -40,7 +40,7 @@ public sealed class McpProtocolTests
         Assert.Contains(tools, t => t.Name == "create_item");
         foreach (var name in new[] { "search_items", "get_item", "search_occurrences", "get_occurrence",
             "get_item_history", "get_occurrence_history", "create_item", "update_item", "update_occurrence",
-            "search_rooms", "get_room", "get_room_history", "get_room_occurrences" })
+            "search_rooms", "get_room", "get_room_history", "get_room_occurrences", "create_room", "update_room" })
         {
             var description = tools.Single(t => t.Name == name).Description!;
             Assert.Contains("get_field_metadata", description);
@@ -54,7 +54,7 @@ public sealed class McpProtocolTests
         }
         Assert.Contains("in fields", tools.Single(t => t.Name == "get_item").Description!);
         Assert.Contains("in fields", tools.Single(t => t.Name == "get_occurrence").Description!);
-        foreach (var name in new[] { "update_item", "update_occurrence" })
+        foreach (var name in new[] { "update_item", "update_occurrence", "update_room" })
         {
             var description = tools.Single(t => t.Name == name).Description!;
             Assert.Contains("changes keys", description);
@@ -77,7 +77,29 @@ public sealed class McpProtocolTests
         Assert.Contains("not row count", client.ServerInstructions!);
         foreach (var name in new[] { "search_rooms", "get_room", "get_room_history", "get_room_occurrences" })
             Assert.True(tools.Single(t => t.Name == name).ProtocolTool.Annotations!.ReadOnlyHint);
-        Assert.DoesNotContain(tools, t => t.Name == "update_room" || t.Name == "create_room");
+        foreach (var name in new[] { "create_room", "update_room" })
+        {
+            var tool = tools.Single(t => t.Name == name);
+            Assert.False(tool.ProtocolTool.Annotations!.ReadOnlyHint);
+            Assert.True(tool.ProtocolTool.Annotations.DestructiveHint);
+            Assert.False(tool.ProtocolTool.Annotations.IdempotentHint);
+            Assert.Contains("DROFUS_ENABLE_WRITES=true", tool.Description!);
+            Assert.True(tool.JsonSchema.GetProperty("properties").GetProperty("preview").GetProperty("default").GetBoolean());
+        }
+        Assert.DoesNotContain(tools, t => t.Name == "delete_room");
+        Assert.Contains("update_room", client.ServerInstructions!);
+        var roomPreview = await client.CallToolAsync("create_room", RoomCreationArguments(), cancellationToken: timeout.Token);
+        Assert.NotEqual(true, roomPreview.IsError);
+        Assert.Equal("preview", roomPreview.StructuredContent!.Value.GetProperty("outcome").GetString());
+        var roomCreateRejected = await client.CallToolAsync("create_room", RoomCreationArguments(false), cancellationToken: timeout.Token);
+        Assert.True(roomCreateRejected.IsError);
+        Assert.Contains(roomCreateRejected.Content.OfType<TextContentBlock>(), block => block.Text.Contains("Writes are disabled"));
+        var roomUpdateRejected = await client.CallToolAsync("update_room", new Dictionary<string, object?>
+        {
+            ["id"] = 8, ["changes"] = new Dictionary<string, object> { ["name"] = "Lab" }, ["preview"] = false
+        }, cancellationToken: timeout.Token);
+        Assert.True(roomUpdateRejected.IsError);
+        Assert.Contains(roomUpdateRejected.Content.OfType<TextContentBlock>(), block => block.Text.Contains("Writes are disabled"));
         var invalidRoom = await client.CallToolAsync("get_room_occurrences",
             new Dictionary<string, object?> { ["roomId"] = 0 }, cancellationToken: timeout.Token);
         Assert.True(invalidRoom.IsError);
@@ -91,21 +113,26 @@ public sealed class McpProtocolTests
         Assert.Contains(rejected.Content.OfType<TextContentBlock>(), block => block.Text.Contains("Writes are disabled"));
     }
 
-    [Fact]
-    public async Task EnabledWritesWithoutElicitationFailClosed()
+    [Theory]
+    [InlineData("create_item")]
+    [InlineData("create_room")]
+    public async Task EnabledWritesWithoutElicitationFailClosed(string tool)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(true, null, timeout.Token);
-        var result = await client.CallToolAsync("create_item", CreationArguments(preview: false), cancellationToken: timeout.Token);
+        var result = await client.CallToolAsync(tool, tool == "create_item" ? CreationArguments(false) : RoomCreationArguments(false), cancellationToken: timeout.Token);
         Assert.True(result.IsError);
         Assert.Contains(result.Content.OfType<TextContentBlock>(), block => block.Text.Contains("interactive form elicitation"));
     }
 
     [Theory]
-    [InlineData("decline", false)]
-    [InlineData("cancel", false)]
-    [InlineData("accept", false)]
-    public async Task HostMustExplicitlyApproveExactProposal(string action, bool approve)
+    [InlineData("create_item", "decline", false)]
+    [InlineData("create_item", "cancel", false)]
+    [InlineData("create_item", "accept", false)]
+    [InlineData("create_room", "decline", false)]
+    [InlineData("create_room", "cancel", false)]
+    [InlineData("create_room", "accept", false)]
+    public async Task HostMustExplicitlyApproveExactProposal(string tool, string action, bool approve)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         ElicitRequestParams? received = null;
@@ -126,13 +153,19 @@ public sealed class McpProtocolTests
             }
         };
         await using var client = await ConnectAsync(true, options, timeout.Token);
-        var result = await client.CallToolAsync("create_item", CreationArguments(preview: false), cancellationToken: timeout.Token);
+        var result = await client.CallToolAsync(tool, tool == "create_item" ? CreationArguments(false) : RoomCreationArguments(false), cancellationToken: timeout.Token);
         Assert.NotNull(received);
-        Assert.Contains("Chair", received.Message);
+        Assert.Contains(tool == "create_item" ? "Chair" : "Lab", received.Message);
         Assert.Contains("test_db", received.Message);
         Assert.DoesNotContain("test-password", received.Message);
         Assert.Equal("declined", result.StructuredContent!.Value.GetProperty("outcome").GetString());
     }
+
+    private static Dictionary<string, object?> RoomCreationArguments(bool preview = true) => new()
+    {
+        ["fields"] = new Dictionary<string, object> { ["name"] = "Lab" },
+        ["preview"] = preview
+    };
 
     private static Dictionary<string, object?> CreationArguments(bool preview = true) => new()
     {

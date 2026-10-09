@@ -88,7 +88,7 @@ public sealed class ReadTools(DrofusService service)
         service.HistoryAsync("occurrences", id, from, to, filters, limit, offset, cancellationToken);
 
     [McpServerTool(Name = "get_field_metadata", ReadOnly = true, UseStructuredContent = true)]
-    [Description("Discover field IDs, labels, types, units and known readOnly restrictions for entity 'items', 'occurrences' or 'rooms'. Rooms are read-only in MCP regardless of field writability. readOnly=null cannot be written. Use resolve_property to map a user's label to a verified built-in field before considering custom matches.")]
+    [Description("Discover field IDs, labels, types, units and known readOnly restrictions for entity 'items', 'occurrences' or 'rooms'. Room changes use update_room with the same write enablement and approval as other writes. readOnly=null cannot be written. Use resolve_property to map a user's label to a verified built-in field before considering custom matches.")]
     public Task<ReadResult> GetFieldMetadata(string entity, int limit = 100, int offset = 0,
         CancellationToken cancellationToken = default) =>
         service.MetadataAsync(entity, limit, offset, cancellationToken);
@@ -106,7 +106,7 @@ public sealed class ReadTools(DrofusService service)
         service.ResolveCustomPropertyAsync(entity, property, propertyGroup, limit, offset, cancellationToken);
 
     [McpServerTool(Name = "resolve_property", ReadOnly = true, UseStructuredContent = true)]
-    [Description("Resolve a user-facing property for entity 'items', 'occurrences', 'rooms' or 'systems'. Always use this before custom or keyword search. Checks exact API names, then verified built-in model/display aliases, documented built-in synonyms, exact custom labels, and finally fuzzy suggestions. Aliases are generated from API schema, C# JsonPropertyName mappings, XML summaries and live metadata; sources are returned. Only a unique high-confidence match returns resolvedId. Ambiguous matches and fuzzy suggestions require user clarification, even if pagination shows one candidate. Room fields can be read with get_room; resolution does not enable Room writes or System read/write tools.")]
+    [Description("Resolve a user-facing property for entity 'items', 'occurrences', 'rooms' or 'systems'. Always use this before custom or keyword search. Checks exact API names, then verified built-in model/display aliases, documented built-in synonyms, exact custom labels, and finally fuzzy suggestions. Aliases are generated from API schema, C# JsonPropertyName mappings, XML summaries and live metadata; sources are returned. Only a unique high-confidence match returns resolvedId. Ambiguous matches and fuzzy suggestions require user clarification, even if pagination shows one candidate. Room fields can be read with get_room and writable fields changed with update_room under write enablement/approval. Resolution does not enable System read/write tools.")]
     public Task<ReadResult> ResolveProperty(string entity, string property, int limit = 25, int offset = 0,
         CancellationToken cancellationToken = default) =>
         service.ResolvePropertyAsync(entity, property, limit, offset, cancellationToken);

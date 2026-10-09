@@ -205,12 +205,45 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         finally { _writeLock.Release(); }
     });
 
+    public Task<WriteResult> CreateRoomAsync(Dictionary<string, JsonElement> fields, bool preview,
+        Func<WriteProposal, CancellationToken, Task<bool>> approve, CancellationToken cancellationToken) => SafeAsync(async () =>
+    {
+        FieldCatalog.ValidateChanges(fields, catalog.GetFields("CreateRoom"), creating: true);
+        if (!fields.TryGetValue("name", out var name) || name.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(name.GetString()))
+            throw new McpException("Creating a room requires a non-empty name.");
+        var proposal = new WriteProposal(settings.Context, "create_room", null, fields, [], null);
+        if (preview)
+            return new(settings.Context, "preview", null, [], proposal);
+        EnsureWritesEnabled();
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (!await approve(proposal, cancellationToken))
+                return new(settings.Context, "declined", null, []);
+            cancellationToken.ThrowIfCancellationRequested();
+            Room created;
+            try
+            {
+                var request = JsonSerializer.Deserialize<CreateRoom>(JsonSerializer.Serialize(fields))!;
+                created = await client.CreateRoomAsync(request, cancellationToken);
+            }
+            catch (Exception exception) when (IsUpstreamFailure(exception))
+            {
+                Audit("create_room", null, "uncertain");
+                return new(settings.Context, "uncertain", null, [], Notice: "Creation failed or its result could not be confirmed. Check rooms/history before retrying; creation is not idempotent.");
+            }
+            Audit("create_room", created.Id, "applied");
+            return await VerifyWriteAsync("rooms", created.Id, ["created"], fields.Keys.ToArray(), cancellationToken);
+        }
+        finally { _writeLock.Release(); }
+    });
+
     public Task<WriteResult> UpdateAsync(string entity, int id, Dictionary<string, JsonElement> changes,
         StatusChange[]? statuses, bool preview, Func<WriteProposal, CancellationToken, Task<bool>> approve,
         CancellationToken cancellationToken) => SafeAsync(async () =>
     {
-        if (entity is not ("items" or "occurrences"))
-            throw new McpException("Updates support items and occurrences only; rooms are read-only.");
+        if (entity is not ("items" or "occurrences" or "rooms"))
+            throw new McpException("Updates support items, occurrences and rooms only.");
         ValidateId(id);
         statuses ??= [];
         ValidateStatuses(entity, statuses);
@@ -223,7 +256,7 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
         if (entity == "occurrences" && changes.TryGetValue("room_id", out var room) && room.ValueKind != JsonValueKind.Null &&
             (!changes.TryGetValue("equipment_list_type_id", out var schedule) || schedule.ValueKind != JsonValueKind.Number))
             throw new McpException("Assigning a room requires equipment_list_type_id (room schedule) in the same update.");
-        if (changes.Keys.Any(f => f.StartsWith("ce", StringComparison.Ordinal) ||
+        if (entity != "rooms" && changes.Keys.Any(f => f.StartsWith("ce", StringComparison.Ordinal) ||
             f.StartsWith("occurrence_classification_", StringComparison.Ordinal)))
             throw new McpException("Pass occurrence status changes through statuses, not changes.");
         var selected = changes.Keys.Concat(statuses.Select(s => FindStatusField(s.StatusTypeId, definitions))).Append("id").Distinct().ToArray();
@@ -247,6 +280,8 @@ public sealed class DrofusService(IdRofusClient client, ServerSettings settings,
                     var patch = new PatchRequest { Body = JsonSerializer.Serialize(changes) };
                     if (entity == "items")
                         await client.PatchAsync<Item>($"items/{id}", patch, cancellationToken);
+                    else if (entity == "rooms")
+                        await client.PatchAsync<Room>($"rooms/{id}", patch, cancellationToken);
                     else
                         await client.PatchAsync<Occurence>($"occurrences/{id}", patch, cancellationToken);
                     completed.Add("fields");

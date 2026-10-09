@@ -116,7 +116,7 @@ var configs = client.GetAttributeConfigurations(AttributeConfigType.RevitOccurre
 
 ## Local MCP server
 
-`dRofusClient.Mcp` exposes Items (articles), Occurrences and read-only Rooms to local AI agents over
+`dRofusClient.Mcp` exposes Items (articles), Occurrences and Rooms to local AI agents over
 stdio. It does not require Revit and does not open an HTTP listener.
 
 ### Build and connect
@@ -199,14 +199,16 @@ password prompt and agents cannot enable or access the store through tools.
 | `search_custom_properties` | List/search live custom and dynamic properties by API ID, label or group, with optional exact `propertyGroup` filtering |
 | `resolve_custom_property` | Resolve an exact ID, label or `group: label` to an API ID, reporting ambiguous or missing matches instead of guessing |
 | `create_item` | Create an Item with required `level_id` (existing item group) and `name` |
-| `update_item`, `update_occurrence` | Sparse field updates; occurrence statuses are separate ordered steps |
+| `create_room` | Create a Room with required `name` and supported optional creation fields |
+| `update_item`, `update_occurrence`, `update_room` | Sparse field updates; occurrence statuses are separate ordered steps |
 
 ### Built-in-first property resolution
 
 When a user names a property, agents should first call `resolve_property` with
 `entity` and `property`, rather than perform a keyword search of custom fields.
 Resolution supports `items`, `occurrences`, `rooms` and `systems`. Room fields can
-be read with `get_room`; resolution does not enable Room writes or System read/write tools.
+be read with `get_room` and verified writable fields changed with `update_room`
+under the normal write safeguards. Resolution does not enable System read/write tools.
 
 Resolution order:
 
@@ -316,15 +318,18 @@ water outlets?”, the tool descriptions and server instructions guide agents to
 
 Room assignment in dRofus does **not** prove physical/BIM placement, geometric
 location or code compliance; checking whether everything is modeled in the room
-requires external model evidence. Rooms are read-only in this MCP version, even
-if metadata marks their fields writable. Existing occurrence reassignment still
+requires external model evidence. To change room requirements, use `update_room`
+with verified writable property IDs; to create a room, use `create_room`.
+Both share `DROFUS_ENABLE_WRITES` and interactive approval with Item/Occurrence
+writes. Updating requirements does not modify assigned occurrences. Occurrence reassignment still
 requires the normal write preview/approval and `equipment_list_type_id`.
 
 ### Write approval and limitations
 
-All three write tools default to `preview=true`, which does not modify dRofus.
+All five write tools default to `preview=true`, which does not modify dRofus.
 For execution, set `preview=false`; the operator must also enable writes in the
-server environment. The server then requests **interactive form elicitation**
+server environment using `DROFUS_ENABLE_WRITES=true` (the default is `false`).
+There is no separate Room write flag. The server then requests **interactive form elicitation**
 from the MCP host, showing the project, operation, target, proposed values and
 current selected values for updates. Approval expires after two minutes.
 Decline, cancel, missing/false approval, or a host without form elicitation
@@ -334,6 +339,13 @@ not one that lets the model automatically approve elicitation requests.
 - Item creation accepts only `level_id`, `name`, `bim_id`, `bip`, `note`,
   `parent_id`, `price_reference`, `serial_no` (maximum 10 characters), and
   `to_be_drawn`. Creation requires an already known item group ID.
+- Room creation requires a non-empty `name` (maximum 500 characters). Optional
+  fields from the API creation schema are `architect_no`, `description`,
+  `designed_area`, `drawing_name`, `drawing_no`, `note`, `programmed_area`,
+  `room_function_id` (positive when supplied), and `user_room_no`.
+  Additional verified writable requirements can be set with `update_room`
+  afterward, using a separate preview/approval. Room deletion and room-specific
+  status/group/template operations are not exposed.
 - Updates send only `changes`. Omitted properties remain unchanged; explicit
   JSON `null` requests clearing a writable field, subject to upstream validation.
   Read-only properties cannot be sent, including through additional properties.
@@ -353,7 +365,7 @@ not one that lets the model automatically approve elicitation requests.
 - Results distinguish `preview`, `declined`, `conflict`, `applied`,
   `applied_unverified`, `partial` and `uncertain`. Inspect `completedSteps` and
   the entity/history after an uncertain or partial result. There is no rollback
-  and no automatic write retry; retrying item creation can create duplicates.
+  and no automatic write retry; retrying item or room creation can create duplicates.
 - Occurrence creation, deletion, bulk writes, system instances, remote HTTP
   hosting and logbook features beyond the API change logs are not included.
 
