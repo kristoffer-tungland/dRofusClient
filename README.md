@@ -151,13 +151,39 @@ secure environment/secret configuration:
 | `DROFUS_DATABASE` | Database identifier |
 | `DROFUS_PROJECT_ID` | Project identifier |
 | `DROFUS_USERNAME` | dRofus account with the required project permissions |
-| `DROFUS_PASSWORD` | Account password, supplied from a secret store |
+| `DROFUS_PASSWORD` | Account password; takes precedence over Windows Credential Manager when nonblank |
+| `DROFUS_USE_WINDOWS_CREDENTIALS` | Optional `true` or `false` (default `false`); if enabled and `DROFUS_PASSWORD` is absent/blank, read the saved Windows password |
 | `DROFUS_ENABLE_WRITES` | Optional `true` or `false`; defaults to `false` |
 
 Use a least-privileged account. Do not put credentials in prompts, tool arguments,
 checked-in MCP configuration or command-line arguments. Database/project IDs
 accept letters, digits, underscores and hyphens. Each server process is scoped to
 one project; tools cannot change the destination or authentication.
+
+#### Windows Credential Manager
+
+On Windows, set `DROFUS_USE_WINDOWS_CREDENTIALS=true` and omit `DROFUS_PASSWORD`
+to reuse a saved password. Continue to supply `DROFUS_BASE_URL`, `DROFUS_DATABASE`,
+`DROFUS_PROJECT_ID` and `DROFUS_USERNAME`; only the password comes from the store.
+A nonblank environment password always wins, so existing configurations continue
+to work on Windows, Linux and macOS without accessing the credential store.
+
+Use the existing dRofus Windows login's **Remember me** option, or open
+**Control Panel → Credential Manager → Windows Credentials → Add a generic
+credential**. The target must match the existing library convention:
+`drofus://<username>@<server>`, with the configured username and password.
+The server is the API origin without its scheme or trailing slash, except
+`https://api-no.drofus.com`, which maps to `db2.nosyko.no`.
+For example, user `alice` on the Nordic server uses
+`drofus://alice@db2.nosyko.no`; on the EU server it uses
+`drofus://alice@api-eu.drofus.com`.
+
+Run the MCP host under the Windows account that owns the saved credential.
+The server reads that single target at startup; it never enumerates, creates,
+updates or deletes credentials. Missing/empty credentials, store failures, or
+attempting the fallback on a non-Windows machine fail startup without exposing
+passwords, credential targets or raw store errors. There is no interactive
+password prompt and agents cannot enable or access the store through tools.
 
 ### Tools
 

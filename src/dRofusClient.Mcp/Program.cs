@@ -36,7 +36,7 @@ try
 }
 catch (ArgumentException)
 {
-    Console.Error.WriteLine("Invalid MCP configuration. Check DROFUS_BASE_URL, DATABASE, PROJECT_ID, USERNAME, PASSWORD and ENABLE_WRITES environment variables.");
+    Console.Error.WriteLine("Invalid MCP configuration. Check DROFUS_BASE_URL, DROFUS_DATABASE, DROFUS_PROJECT_ID, DROFUS_USERNAME, DROFUS_PASSWORD, DROFUS_USE_WINDOWS_CREDENTIALS and DROFUS_ENABLE_WRITES. Windows credential lookup requires Windows and a saved credential for the current account.");
     return 1;
 }
 catch (Exception)

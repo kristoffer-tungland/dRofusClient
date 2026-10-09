@@ -11,7 +11,10 @@ public sealed class ServerSettings
 
     public ProjectContext Context => new(BaseUrl, Database, ProjectId);
 
-    public static ServerSettings FromEnvironment(Func<string, string?> get)
+    public static ServerSettings FromEnvironment(Func<string, string?> get) =>
+        FromEnvironment(get, new WindowsCredentialPasswordStore());
+
+    public static ServerSettings FromEnvironment(Func<string, string?> get, IWindowsCredentialPasswordStore credentialStore)
     {
         string Required(string name) => !string.IsNullOrWhiteSpace(get(name))
             ? get(name)! : throw new ArgumentException("Missing required environment variable.");
@@ -27,13 +30,32 @@ public sealed class ServerSettings
         var writes = get("DROFUS_ENABLE_WRITES");
         if (writes is not null && !bool.TryParse(writes, out _))
             throw new ArgumentException("Enable writes must be true or false.");
+        var useWindowsCredentials = get("DROFUS_USE_WINDOWS_CREDENTIALS");
+        if (useWindowsCredentials is not null && !bool.TryParse(useWindowsCredentials, out _))
+            throw new ArgumentException("Use Windows credentials must be true or false.");
+        var username = Required("DROFUS_USERNAME");
+        var password = get("DROFUS_PASSWORD");
+        if (string.IsNullOrWhiteSpace(password) && bool.TryParse(useWindowsCredentials, out var useStore) && useStore)
+        {
+            try
+            {
+                password = credentialStore.ReadPassword(uri.GetLeftPart(UriPartial.Authority), username);
+            }
+            catch (Exception)
+            {
+                // Store exceptions may contain credential targets or account information.
+                throw new ArgumentException("Windows credential lookup failed. Check platform, account and saved credential.");
+            }
+        }
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentException("No password available. Supply DROFUS_PASSWORD or configure Windows credentials.");
         return new ServerSettings
         {
             BaseUrl = uri.GetLeftPart(UriPartial.Authority),
             Database = database,
             ProjectId = project,
-            Username = Required("DROFUS_USERNAME"),
-            Password = Required("DROFUS_PASSWORD"),
+            Username = username,
+            Password = password,
             EnableWrites = bool.TryParse(writes, out var enabled) && enabled
         };
     }
