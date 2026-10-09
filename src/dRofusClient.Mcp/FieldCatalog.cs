@@ -74,7 +74,7 @@ public sealed class FieldCatalog
     public List<CustomPropertyDefinition> GetCustomProperties(string schemaName, IReadOnlyList<dRofusPropertyMeta> metadata)
     {
         var standardIds = GetFields(schemaName).Keys.ToHashSet(StringComparer.Ordinal);
-        var dtoType = schemaName == "Item" ? typeof(Item) : typeof(Occurence);
+        var dtoType = GetModelType(schemaName) ?? throw new ArgumentException("Unsupported model schema.", nameof(schemaName));
         foreach (var property in dtoType.GetProperties())
             if (property.GetCustomAttribute<JsonPropertyNameAttribute>() is { } name)
                 standardIds.Add(name.Name);

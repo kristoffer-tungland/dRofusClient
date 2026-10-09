@@ -40,13 +40,151 @@ public sealed class McpServiceTests
         Assert.Single(fixture.Handler.Requests);
     }
 
-    [Fact]
-    public async Task ResolvingRoomsDoesNotEnableRoomWrites()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ResolvingRoomsDoesNotEnableRoomWrites(bool preview)
     {
         using var fixture = new Fixture(writes: true);
         await Assert.ThrowsAsync<McpException>(() => fixture.Service.UpdateAsync("rooms", 1,
-            Fields("""{"name":"Changed"}"""), null, false, Approve, default));
+            Fields("""{"name":"Changed"}"""), null, preview, Approve, default));
         Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task RoomSearchSelectsIdentityAndPagesResults()
+    {
+        using var fixture = new Fixture("""[{"id":8,"architect_no":"A1","name":"Lab"},{"id":9}]""");
+        var result = await fixture.Service.SearchAsync("rooms", [new("architect_no", "eq", Json("\"A1\""))],
+            null, 1, 2, default);
+        var request = Uri.UnescapeDataString(Assert.Single(fixture.Handler.Requests).Uri);
+        Assert.Contains("/rooms?", request);
+        Assert.Contains("architect_no eq 'A1'", request);
+        Assert.Contains("$select=id,architect_no,name,room_function_id", request);
+        Assert.Contains("$top=2", request);
+        Assert.Contains("$skip=2", request);
+        Assert.Equal(1, JsonSerializer.SerializeToElement(result.Data).GetArrayLength());
+        Assert.True(result.HasMore);
+        Assert.Equal(3, result.NextOffset);
+    }
+
+    [Fact]
+    public async Task RoomRequirementDiscoveryAndReadUseProjectPropertyIds()
+    {
+        const string metadata = """
+            [{"id":"architect_no","name":"Room number","dataType":"string"},
+             {"id":"fixture_sockets","name":"Socket count","propertyGroup":"Electrical","dataType":"integer","readOnly":false},
+             {"id":"fixture_water","name":"Water outlets","propertyGroup":"Plumbing","dataType":"boolean","readOnly":true}]
+            """;
+        using var fixture = new Fixture(metadata, metadata, metadata,
+            """{"id":8,"fixture_sockets":6,"fixture_water":null}""");
+        var fields = Assert.IsType<FieldDefinition[]>((await fixture.Service.MetadataAsync("rooms", 100, 0, default)).Data);
+        Assert.Contains(fields, f => f.Id == "fixture_sockets" && f.Type == "integer");
+        Assert.Contains(fields, f => f.Id == "fixture_water" && f.ReadOnly == true);
+        var resolved = Assert.IsType<VerifiedPropertyResolution>((await fixture.Service.ResolvePropertyAsync(
+            "rooms", "Socket count", 25, 0, default)).Data);
+        Assert.Equal("fixture_sockets", resolved.ResolvedId);
+        var custom = Assert.IsType<PropertyResolution>((await fixture.Service.ResolveCustomPropertyAsync(
+            "rooms", "Water outlets", "Plumbing", 25, 0, default)).Data);
+        Assert.Equal("fixture_water", custom.ResolvedId);
+        var result = await fixture.Service.GetAsync("rooms", 8, ["id", resolved.ResolvedId!, custom.ResolvedId!], default);
+        var data = JsonSerializer.SerializeToElement(result.Data);
+        Assert.Equal(6, data.GetProperty("fixture_sockets").GetInt32());
+        Assert.Equal(JsonValueKind.Null, data.GetProperty("fixture_water").ValueKind);
+        Assert.Contains("/rooms/8?", fixture.Handler.Requests[^1].Uri);
+        Assert.Contains("$select=id,fixture_sockets,fixture_water", Uri.UnescapeDataString(fixture.Handler.Requests[^1].Uri));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(3)]
+    public async Task RoomOccurrencesEnforceRoomScopeAndPreserveQuantitiesAndSchedules(int? schedule)
+    {
+        using var fixture = new Fixture("""{"id":8}""", """
+            [{"id":1,"article_id":10,"room_id":8,"equipment_list_type_id":3,"quantity":4},
+             {"id":2,"article_id":11,"room_id":8,"equipment_list_type_id":3,"quantity":null},
+             {"id":3,"article_id":10,"room_id":8,"equipment_list_type_id":4,"quantity":2}]
+            """);
+        var result = await fixture.Service.RoomOccurrencesAsync(8, schedule,
+            [new("room_id", "eq", Json("9")), new("occurrence_name", "eq", Json("\"A&B's\""))],
+            ["ifc_guids"], 2, 5, default);
+        Assert.Contains("/rooms/8?", fixture.Handler.Requests[0].Uri);
+        var uri = new Uri(fixture.Handler.Requests[1].Uri);
+        var parameters = uri.Query.TrimStart('?').Split('&').Select(p => p.Split('=', 2))
+            .ToDictionary(p => p[0], p => Uri.UnescapeDataString(p[1]));
+        Assert.EndsWith("/occurrences", uri.AbsolutePath);
+        Assert.Equal("3", parameters["$top"]);
+        Assert.Equal("5", parameters["$skip"]);
+        Assert.Equal("id asc", parameters["$orderby"]);
+        Assert.Contains("room_id eq 9", parameters["$filter"]);
+        Assert.Contains(" and room_id eq 8", parameters["$filter"]);
+        Assert.Contains("occurrence_name eq 'A&B''s'", parameters["$filter"]);
+        Assert.Equal(schedule.HasValue, parameters["$filter"].Contains("equipment_list_type_id eq 3"));
+        foreach (var field in new[] { "id", "article_id", "room_id", "equipment_list_type_id", "quantity", "occurrence_name", "ifc_guids" })
+            Assert.Contains(field, parameters["$select"].Split(','));
+        var rows = JsonSerializer.SerializeToElement(result.Data);
+        Assert.Equal(2, rows.GetArrayLength());
+        Assert.Equal(4, rows[0].GetProperty("quantity").GetInt32());
+        Assert.Equal(JsonValueKind.Null, rows[1].GetProperty("quantity").ValueKind);
+        Assert.True(result.HasMore);
+        Assert.Equal(7, result.NextOffset);
+        Assert.Contains("not evidence of physical/BIM placement", result.Notice);
+        Assert.Contains("null quantity is unknown", result.Notice);
+    }
+
+    [Fact]
+    public async Task RoomOccurrenceContinuationAndEmptyRoomAreBounded()
+    {
+        using var fixture = new Fixture("""{"id":8}""", """[{"id":1},{"id":2}]""",
+            """{"id":8}""", """[{"id":2}]""", """{"id":9}""", "[]");
+        var first = await fixture.Service.RoomOccurrencesAsync(8, null, null, null, 1, 0, default);
+        var last = await fixture.Service.RoomOccurrencesAsync(8, null, null, null, 1, first.NextOffset!.Value, default);
+        Assert.Equal(2, JsonSerializer.SerializeToElement(last.Data)[0].GetProperty("id").GetInt32());
+        Assert.False(last.HasMore);
+        Assert.Null(last.NextOffset);
+        Assert.Contains("$skip=1", fixture.Handler.Requests[3].Uri);
+        var empty = await fixture.Service.RoomOccurrencesAsync(9, null, null, null, 25, 0, default);
+        Assert.Equal(0, JsonSerializer.SerializeToElement(empty.Data).GetArrayLength());
+        Assert.False(empty.HasMore);
+    }
+
+    [Theory]
+    [InlineData(0, null, 25, 0)]
+    [InlineData(8, 0, 25, 0)]
+    [InlineData(8, -1, 25, 0)]
+    [InlineData(8, null, 101, 0)]
+    [InlineData(8, null, 25, -1)]
+    public async Task RoomOccurrencesValidateBeforeAnyRequest(int roomId, int? schedule, int limit, int offset)
+    {
+        using var fixture = new Fixture();
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.RoomOccurrencesAsync(
+            roomId, schedule, null, null, limit, offset, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task RoomOccurrencesRejectInvalidFiltersAndFieldsBeforeRequests()
+    {
+        using var fixture = new Fixture();
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.RoomOccurrencesAsync(
+            8, null, [new("room_id", "or", Json("9"))], null, 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.RoomOccurrencesAsync(
+            8, null, null, ["bad&field"], 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.RoomOccurrencesAsync(
+            8, null, null, [], 25, 0, default));
+        Assert.Empty(fixture.Handler.Requests);
+    }
+
+    [Fact]
+    public async Task MissingRoomDoesNotReturnMisleadingEmptyAssignments()
+    {
+        using var fixture = new Fixture();
+        fixture.Handler.Responses.Enqueue(new(HttpStatusCode.NotFound) { Content = new StringContent("private room details") });
+        var error = await Assert.ThrowsAsync<McpException>(() => fixture.Service.RoomOccurrencesAsync(
+            8, null, null, null, 25, 0, default));
+        Assert.DoesNotContain("private", error.Message);
+        Assert.Contains("404", error.Message);
+        Assert.Contains("/rooms/8?", Assert.Single(fixture.Handler.Requests).Uri);
     }
 
     private const string CustomMetadata = """
@@ -62,6 +200,7 @@ public sealed class McpServiceTests
     [Theory]
     [InlineData("items", "budget_group")]
     [InlineData("occurrences", "occurrence_name")]
+    [InlineData("rooms", "architect_no")]
     public async Task CustomPropertyDiscoveryUsesLiveMetadataAndExcludesStandardFields(string entity, string standardId)
     {
         using var fixture = new Fixture(CustomMetadata.Replace("budget_group", standardId).Replace("\"id\":\"name\"", "\"id\":\"id\""));
@@ -167,7 +306,7 @@ public sealed class McpServiceTests
     public async Task CustomPropertyLookupRejectsInvalidArgumentsBeforeRequests()
     {
         using var fixture = new Fixture();
-        await Assert.ThrowsAsync<McpException>(() => fixture.Service.SearchCustomPropertiesAsync("rooms", null, null, 25, 0, default));
+        await Assert.ThrowsAsync<McpException>(() => fixture.Service.SearchCustomPropertiesAsync("unsupported", null, null, 25, 0, default));
         await Assert.ThrowsAsync<McpException>(() => fixture.Service.SearchCustomPropertiesAsync("items", null, null, 101, 0, default));
         await Assert.ThrowsAsync<McpException>(() => fixture.Service.SearchCustomPropertiesAsync("items", new string('a', 257), null, 25, 0, default));
         await Assert.ThrowsAsync<McpException>(() => fixture.Service.ResolveCustomPropertyAsync("items", " ", null, 25, 0, default));
@@ -248,15 +387,17 @@ public sealed class McpServiceTests
         Assert.Empty(fixture.Handler.Requests);
     }
 
-    [Fact]
-    public async Task HistoryUsesCorrectEndpointAndUtcBounds()
+    [Theory]
+    [InlineData("occurrences")]
+    [InlineData("rooms")]
+    public async Task HistoryUsesCorrectEndpointAndUtcBounds(string entity)
     {
         using var fixture = new Fixture("""[{"occurrence_id":8,"old_value":"old","new_value":"new","note":"data"}]""");
-        var result = await fixture.Service.HistoryAsync("occurrences", 8,
+        var result = await fixture.Service.HistoryAsync(entity, 8,
             DateTimeOffset.Parse("2026-01-01T12:00:00+02:00"), DateTimeOffset.Parse("2026-01-02T12:00:00Z"),
             [new("username", "eq", Json("\"user\""))], 25, 0, default);
         var request = Assert.Single(fixture.Handler.Requests);
-        Assert.Contains("/occurrences/8/logs", request.Uri);
+        Assert.Contains($"/{entity}/8/logs", request.Uri);
         var query = Uri.UnescapeDataString(request.Uri);
         Assert.Contains("2026-01-01T10:00:00.0000000Z", query);
         Assert.Contains("orderby=time", query);

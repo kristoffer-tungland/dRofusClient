@@ -116,7 +116,7 @@ var configs = client.GetAttributeConfigurations(AttributeConfigType.RevitOccurre
 
 ## Local MCP server
 
-`dRofusClient.Mcp` exposes Items (articles) and Occurrences to local AI agents over
+`dRofusClient.Mcp` exposes Items (articles), Occurrences and read-only Rooms to local AI agents over
 stdio. It does not require Revit and does not open an HTTP listener.
 
 ### Build and connect
@@ -191,8 +191,10 @@ password prompt and agents cannot enable or access the store through tools.
 | --- | --- |
 | `search_items`, `get_item` | Search/read Items; selected fields use API identifiers |
 | `search_occurrences`, `get_occurrence` | Search/read Occurrences, including filters on `article_id` and `room_id` |
-| `get_item_history`, `get_occurrence_history` | Per-entity API change log, including time, user, action, field, old/new values and notes |
-| `get_field_metadata` | Project field labels, identifiers, types, units and known read-only restrictions; entity is `items` or `occurrences` |
+| `search_rooms`, `get_room` | Find Rooms and read selected identity/requirement fields |
+| `get_room_occurrences` | Paginated occurrences constrained to `roomId`, optionally `equipmentListTypeId`, with assignment and quantity fields always included |
+| `get_item_history`, `get_occurrence_history`, `get_room_history` | Per-entity API change log, including time, user, action, field, old/new values and notes |
+| `get_field_metadata` | Project field labels, identifiers, types, units and known read-only restrictions; entity is `items`, `occurrences` or `rooms` |
 | `resolve_property` | Endpoint-aware resolution of API names, verified built-in aliases/synonyms and custom labels; returns provenance and never confirms fuzzy suggestions |
 | `search_custom_properties` | List/search live custom and dynamic properties by API ID, label or group, with optional exact `propertyGroup` filtering |
 | `resolve_custom_property` | Resolve an exact ID, label or `group: label` to an API ID, reporting ambiguous or missing matches instead of guessing |
@@ -203,8 +205,8 @@ password prompt and agents cannot enable or access the store through tools.
 
 When a user names a property, agents should first call `resolve_property` with
 `entity` and `property`, rather than perform a keyword search of custom fields.
-Resolution supports `items`, `occurrences`, `rooms` and `systems`; this does not add
-Room/System read or write tools or change write permissions.
+Resolution supports `items`, `occurrences`, `rooms` and `systems`. Room fields can
+be read with `get_room`; resolution does not enable Room writes or System read/write tools.
 
 Resolution order:
 
@@ -255,7 +257,7 @@ Use the custom-only tools after verified built-in resolution fails, or to browse
 known custom properties explicitly. They do not replace `resolve_property` and
 must not override its built-in matches or ambiguities.
 
-Both custom-property tools accept `entity` (`items` or `occurrences`), `limit`
+Both custom-property tools accept `entity` (`items`, `occurrences` or `rooms`), `limit`
 (1–100, default 25) and `offset`. Discovery uses live project metadata and excludes
 standard fields defined in the bundled schema or client DTOs; dynamic status fields
 are included. Use `get_field_metadata` for standard fields. Results retain the
@@ -285,6 +287,38 @@ is true. History accepts inclusive `from`/`to` timestamps and filters on log
 fields such as `username`, `action` and `field`, ordered oldest first. Use a
 fixed end time when paging logs. Offset paging can still shift if upstream data
 changes; the API log is not a complete reconstruction of historical state.
+
+### Room requirements and assigned equipment
+
+For questions such as “How many sockets does this room need?” or “Should it have
+water outlets?”, the tool descriptions and server instructions guide agents to:
+
+1. Find the Room with `search_rooms`, using verified identity fields such as
+   `architect_no` (room number), and clarify multiple matches rather than guessing.
+2. Resolve requirement labels using `resolve_property` with `entity="rooms"`.
+   Inspect `get_field_metadata` and, after built-in resolution fails, custom-property
+   discovery. There are no assumed universal socket/water-outlet field IDs.
+3. Read the resolved IDs through `get_room(fields=...)`. Its default selection
+   contains identity fields only. Missing or null requirements mean **unknown**,
+   not zero or “not required”.
+4. Use `get_room_occurrences(roomId=...)` and follow every `nextOffset` while
+   `hasMore` is true. The tool verifies the Room exists and always enforces its
+   `room_id` filter; additional filters can only narrow the list. An existing
+   Room with no assignments returns an empty page.
+5. Inspect related Items using each occurrence's `article_id` to identify equipment.
+   Compare relevant `quantity` values, not occurrence row counts, with the Room's
+   requirements. Null quantities remain unknown. Keep `equipment_list_type_id`
+   schedules separate; optionally filter to a known schedule with
+   `equipmentListTypeId`. Do not double-count alternative schedules or declare
+   completeness from filtered or partial results.
+6. Report requirement values, assigned quantities, IDs and any gaps/unknowns
+   separately. `get_room_history` can help investigate changes.
+
+Room assignment in dRofus does **not** prove physical/BIM placement, geometric
+location or code compliance; checking whether everything is modeled in the room
+requires external model evidence. Rooms are read-only in this MCP version, even
+if metadata marks their fields writable. Existing occurrence reassignment still
+requires the normal write preview/approval and `equipment_list_type_id`.
 
 ### Write approval and limitations
 

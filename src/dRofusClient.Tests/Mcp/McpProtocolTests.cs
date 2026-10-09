@@ -8,12 +8,12 @@ namespace dRofusClient.Tests.Mcp;
 public sealed class McpProtocolTests
 {
     [Fact]
-    public async Task StdioInitializesListsThirteenToolsAndReturnsStructuredPreview()
+    public async Task StdioInitializesListsSeventeenToolsAndReturnsStructuredPreview()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
-        Assert.Equal(13, tools.Count);
+        Assert.Equal(17, tools.Count);
         var resolver = tools.Single(t => t.Name == "resolve_property");
         Assert.Contains("rooms", resolver.Description!);
         Assert.Contains("systems", resolver.Description!);
@@ -31,7 +31,7 @@ public sealed class McpProtocolTests
             Assert.Contains("propertyGroup", tool.JsonSchema.GetRawText());
             var invalid = await client.CallToolAsync(name, new Dictionary<string, object?>
             {
-                ["entity"] = "rooms", ["property"] = "Power"
+                ["entity"] = "unsupported", ["property"] = "Power"
             }, cancellationToken: timeout.Token);
             Assert.True(invalid.IsError);
         }
@@ -39,14 +39,16 @@ public sealed class McpProtocolTests
         Assert.Contains(tools, t => t.Name == "get_occurrence_history");
         Assert.Contains(tools, t => t.Name == "create_item");
         foreach (var name in new[] { "search_items", "get_item", "search_occurrences", "get_occurrence",
-            "get_item_history", "get_occurrence_history", "create_item", "update_item", "update_occurrence" })
+            "get_item_history", "get_occurrence_history", "create_item", "update_item", "update_occurrence",
+            "search_rooms", "get_room", "get_room_history", "get_room_occurrences" })
         {
             var description = tools.Single(t => t.Name == name).Description!;
             Assert.Contains("get_field_metadata", description);
             Assert.Contains("search_custom_properties", description);
             Assert.Contains("resolve_custom_property", description);
             Assert.Contains("resolve_property", description);
-            Assert.Contains(name.Contains("occurrence") ? "entity='occurrences'" : "entity='items'", description);
+            Assert.Contains(name.Contains("occurrence") ? "entity='occurrences'" :
+                name.Contains("room") ? "entity='rooms'" : "entity='items'", description);
             Assert.Contains("proactively", description, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("ambiguous", description);
         }
@@ -69,6 +71,16 @@ public sealed class McpProtocolTests
         Assert.Contains("search_custom_properties", client.ServerInstructions!);
         Assert.Contains("resolve_custom_property", client.ServerInstructions!);
         Assert.Contains("first use resolve_property", client.ServerInstructions!);
+        Assert.Contains("get_room_occurrences", client.ServerInstructions!);
+        Assert.Contains("not proof of physical/BIM placement", client.ServerInstructions!);
+        Assert.Contains("missing/null requirements are unknown", client.ServerInstructions!);
+        Assert.Contains("not row count", client.ServerInstructions!);
+        foreach (var name in new[] { "search_rooms", "get_room", "get_room_history", "get_room_occurrences" })
+            Assert.True(tools.Single(t => t.Name == name).ProtocolTool.Annotations!.ReadOnlyHint);
+        Assert.DoesNotContain(tools, t => t.Name == "update_room" || t.Name == "create_room");
+        var invalidRoom = await client.CallToolAsync("get_room_occurrences",
+            new Dictionary<string, object?> { ["roomId"] = 0 }, cancellationToken: timeout.Token);
+        Assert.True(invalidRoom.IsError);
         var create = tools.Single(t => t.Name == "create_item");
         Assert.DoesNotContain("server", create.JsonSchema.GetRawText());
         var preview = await client.CallToolAsync("create_item", CreationArguments(), cancellationToken: timeout.Token);
