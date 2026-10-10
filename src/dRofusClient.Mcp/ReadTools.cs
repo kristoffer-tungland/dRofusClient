@@ -6,9 +6,45 @@ namespace dRofusClient.Mcp;
 [McpServerToolType]
 public sealed class ReadTools(DrofusService service)
 {
+    internal const string MappingGuidance =
+        " When comparing dRofus with Revit, proactively use list_attribute_configurations, then get_attribute_configuration or find_attribute_mappings " +
+        "for the selected configuration. Check config_type/applicable_to; is_default does not prove it is active in Revit. Clarify ambiguous configurations/mappings. " +
+        "Verify drofus_attribute_id against the target endpoint's resolve_property/get_field_metadata and external_attribute_id against the Revit MCP server's " +
+        "parameter metadata (including type/instance scope and units); mapping IDs are opaque, not assumed API field names or Revit parameter names. " +
+        "Key identifies corresponding objects, not a transfer direction; ToExternalApplication means dRofus to the external application and ToDrofus means the reverse. " +
+        "Null, missing or unfamiliar directions are unknown; never infer Key. Mappings describe intended synchronization, not proof values are synchronized, " +
+        "and never bypass either server's write safeguards.";
+
     private const string ResolutionGuidance =
         " First proactively call resolve_property for the target entity: exact API names and verified built-in aliases/synonyms take precedence over custom labels. " +
-        "Do not substitute keyword search for built-in resolution. Fuzzy results are suggestions only; ask the user to clarify ambiguous or unconfirmed matches.";
+        "Do not substitute keyword search for built-in resolution. Fuzzy results are suggestions only; ask the user to clarify ambiguous or unconfirmed matches." + MappingGuidance;
+
+    [McpServerTool(Name = "list_attribute_configurations", ReadOnly = true, UseStructuredContent = true)]
+    [Description("List attribute configuration summaries with id, name, config_type, applicable_to, available_to_users and is_default. " +
+        "Filters are ANDed on API fields, e.g. config_type or name. Verified config_type values include room, space, article and revit-occurrence; " +
+        "do not confuse these with plural MCP entity names. Read all pages before choosing among configurations. Does not return mapping elements." + MappingGuidance)]
+    public Task<ReadResult> ListAttributeConfigurations(FieldFilter[]? filters = null, int limit = 25, int offset = 0,
+        CancellationToken cancellationToken = default) =>
+        service.ListAttributeConfigurationsAsync(filters, limit, offset, cancellationToken);
+
+    [McpServerTool(Name = "get_attribute_configuration", ReadOnly = true, UseStructuredContent = true)]
+    [Description("Read mappings for a positive configuration id selected from list_attribute_configurations. Returns configuration context and paginated mappings " +
+        "with original drofus_attribute_id/label, external_attribute_id/label, direction, configuration and mapping id. " +
+        "limit/offset page mapping elements, not configurations; follow nextOffset. The API supplies the selected configuration's entire elements array before local paging. " +
+        "Status unavailable means elements were missing/null, not that no mappings exist." + MappingGuidance)]
+    public Task<ReadResult> GetAttributeConfiguration(int id, int limit = 25, int offset = 0,
+        CancellationToken cancellationToken = default) =>
+        service.GetAttributeConfigurationAsync(id, limit, offset, cancellationToken);
+
+    [McpServerTool(Name = "find_attribute_mappings", ReadOnly = true, UseStructuredContent = true)]
+    [Description("Find mappings inside one explicitly selected configurationId for property on side drofus, external or either (default). " +
+        "Matches exact case-sensitive opaque IDs first, otherwise exact case-insensitive labels; no fuzzy matching or guessed translations. " +
+        "Returns matched, ambiguous, not_found or unavailable plus matchCount and paginated mappings. Ambiguity is determined before paging; one visible candidate does not imply uniqueness. " +
+        "A matched mapping is not verified writable or synchronized. For partial names, read get_attribute_configuration pages and clarify with the user. " +
+        "The API supplies the selected configuration's entire elements array before local lookup/paging." + MappingGuidance)]
+    public Task<ReadResult> FindAttributeMappings(int configurationId, string property, string side = "either",
+        int limit = 25, int offset = 0, CancellationToken cancellationToken = default) =>
+        service.FindAttributeMappingsAsync(configurationId, property, side, limit, offset, cancellationToken);
 
     [McpServerTool(Name = "search_rooms", ReadOnly = true, UseStructuredContent = true)]
     [Description("Find rooms by name, room number (architect_no), or verified properties. Filters are ANDed; read all pages and clarify ambiguous room identities before choosing an ID. " +

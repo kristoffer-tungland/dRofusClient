@@ -7,7 +7,7 @@ using ModelContextProtocol;
 
 namespace dRofusClient.Tests.Mcp;
 
-public sealed class McpServiceTests
+public sealed partial class McpServiceTests
 {
     [Theory]
     [InlineData("items", "price", "price")]

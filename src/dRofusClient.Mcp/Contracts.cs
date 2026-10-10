@@ -24,6 +24,8 @@ public sealed record VerifiedPropertyResolution(string Status, string Stage, str
     IReadOnlyList<VerifiedProperty> Candidates);
 public sealed record ReadResult(ProjectContext Project, object Data, int? NextOffset = null,
     bool HasMore = false, string? Notice = null);
+public sealed record AttributeMappingResult(IReadOnlyDictionary<string, JsonElement> Configuration,
+    string Status, int? MatchCount, IReadOnlyList<JsonElement> Mappings);
 public sealed record WriteResult(ProjectContext Project, string Outcome, int? Id,
     IReadOnlyList<string> CompletedSteps, object? Data = null, string? Notice = null);
 public sealed record WriteProposal(ProjectContext Project, string Operation, int? Id,

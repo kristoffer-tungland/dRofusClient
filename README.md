@@ -195,6 +195,9 @@ password prompt and agents cannot enable or access the store through tools.
 | `get_room_occurrences` | Paginated occurrences constrained to `roomId`, optionally `equipmentListTypeId`, with assignment and quantity fields always included |
 | `get_item_history`, `get_occurrence_history`, `get_room_history` | Per-entity API change log, including time, user, action, field, old/new values and notes |
 | `get_field_metadata` | Project field labels, identifiers, types, units and known read-only restrictions; entity is `items`, `occurrences` or `rooms` |
+| `list_attribute_configurations` | Paginated configuration summaries including type, applicability, user availability and default status |
+| `get_attribute_configuration` | Configuration context and paginated mappings, preserving identifiers, labels and raw directions |
+| `find_attribute_mappings` | Exact ID/label lookup within a selected configuration, with explicit ambiguity and missing-data results |
 | `resolve_property` | Endpoint-aware resolution of API names, verified built-in aliases/synonyms and custom labels; returns provenance and never confirms fuzzy suggestions |
 | `search_custom_properties` | List/search live custom and dynamic properties by API ID, label or group, with optional exact `propertyGroup` filtering |
 | `resolve_custom_property` | Resolve an exact ID, label or `group: label` to an API ID, reporting ambiguous or missing matches instead of guessing |
@@ -323,6 +326,53 @@ with verified writable property IDs; to create a room, use `create_room`.
 Both share `DROFUS_ENABLE_WRITES` and interactive approval with Item/Occurrence
 writes. Updating requirements does not modify assigned occurrences. Occurrence reassignment still
 requires the normal write preview/approval and `equipment_list_type_id`.
+
+### Revit parameter mappings across MCP servers
+
+The three attribute configuration tools are read-only and work without
+`DROFUS_ENABLE_WRITES`. Agent-facing read/write descriptions and server instructions
+proactively direct agents to these tools when comparing dRofus with Revit:
+
+1. Use `list_attribute_configurations`, optionally with ANDed filters on API
+   fields such as `config_type` or `name`. Configuration type values include
+   `room`, `space`, `article` and `revit-occurrence`—not plural MCP entity names.
+   Check `applicable_to`, `available_to_users` and `is_default`, and follow all
+   pages. A default does not prove the configuration is active in the Revit model;
+   clarify competing configurations before selecting one.
+2. Pass its positive ID to `get_attribute_configuration`, or search with
+   `find_attribute_mappings(configurationId, property, side)`. `side` is `drofus`,
+   `external`, or `either` (default). Lookup prefers exact case-sensitive IDs,
+   then exact case-insensitive labels. It does not fuzzy-match or translate IDs.
+3. Read the original `drofus_attribute_id`/`drofus_attribute_label`,
+   `external_attribute_id`/`external_attribute_label`, `direction`, `configuration`
+   and mapping `id`. IDs are opaque: do not assume they are directly usable API
+   field names, Revit parameter names, GUIDs or built-in parameter codes.
+   Verify the dRofus side against endpoint-specific `resolve_property` and
+   `get_field_metadata`, and the Revit side through that MCP server's parameter
+   metadata, including type/instance scope and units. Unverified identifiers
+   require clarification, not a guessed conversion.
+4. Respect the documented direction:
+   - `Key`: identifies corresponding objects; it is not a transfer direction.
+   - `ToExternalApplication`: dRofus → the configured external application (Revit
+     when this is a Revit configuration).
+   - `ToDrofus`: external application → dRofus.
+   Missing, null or unfamiliar directions remain unchanged and mean unknown.
+   They are never defaulted to `Key` or assumed bidirectional.
+
+List pagination applies to configurations. Read/lookup `limit` and `offset`
+apply to mapping elements within one configuration (default 25, maximum 100).
+The upstream API returns the selected configuration's entire elements array;
+mapping lookup and pagination occur locally. Results retain configuration context.
+Lookup returns `matched`, `ambiguous`, `not_found`, or `unavailable`, and a
+`matchCount` calculated before pagination. Multiple mappings remain ambiguous
+even if only one fits on a page. `unavailable` with a null count means elements
+were missing/null; an empty array is a known empty set. Read results use
+`available` for supplied elements. Follow `nextOffset` while `hasMore` is true.
+
+A mapping describes **intended synchronization**, not proof that values are
+synchronized or that objects are matched correctly. It neither grants write
+permission nor bypasses either MCP server's approval requirements. Configuration
+editing and automatic cross-server synchronization are not provided.
 
 ### Write approval and limitations
 

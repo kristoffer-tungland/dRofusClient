@@ -9,7 +9,7 @@ public sealed class WriteTools(DrofusService service, IWriteApproval approval)
 {
     private const string ResolutionGuidance =
         " First call resolve_property for the target entity to resolve exact API names and verified built-in aliases/synonyms before custom labels. " +
-        "Never replace a built-in match with keyword search. Ambiguous results and fuzzy suggestions require user clarification; only a resolvedId is confirmed.";
+        "Never replace a built-in match with keyword search. Ambiguous results and fuzzy suggestions require user clarification; only a resolvedId is confirmed." + ReadTools.MappingGuidance;
     [McpServerTool(Name = "create_item", ReadOnly = false, Destructive = true, Idempotent = false, UseStructuredContent = true)]
     [Description("Create an Item (article). Requires level_id (existing item group) and name. Optional fields: bim_id, bip, note, parent_id, price_reference, serial_no (max 10), to_be_drawn. Preview is the default. Actual writes require operator enablement and interactive host approval; never automatically retry. " +
         "Proactively inspect get_field_metadata (entity='items'); search_custom_properties and resolve_custom_property are custom-only fallbacks after built-in lookup fails. Never guess IDs and clarify ambiguous matches. This tool accepts only the creation fields listed above, even if metadata exposes other writable properties. Set supported additional properties afterward with update_item using the created ID, verified writable field IDs/types, and a separate preview/approval." + ResolutionGuidance)]

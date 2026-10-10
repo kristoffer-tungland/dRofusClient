@@ -8,12 +8,30 @@ namespace dRofusClient.Tests.Mcp;
 public sealed class McpProtocolTests
 {
     [Fact]
-    public async Task StdioInitializesListsNineteenToolsAndReturnsStructuredPreview()
+    public async Task StdioInitializesListsTwentyTwoToolsAndReturnsStructuredPreview()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
-        Assert.Equal(19, tools.Count);
+        Assert.Equal(22, tools.Count);
+        foreach (var name in new[] { "list_attribute_configurations", "get_attribute_configuration", "find_attribute_mappings" })
+        {
+            var tool = tools.Single(t => t.Name == name);
+            Assert.True(tool.ProtocolTool.Annotations!.ReadOnlyHint);
+            Assert.False(tool.JsonSchema.GetProperty("properties").TryGetProperty("server", out _));
+            Assert.Contains("ToExternalApplication", tool.Description!);
+            Assert.Contains("ToDrofus", tool.Description!);
+            Assert.Contains("Key identifies", tool.Description!);
+            Assert.Contains("write safeguards", tool.Description!);
+            var invalid = await client.CallToolAsync(name, new Dictionary<string, object?>
+            {
+                ["id"] = 0, ["configurationId"] = 0, ["property"] = "Name", ["limit"] = 0
+            }, cancellationToken: timeout.Token);
+            Assert.True(invalid.IsError);
+        }
+        Assert.Contains("get_attribute_configuration", client.ServerInstructions!);
+        Assert.Contains("find_attribute_mappings", client.ServerInstructions!);
+        Assert.Contains("not proof values are synchronized", client.ServerInstructions!);
         var resolver = tools.Single(t => t.Name == "resolve_property");
         Assert.Contains("rooms", resolver.Description!);
         Assert.Contains("systems", resolver.Description!);
@@ -51,6 +69,8 @@ public sealed class McpProtocolTests
                 name.Contains("room") ? "entity='rooms'" : "entity='items'", description);
             Assert.Contains("proactively", description, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("ambiguous", description);
+            Assert.Contains("list_attribute_configurations", description);
+            Assert.Contains("find_attribute_mappings", description);
         }
         Assert.Contains("in fields", tools.Single(t => t.Name == "get_item").Description!);
         Assert.Contains("in fields", tools.Single(t => t.Name == "get_occurrence").Description!);

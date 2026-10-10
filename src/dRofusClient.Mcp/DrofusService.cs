@@ -15,7 +15,7 @@ using ModelContextProtocol;
 
 namespace dRofusClient.Mcp;
 
-public sealed class DrofusService(IdRofusClient client, ServerSettings settings, FieldCatalog catalog,
+public sealed partial class DrofusService(IdRofusClient client, ServerSettings settings, FieldCatalog catalog,
     ILogger<DrofusService> logger) : IDisposable
 {
     private readonly SemaphoreSlim _writeLock = new(1, 1);
