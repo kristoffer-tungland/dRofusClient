@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\dRofusClient\dRofusClient.csproj" />
+    <ProjectReference Include="..\dRofusClient.Mcp\dRofusClient.Mcp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
