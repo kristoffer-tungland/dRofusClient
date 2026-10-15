@@ -119,28 +119,378 @@ var configs = client.GetAttributeConfigurations(AttributeConfigType.RevitOccurre
 `dRofusClient.Mcp` exposes Items (articles), Occurrences and Rooms to local AI agents over
 stdio. It does not require Revit and does not open an HTTP listener.
 
-### Build and connect
+### Requirements
 
-Install the .NET 8 SDK or later and publish the server (replace the absolute paths):
+- A dRofus account with API access and permission to the intended database/project.
+  Ask your administrator for the HTTPS API origin, database ID and project ID.
+- An MCP host supporting local **stdio** servers, such as Claude Desktop,
+  VS Code with GitHub Copilot, or OpenCode. Install and sign in to the host first.
+  Your organization's AI/data-sharing policy must permit sending project data
+  to the selected model provider.
+- A supported 64-bit Windows, macOS or glibc-based Linux system matching an asset
+  below, with outbound HTTPS access to your dRofus API.
+- **Release binaries are self-contained .NET 8 applications: no separate .NET
+  installation is needed.** Native OS libraries are still required. Building
+  from source needs the .NET SDK; running a framework-dependent publish needs the
+  .NET 8 runtime. Neither Node.js nor Python is required by this server.
 
-```sh
-dotnet publish /absolute/path/to/dRofusClient/src/dRofusClient.Mcp/dRofusClient.Mcp.csproj \
-  --configuration Release --output /absolute/path/to/drofus-mcp
+### Installation (Windows, macOS and Linux)
+
+Open [GitHub Releases](https://github.com/kristoffer-tungland/dRofusClient/releases)
+and select a release that actually lists the MCP assets. **The existing `v1.0.15`
+release has no MCP binaries.** The packaging described here is for releases
+produced by the new pipeline; it does not mean those assets are already live.
+Until a release contains them, use [Build from source](#build-from-source).
+
+Set `VERSION` to the selected release's version **without its leading `v`**;
+the download commands use tag `v${VERSION}`. Do not use `1.0.15` for MCP downloads.
+The available asset names will be:
+
+| OS / architecture | Asset |
+| --- | --- |
+| Windows x64 | `dRofusClient.Mcp-VERSION-win-x64.zip` |
+| macOS Intel | `dRofusClient.Mcp-VERSION-osx-x64.tar.gz` |
+| macOS Apple Silicon | `dRofusClient.Mcp-VERSION-osx-arm64.tar.gz` |
+| Linux x64 (glibc) | `dRofusClient.Mcp-VERSION-linux-x64.tar.gz` |
+| Linux ARM64 (glibc) | `dRofusClient.Mcp-VERSION-linux-arm64.tar.gz` |
+
+Download the matching archive and `SHA256SUMS` from the **same release**. Verify
+the checksum before extracting; stop on any mismatch. A matching checksum checks
+integrity, not independent publisher identity: download only from the trusted
+repository. GitHub's automatic “Source code” archives are not runnable binaries.
+
+**Extract ALL files together**, not just the executable. Keep the DLLs,
+`.deps.json`, `.runtimeconfig.json`, runtime/native libraries and XML documentation
+(including the core library's generated `dRofusClient.VERSION.xml`)
+in the installed directory. The Swagger schema is embedded in the application;
+no separate Swagger download is needed. Install each version in its own directory
+and update the host's command path when upgrading.
+
+**For maintainers:** [onPushMaster.yml](.github/workflows/onPushMaster.yml) runs on
+pushes to `master`, `v*` tags, or manual `workflow_dispatch`. A single job runs the
+existing `paulhatch/semantic-version` calculation and shares its version with both
+NuGet and MCP packaging; there is no version input or manual version bump.
+Manual dispatch has a boolean `publish_release` input (default `false`): setting
+it explicitly to `true` permits a GitHub release from the selected ref, including
+a feature branch. Without that opt-in, manual feature-branch runs build only.
+NuGet pushes remain restricted to `master` and `v*` tags; a manual feature-branch
+release does not push NuGet packages. Every path uses the shared semantic version,
+not a version input. The release stays draft until all five native-runner test
+jobs and archive upload/download SHA256 checks pass. Existing public versions
+cannot be overwritten. Dispatch may remain unavailable until the default branch
+contains `workflow_dispatch`; merge the workflow changes into `master` first to
+enable it.
+
+#### Windows (PowerShell, x64)
+
+Run in PowerShell, enter the version you selected, and keep the printed executable
+path for your host configuration:
+
+```powershell
+$ErrorActionPreference = "Stop"
+$VERSION = Read-Host "Release version without v (must contain MCP assets)"
+$Asset = "dRofusClient.Mcp-$VERSION-win-x64.zip"
+$Release = "https://github.com/kristoffer-tungland/dRofusClient/releases/download/v$VERSION"
+$DownloadDir = Join-Path $HOME "Downloads\drofus-mcp-$VERSION"
+$InstallDir = Join-Path $env:LOCALAPPDATA "drofus-mcp\$VERSION"
+New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
+Invoke-WebRequest "$Release/$Asset" -OutFile (Join-Path $DownloadDir $Asset)
+Invoke-WebRequest "$Release/SHA256SUMS" -OutFile (Join-Path $DownloadDir "SHA256SUMS")
+$Entries = @(Get-Content (Join-Path $DownloadDir "SHA256SUMS") | Where-Object {
+    ($_ -split '\s+')[-1].TrimStart('*') -eq $Asset
+})
+if ($Entries.Count -ne 1) { throw "Missing or ambiguous checksum entry" }
+$Expected = ($Entries[0] -split '\s+')[0]
+$Actual = (Get-FileHash (Join-Path $DownloadDir $Asset) -Algorithm SHA256).Hash
+if ($Actual -ne $Expected) { throw "Checksum mismatch; do not install" }
+Expand-Archive -Path (Join-Path $DownloadDir $Asset) -DestinationPath $InstallDir
+Join-Path $InstallDir "dRofusClient.Mcp.exe"
 ```
 
-Configure your MCP host to launch the published DLL, not `dotnet run`, so build
-output cannot interfere with the stdio protocol:
+If the installation directory already exists, choose a fresh directory instead
+of mixing old and new files. There is no native Windows ARM64 asset in this list.
+
+#### macOS (Terminal)
+
+Use **About This Mac** to check the chip: Apple Silicon uses `osx-arm64`; Intel
+uses `osx-x64`. `uname -m` prints `arm64` or `x86_64`, but a Terminal running under
+Rosetta can report `x86_64` on Apple Silicon. Set `RID` for your actual chip:
+
+```sh
+printf 'Release version without v (must contain MCP assets): '
+read -r VERSION
+RID=osx-arm64 # Change to osx-x64 for Intel
+ASSET="dRofusClient.Mcp-$VERSION-$RID.tar.gz"
+RELEASE="https://github.com/kristoffer-tungland/dRofusClient/releases/download/v$VERSION"
+DOWNLOAD_DIR="$HOME/Downloads/drofus-mcp-$VERSION"
+INSTALL_DIR="$HOME/Applications/drofus-mcp/$VERSION"
+mkdir -p "$DOWNLOAD_DIR" &&
+cd "$DOWNLOAD_DIR" &&
+curl -fLO "$RELEASE/$ASSET" &&
+curl -fLO "$RELEASE/SHA256SUMS" &&
+grep -F "  $ASSET" SHA256SUMS | shasum -a 256 -c - &&
+mkdir -p "$(dirname "$INSTALL_DIR")" &&
+mkdir "$INSTALL_DIR" &&
+tar -xzf "$ASSET" -C "$INSTALL_DIR" &&
+chmod u+x "$INSTALL_DIR/dRofusClient.Mcp" &&
+printf 'Installed command: %s/dRofusClient.Mcp\n' "$INSTALL_DIR"
+```
+
+If Gatekeeper blocks this trusted download, first verify its source and checksum.
+After the blocked launch, use **System Settings → Privacy & Security → Open
+Anyway** for this application, then confirm the prompt. See
+[Apple's guidance](https://support.apple.com/en-us/102445). Do not globally disable
+Gatekeeper or remove quarantine recursively from unrelated files. If macOS reports
+malware or your organization's policy blocks the application, stop and contact
+your administrator rather than bypassing the warning.
+
+#### Linux (Terminal, glibc)
+
+Use `linux-x64` for `uname -m` = `x86_64`, or `linux-arm64` for `aarch64`/`arm64`.
+These assets target **glibc, not Alpine/musl**. Use a supported glibc distribution
+(or a glibc-based container) instead of trying to run them directly on Alpine.
+You need `curl`, `tar` and `sha256sum`:
+
+```sh
+printf 'Release version without v (must contain MCP assets): '
+read -r VERSION
+RID=linux-x64 # Change to linux-arm64 for ARM64
+ASSET="dRofusClient.Mcp-$VERSION-$RID.tar.gz"
+RELEASE="https://github.com/kristoffer-tungland/dRofusClient/releases/download/v$VERSION"
+DOWNLOAD_DIR="$HOME/Downloads/drofus-mcp-$VERSION"
+INSTALL_DIR="$HOME/.local/share/drofus-mcp/$VERSION"
+mkdir -p "$DOWNLOAD_DIR" &&
+cd "$DOWNLOAD_DIR" &&
+curl -fLO "$RELEASE/$ASSET" &&
+curl -fLO "$RELEASE/SHA256SUMS" &&
+grep -F "  $ASSET" SHA256SUMS | sha256sum -c - &&
+mkdir -p "$(dirname "$INSTALL_DIR")" &&
+mkdir "$INSTALL_DIR" &&
+tar -xzf "$ASSET" -C "$INSTALL_DIR" &&
+chmod u+x "$INSTALL_DIR/dRofusClient.Mcp" &&
+printf 'Installed command: %s/dRofusClient.Mcp\n' "$INSTALL_DIR"
+```
+
+Self-contained does not mean statically linked. The OS still needs the .NET 8
+native dependencies, including glibc, ICU, OpenSSL, zlib, libgcc and libstdc++;
+some distributions also require Kerberos libraries. Install the packages for
+your distribution/version using Microsoft's
+[.NET Linux prerequisites](https://learn.microsoft.com/en-us/dotnet/core/install/linux).
+Do not work around missing libraries by disabling TLS checks or globalization.
+
+### Quick Start
+
+1. Install/extract the matching release above, or publish from source below.
+2. Choose **one** host configuration below. Replace every `YOUR_*`/`VERSION`
+   placeholder with your own details. Use the absolute executable path printed
+   by installation, not the archive path or a path inside Downloads.
+3. Keep `DROFUS_ENABLE_WRITES=false`. Start/restart the server through the host,
+   review its trust prompt and enable only the tools you need.
+4. Ask: **“Using drofus, list up to five rooms in the configured project. Show
+   their IDs and names; do not change anything.”** Approve the read tool if asked.
+   This verifies the connection and project permissions without modifying data.
+5. Only consider writes after reviewing [Write approval and limitations](#write-approval-and-limitations)
+   and testing with a dedicated test project.
+
+**The host launches the server and communicates over stdio.** There is no web
+page, port, interactive login or startup banner. Running the executable manually
+with valid configuration normally waits silently for MCP input; use Ctrl+C to
+stop it, then let the host start its own process.
+
+### Host configuration
+
+Merge the example into the indicated configuration file without removing your
+other servers/settings. These hosts use **different JSON formats**. Paths in JSON
+are literal: do not assume `~`, `$HOME` or `%LOCALAPPDATA%` expands in `command`.
+Use the resolved absolute path, doubling backslashes in Windows JSON.
+Example installed paths (replace username and version):
+
+- Windows: `C:\\Users\\YOUR_USER\\AppData\\Local\\drofus-mcp\\VERSION\\dRofusClient.Mcp.exe`
+- macOS: `/Users/YOUR_USER/Applications/drofus-mcp/VERSION/dRofusClient.Mcp`
+- Linux: `/home/YOUR_USER/.local/share/drofus-mcp/VERSION/dRofusClient.Mcp`
+
+#### Claude Desktop
+
+Open **Settings → Developer → Edit Config**. This opens
+`claude_desktop_config.json`; on Windows it is under `%APPDATA%\Claude`, and on
+macOS under your home directory's `Library/Application Support/Claude`.
+Use the path for your installation in this example:
 
 ```json
 {
   "mcpServers": {
     "drofus": {
-      "command": "dotnet",
+      "command": "/Users/YOUR_USER/Applications/drofus-mcp/VERSION/dRofusClient.Mcp",
+      "args": [],
+      "env": {
+        "DROFUS_BASE_URL": "https://api-no.drofus.com",
+        "DROFUS_DATABASE": "YOUR_DATABASE",
+        "DROFUS_PROJECT_ID": "YOUR_PROJECT_ID",
+        "DROFUS_USERNAME": "YOUR_USERNAME",
+        "DROFUS_PASSWORD": "YOUR_PASSWORD",
+        "DROFUS_ENABLE_WRITES": "false"
+      }
+    }
+  }
+}
+```
+
+The password above is a placeholder, **not a secret-store reference**. Replacing
+it stores your password in plaintext in the config file. Never commit or share
+that file, paste it into chat, or include it in screenshots; restrict access to
+your OS account and protect backups. Prefer injecting credentials through a
+trusted launcher/secret manager's process environment (omit the corresponding
+`env` keys), or on Windows use [Windows Credential Manager](#windows-credential-manager):
+remove `DROFUS_PASSWORD` and add `"DROFUS_USE_WINDOWS_CREDENTIALS": "true"`.
+GUI apps do not necessarily inherit a terminal's environment.
+
+Fully quit and reopen Claude Desktop, then inspect the `drofus` connector/tools.
+The official [local server guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
+describes this `mcpServers` format; UI names can vary by host version.
+
+#### VS Code with GitHub Copilot
+
+Use **MCP: Open User Configuration** for a personal profile, or create
+`.vscode/mcp.json` in your workspace. This example deliberately uses VS Code's
+`servers`/`inputs` format so the password is prompted for and securely stored by
+VS Code, rather than written into the JSON:
+
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "drofus-password",
+      "description": "dRofus password",
+      "password": true
+    }
+  ],
+  "servers": {
+    "drofus": {
+      "type": "stdio",
+      "command": "C:\\Users\\YOUR_USER\\AppData\\Local\\drofus-mcp\\VERSION\\dRofusClient.Mcp.exe",
+      "args": [],
+      "env": {
+        "DROFUS_BASE_URL": "https://api-no.drofus.com",
+        "DROFUS_DATABASE": "YOUR_DATABASE",
+        "DROFUS_PROJECT_ID": "YOUR_PROJECT_ID",
+        "DROFUS_USERNAME": "YOUR_USERNAME",
+        "DROFUS_PASSWORD": "${input:drofus-password}",
+        "DROFUS_ENABLE_WRITES": "false"
+      }
+    }
+  }
+}
+```
+
+On macOS/Linux replace `command` with the appropriate absolute path above. Use
+**MCP: List Servers → drofus → Start**, review trust, and enter your password.
+Open Copilot Chat in an agent mode supporting MCP and select the `drofus` tools
+in **Configure Tools**. Keep tool approval prompts enabled; do not enable global
+auto-approval to make setup work.
+
+**Compatibility:** current VS Code docs also describe portable `.mcp.json` and
+Copilot `mcp-config.json` files using `mcpServers`. Those formats do **not** support
+VS Code `${input:...}` variables. Copilot harness sessions do not receive servers
+requiring interactive input from `.vscode/mcp.json`. Use a VS Code session that
+supports the input-variable configuration above; for a harness session, follow
+the official portable configuration guidance with securely supplied environment
+credentials instead. Do not paste a password into a shared portable config.
+See [MCP server setup](https://code.visualstudio.com/docs/agent-customization/mcp-servers)
+and the [configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
+
+#### OpenCode
+
+Merge this into `opencode.json` in your project root, or your personal
+`opencode.json` in your home directory's `.config/opencode` directory. OpenCode
+uses `mcp`, `type: "local"`, a **command array**, and `environment` (not `env`):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "drofus": {
+      "type": "local",
+      "command": ["/home/YOUR_USER/.local/share/drofus-mcp/VERSION/dRofusClient.Mcp"],
+      "enabled": true,
+      "environment": {
+        "DROFUS_BASE_URL": "https://api-no.drofus.com",
+        "DROFUS_DATABASE": "YOUR_DATABASE",
+        "DROFUS_PROJECT_ID": "YOUR_PROJECT_ID",
+        "DROFUS_USERNAME": "YOUR_USERNAME",
+        "DROFUS_PASSWORD": "{env:DROFUS_PASSWORD}",
+        "DROFUS_ENABLE_WRITES": "false"
+      }
+    }
+  }
+}
+```
+
+Change the command for Windows/macOS. Provide `DROFUS_PASSWORD` in the environment
+that launches OpenCode, preferably through your secret manager. For a one-session
+Bash launch on macOS/Linux, this prompts without echoing the password or recording
+it in shell history:
+
+```bash
+read -r -s -p 'dRofus password: ' DROFUS_PASSWORD
+printf '\n'
+export DROFUS_PASSWORD
+opencode
+unset DROFUS_PASSWORD
+```
+
+Run that block in **Bash**, not macOS's default zsh. Environment variables are
+not an encrypted vault; limit access to your account and avoid dumping the
+environment into logs. OpenCode's documented `{env:NAME}` substitution produces
+an empty string when a variable is absent, so an unset password will fail startup
+unless the Windows fallback is configured. On Windows you can instead remove the
+password entry and enable the credential-store option described below.
+
+Restart OpenCode after changes, run `opencode mcp list` to inspect server status,
+then ask the read-only Quick Start question. Review your host's tool permissions;
+do not grant blanket approval. See the official
+[MCP configuration](https://opencode.ai/docs/mcp-servers/) and
+[environment substitution](https://opencode.ai/docs/config/#env-vars) docs.
+
+**All hosts:** enabling writes is not sufficient to execute them. A host must
+support **interactive form elicitation** and show the approval form to the human.
+Hosts without it can read and preview, but cannot execute writes even with
+`DROFUS_ENABLE_WRITES=true`. Ordinary tool-call approval is not a replacement.
+
+### Build from source
+
+If binaries are not yet available, install the .NET 8 SDK (or a compatible later
+SDK) and publish the server from this repository (replace the absolute paths).
+This explicitly creates a **framework-dependent** publish; the machine running
+it needs the .NET 8 runtime, even when a newer SDK was used to build:
+
+```sh
+dotnet publish /absolute/path/to/dRofusClient/src/dRofusClient.Mcp/dRofusClient.Mcp.csproj \
+  --configuration Release --self-contained false --output /absolute/path/to/drofus-mcp
+```
+
+Keep the entire output directory. Configure your MCP host to launch the published
+DLL, not `dotnet run`, so build output cannot interfere with the stdio protocol.
+For example, using Claude's format (replace `/absolute/path/to/dotnet` with the
+installed executable's full path, obtainable with `command -v dotnet` on Unix or
+`(Get-Command dotnet).Source` in PowerShell):
+
+```json
+{
+  "mcpServers": {
+    "drofus": {
+      "command": "/absolute/path/to/dotnet",
       "args": ["/absolute/path/to/drofus-mcp/dRofusClient.Mcp.dll"]
     }
   }
 }
 ```
+
+Add the same environment configuration shown above. For VS Code use `servers`
+and `env`; for OpenCode use `"command": ["/absolute/path/to/dotnet",
+"/absolute/path/to/drofus-mcp/dRofusClient.Mcp.dll"]` and `environment`.
+
+### Connection configuration
 
 Supply these environment variables to the server process through your host's
 secure environment/secret configuration:
@@ -184,6 +534,29 @@ updates or deletes credentials. Missing/empty credentials, store failures, or
 attempting the fallback on a non-Windows machine fail startup without exposing
 passwords, credential targets or raw store errors. There is no interactive
 password prompt and agents cannot enable or access the store through tools.
+
+### Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| Download returns 404 / no asset | Select a release whose Assets list includes MCP archives; `v1.0.15` does not. Match its version/tag exactly or build from source. |
+| Checksum mismatch | Stop; delete the suspect download and fetch the archive and `SHA256SUMS` again from the same trusted release. Do not ignore the failure. |
+| Executable missing / `ENOENT` | Extract the complete archive and use its absolute executable path. Windows uses `.exe`; macOS/Linux do not. Check JSON escaping and remove unresolved placeholders. |
+| Permission denied / blocked launch | macOS/Linux: apply `chmod u+x` to the installed executable and check whether the filesystem is mounted `noexec`. macOS: follow the per-app Gatekeeper steps above only for a trusted download. |
+| Bad CPU type / exec format error | Download the architecture matching your OS/CPU; Linux and macOS archives are not interchangeable. Check Rosetta on Apple Silicon. |
+| Missing ICU, SSL or other native libraries | Install your distribution's .NET 8 native prerequisites. Linux assets require glibc and do not run directly on Alpine/musl. |
+| “Install .NET” / missing framework | A release archive should be self-contained: re-extract all files and launch its executable. A source framework-dependent publish requires the .NET 8 runtime. |
+| Manual launch appears to hang | Normal for stdio after successful startup: it is waiting for a host handshake. Stop it with Ctrl+C and start through the MCP host; there is no HTTP endpoint. |
+| Server exits / credentials absent | Check the host's environment, API origin and database/project identifiers. GUI apps might not inherit shell variables. An unset OpenCode `{env:...}` becomes empty. |
+| Authentication/authorization error | Verify the regional API origin, account, project access and password privately with your administrator. Windows fallback requires the same OS account and exact saved credential target. Never paste credentials into chat. |
+| Tools absent in VS Code | Check the selected config format, restart the server, inspect **MCP: List Servers → drofus → Show Output**, and enable its tools. Input-variable configurations are not forwarded to Copilot harness sessions; see the compatibility note above. |
+| Claude fails to connect | Fully quit/reopen it and inspect `mcp.log` / `mcp-server-drofus.log` under your home directory's `Library/Logs/Claude` (macOS) or `%APPDATA%\Claude\logs` (Windows). |
+| OpenCode fails to connect | Check `opencode mcp list`, the `mcp`/`environment` keys and the launching process's environment. This is a local server, not an HTTP/OAuth connection. |
+| Write declined or unavailable | Check preview mode, write opt-in, API permissions and human form approval. Hosts without form elicitation cannot execute writes. Do not bypass approvals or automatically retry writes. |
+
+Diagnostics go to stderr, not stdout. Review logs locally and redact any
+project/personal data before sharing. Never add shell banners or logging to stdout
+in a launcher, because that stream carries the MCP protocol.
 
 ### Tools
 

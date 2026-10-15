@@ -17,7 +17,13 @@ try
     builder.Services.AddSingleton<IWriteApproval, ElicitationWriteApproval>();
     builder.Services.AddMcpServer(options =>
     {
-        options.ServerInfo = new() { Name = "dRofusClient", Version = "1.0.0" };
+        options.ServerInfo = new()
+        {
+            Name = "dRofusClient",
+            Version = typeof(DrofusService).Assembly
+                .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                .Cast<System.Reflection.AssemblyInformationalVersionAttribute>().Single().InformationalVersion.Split('+')[0]
+        };
         options.ServerInstructions = "Work only in the configured dRofus project. Items are articles; occurrences reference items. " +
             "When users request properties by name, proactively discover them without waiting for the user to mention metadata tools: " +
             "first use resolve_property for the target endpoint. It checks exact API names, verified built-in aliases/display names, " +

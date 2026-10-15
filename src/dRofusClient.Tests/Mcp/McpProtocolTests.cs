@@ -12,6 +12,10 @@ public sealed class McpProtocolTests
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var client = await ConnectAsync(false, null, timeout.Token);
+        var expectedVersion = Environment.GetEnvironmentVariable("MCP_TEST_VERSION") ??
+            typeof(ReadTools).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                .Cast<System.Reflection.AssemblyInformationalVersionAttribute>().Single().InformationalVersion.Split('+')[0];
+        Assert.Equal(expectedVersion, client.ServerInfo.Version);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
         Assert.Equal(22, tools.Count);
         foreach (var name in new[] { "list_attribute_configurations", "get_attribute_configuration", "find_attribute_mappings" })
@@ -196,11 +200,12 @@ public sealed class McpProtocolTests
     private static Task<McpClient> ConnectAsync(bool writes, McpClientOptions? options, CancellationToken cancellationToken)
     {
         var testAssembly = typeof(McpProtocolTests).Assembly.Location;
+        var executable = Environment.GetEnvironmentVariable("MCP_TEST_EXECUTABLE");
         var transport = new StdioClientTransport(new()
         {
             Name = "dRofus MCP protocol test",
-            Command = "dotnet",
-            Arguments = ["exec", "--runtimeconfig", Path.ChangeExtension(testAssembly, ".runtimeconfig.json"),
+            Command = executable ?? "dotnet",
+            Arguments = executable is not null ? [] : ["exec", "--runtimeconfig", Path.ChangeExtension(testAssembly, ".runtimeconfig.json"),
                 "--depsfile", Path.ChangeExtension(testAssembly, ".deps.json"), typeof(ReadTools).Assembly.Location],
             EnvironmentVariables = new Dictionary<string, string?>
             {

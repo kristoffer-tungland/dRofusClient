@@ -79,6 +79,8 @@ jobs:
   # Non-matrix dependent libraries
   build-core:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -143,6 +145,14 @@ jobs:
         name: core-packages
         path: src/nupkgs/*.nupkg
         retention-days: 1
+
+  mcp-packages:
+    needs: build-core
+    permissions:
+      contents: read
+    uses: ./.github/workflows/mcp-packages.yml
+    with:
+      version: ${{ needs.build-core.outputs.version }}
 
   # Push all packages at once
   publish:
