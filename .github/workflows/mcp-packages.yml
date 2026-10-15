@@ -1,0 +1,81 @@
+name: MCP platform packages
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-15-intel
+            rid: osx-x64
+          - os: macos-15
+            rid: osx-arm64
+          - os: ubuntu-24.04
+            rid: linux-x64
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RUNTIME_ID: ${{ matrix.rid }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Test
+        run: |
+          dotnet test "$env:GITHUB_WORKSPACE/src/dRofusClient.Tests/dRofusClient.Tests.csproj" --configuration Release "-p:Version=$env:RELEASE_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
+      - name: Publish self-contained MCP server
+        run: |
+          dotnet publish "$env:GITHUB_WORKSPACE/src/dRofusClient.Mcp/dRofusClient.Mcp.csproj" --configuration Release --runtime $env:RUNTIME_ID --self-contained true "-p:Version=$env:RELEASE_VERSION" -p:PublishTrimmed=false -p:PublishSingleFile=false --output "$env:RUNNER_TEMP/publish"
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          Copy-Item "$env:GITHUB_WORKSPACE/README.md","$env:GITHUB_WORKSPACE/LICENSE.txt" "$env:RUNNER_TEMP/publish"
+      - name: Package and extract archive
+        run: |
+          $output = "$env:GITHUB_WORKSPACE/mcp-assets"
+          New-Item -ItemType Directory -Force $output,"$env:RUNNER_TEMP/extracted" | Out-Null
+          $name = "dRofusClient.Mcp-$env:RELEASE_VERSION-$env:RUNTIME_ID"
+          if ($IsWindows) {
+            Compress-Archive -Path "$env:RUNNER_TEMP/publish/*" -DestinationPath "$output/$name.zip"
+            Expand-Archive "$output/$name.zip" "$env:RUNNER_TEMP/extracted"
+          } else {
+            tar -czf "$output/$name.tar.gz" -C "$env:RUNNER_TEMP/publish" .
+            if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
+            tar -xzf "$output/$name.tar.gz" -C "$env:RUNNER_TEMP/extracted"
+            if ($LASTEXITCODE -ne 0) { throw 'Extraction failed' }
+          }
+          $exe = if ($IsWindows) { 'dRofusClient.Mcp.exe' } else { 'dRofusClient.Mcp' }
+          foreach ($file in @($exe, 'dRofusClient.Mcp.dll', 'dRofusClient.Mcp.runtimeconfig.json', "dRofusClient.$env:RELEASE_VERSION.xml")) {
+            if (-not (Test-Path "$env:RUNNER_TEMP/extracted/$file")) { throw "Missing package file: $file" }
+          }
+          $runtime = Get-Content "$env:RUNNER_TEMP/extracted/dRofusClient.Mcp.runtimeconfig.json" -Raw | ConvertFrom-Json
+          if (-not $runtime.runtimeOptions.includedFrameworks) { throw 'Package is not self-contained' }
+          "MCP_TEST_EXECUTABLE=$env:RUNNER_TEMP/extracted/$exe" >> $env:GITHUB_ENV
+          "MCP_TEST_VERSION=$env:RELEASE_VERSION" >> $env:GITHUB_ENV
+      - name: Verify extracted executable with real stdio MCP tests
+        run: |
+          dotnet test "$env:GITHUB_WORKSPACE/src/dRofusClient.Tests/dRofusClient.Tests.csproj" --configuration Release --no-build --filter FullyQualifiedName~McpProtocolTests
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged executable protocol checks failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcp-${{ matrix.rid }}
+          path: mcp-assets/*
+          if-no-files-found: error
+          retention-days: 7

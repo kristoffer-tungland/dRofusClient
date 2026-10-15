@@ -8,12 +8,41 @@ on:
     branches: [ "master" ]
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Create a GitHub release from the selected ref (does not publish branch builds to NuGet)
+        type: boolean
+        default: false
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
-  build:
-    runs-on: windows-latest
+  version:
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Application Version
+      id: version
+      uses: paulhatch/semantic-version@v5.0.2
+      with:
+        tag_prefix: "v"
+        version_format: "${major}.${minor}.${patch}"
+        search_commit_body: true
+
+  build:
+    needs: version
+    runs-on: windows-latest
     strategy:
       matrix:
         revit_config:
@@ -31,14 +60,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Application Version
-      id: version
-      uses: paulhatch/semantic-version@v5.0.2
-      with:
-        tag_prefix: "v"
-        version_format: "${major}.${minor}.${patch}"
-        search_commit_body: true
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -50,11 +71,11 @@ jobs:
 
     # Build and pack dRofusClient.Revit for each Revit configuration
     - name: Build dRofusClient.Revit
-      run: dotnet build dRofusClient.Revit/dRofusClient.Revit.csproj --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }}
+      run: dotnet build dRofusClient.Revit/dRofusClient.Revit.csproj --configuration "${{ matrix.revit_config }}" -p:Version=${{ needs.version.outputs.version }}
       working-directory: src
 
     - name: Pack dRofusClient.Revit
-      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ steps.version.outputs.version }} --output "./nupkgs/${{ matrix.revit_config }}"
+      run: dotnet pack dRofusClient.Revit/dRofusClient.Revit.csproj --no-build --configuration "${{ matrix.revit_config }}" -p:Version=${{ needs.version.outputs.version }} --output "./nupkgs/${{ matrix.revit_config }}"
       working-directory: src
 
     - name: Upload NuGet packages
@@ -65,22 +86,13 @@ jobs:
         retention-days: 1
 
   build-core:
+    needs: version
     runs-on: windows-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Application Version
-      id: version
-      uses: paulhatch/semantic-version@v5.0.2
-      with:
-        tag_prefix: "v"
-        version_format: "${major}.${minor}.${patch}"
-        search_commit_body: true
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -93,11 +105,11 @@ jobs:
       working-directory: src
       
     - name: Build dRofusClient
-      run: dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      run: dotnet build dRofusClient/dRofusClient.csproj --no-restore --configuration Release -p:Version=${{ needs.version.outputs.version }}
       working-directory: src
       
     - name: Pack dRofusClient
-      run: dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      run: dotnet pack dRofusClient/dRofusClient.csproj --no-build --configuration Release -p:Version=${{ needs.version.outputs.version }} --output ./nupkgs
       working-directory: src
 
     # dRofusClient.Windows steps
@@ -106,11 +118,11 @@ jobs:
       working-directory: src
       
     - name: Build dRofusClient.Windows
-      run: dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      run: dotnet build dRofusClient.Windows/dRofusClient.Windows.csproj --no-restore --configuration Release -p:Version=${{ needs.version.outputs.version }}
       working-directory: src
       
     - name: Pack dRofusClient.Windows
-      run: dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      run: dotnet pack dRofusClient.Windows/dRofusClient.Windows.csproj --no-build --configuration Release -p:Version=${{ needs.version.outputs.version }} --output ./nupkgs
       working-directory: src
 
     # dRofusClient.WindowsCredentials steps
@@ -119,11 +131,11 @@ jobs:
       working-directory: src
       
     - name: Build dRofusClient.WindowsCredentials
-      run: dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+      run: dotnet build dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-restore --configuration Release -p:Version=${{ needs.version.outputs.version }}
       working-directory: src
       
     - name: Pack dRofusClient.WindowsCredentials
-      run: dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./nupkgs
+      run: dotnet pack dRofusClient.WindowsCredentials/dRofusClient.WindowsCredentials.csproj --no-build --configuration Release -p:Version=${{ needs.version.outputs.version }} --output ./nupkgs
       working-directory: src
 
     - name: Upload NuGet packages
@@ -133,10 +145,22 @@ jobs:
         path: src/nupkgs/*.nupkg
         retention-days: 1
 
+  mcp:
+    needs: version
+    uses: ./.github/workflows/mcp-packages.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
   publish:
-    needs: [build, build-core]
+    needs: [version, build, build-core, mcp]
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || inputs.publish_release == true
     runs-on: windows-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
+    - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -157,7 +181,31 @@ jobs:
         name: core-packages
         path: all-packages/core-packages
 
+    - name: Download MCP packages
+      uses: actions/download-artifact@v4
+      with:
+        pattern: mcp-*
+        path: mcp-assets
+        merge-multiple: true
+
+    - name: Verify complete MCP asset set and generate checksums
+      shell: pwsh
+      env:
+        RELEASE_VERSION: ${{ needs.version.outputs.version }}
+      run: |
+        $expected = @('win-x64.zip', 'osx-x64.tar.gz', 'osx-arm64.tar.gz', 'linux-x64.tar.gz', 'linux-arm64.tar.gz') |
+          ForEach-Object { "dRofusClient.Mcp-$env:RELEASE_VERSION-$_" }
+        $actual = @(Get-ChildItem mcp-assets -File | Select-Object -ExpandProperty Name)
+        if (Compare-Object $expected $actual) { throw 'Missing or unexpected MCP assets' }
+        $checksums = foreach ($name in $expected) {
+          $file = Get-Item "mcp-assets/$name"
+          if ($file.Length -eq 0) { throw "Empty asset: $name" }
+          "$((Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $name"
+        }
+        $checksums | Set-Content mcp-assets/SHA256SUMS -Encoding utf8
+
     - name: Push all packages to GitHub
+      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
       run: |
         $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
         Write-Host "Found $($packages.Count) packages to publish"
@@ -168,6 +216,7 @@ jobs:
       shell: pwsh
 
     - name: Push all packages to NuGet.org
+      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
       run: |
         $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
         Write-Host "Found $($packages.Count) packages to publish"
@@ -177,15 +226,47 @@ jobs:
         }
       shell: pwsh
 
-    - id: "release"
-      name: "Automatic Release"
-      uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "v${{ needs.build.outputs.version }}"
-        prerelease: false
-        title: "Release ${{ needs.build.outputs.version }}"
-        files: |
-          LICENSE.txt
-          README.md
-          all-packages/**/*.nupkg
+    - name: Create draft release, verify uploaded binaries, then publish
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        RELEASE_COMMIT: ${{ github.sha }}
+      run: |
+        $tag = "v$env:RELEASE_VERSION"
+        $tagCommit = gh api "repos/$env:GH_REPO/commits/$tag" --jq .sha 2>$null
+        if ($LASTEXITCODE -ne 0) {
+          gh api "repos/$env:GH_REPO/git/refs" --method POST -f "ref=refs/tags/$tag" -f "sha=$env:RELEASE_COMMIT"
+          if ($LASTEXITCODE -ne 0) { throw 'Release tag creation failed' }
+        } elseif ($tagCommit -ne $env:RELEASE_COMMIT) {
+          throw 'Release tag does not match this build'
+        }
+        $existing = gh release view $tag --json isDraft 2>$null
+        if ($LASTEXITCODE -eq 0) {
+          if (-not ($existing | ConvertFrom-Json).isDraft) {
+            throw "Release $tag is already public; refusing to replace published binaries"
+          }
+        } else {
+          gh release create $tag --target $env:RELEASE_COMMIT --draft --title "Release $env:RELEASE_VERSION" --generate-notes
+          if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
+        }
+        # A retry must use the same tagged source, never replace an older release's artifacts.
+        $tagCommit = gh api "repos/$env:GH_REPO/commits/$tag" --jq .sha
+        if ($LASTEXITCODE -ne 0 -or $tagCommit -ne $env:RELEASE_COMMIT) { throw 'Release tag does not match this build' }
+        $assets = @(Get-ChildItem all-packages -Recurse -Filter *.nupkg | Select-Object -ExpandProperty FullName)
+        $assets += @(Get-ChildItem mcp-assets -File | Select-Object -ExpandProperty FullName)
+        $assets += @('README.md', 'LICENSE.txt')
+        gh release upload $tag @assets --clobber
+        if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
+        gh release download $tag --pattern 'dRofusClient.Mcp-*' --pattern SHA256SUMS --dir downloaded-release
+        if ($LASTEXITCODE -ne 0) { throw 'Release asset download failed' }
+        foreach ($source in Get-ChildItem mcp-assets -File) {
+          $download = Join-Path downloaded-release $source.Name
+          if (-not (Test-Path $download) -or
+              (Get-FileHash $source.FullName).Hash -ne (Get-FileHash $download).Hash) {
+            throw "Release verification failed: $($source.Name)"
+          }
+        }
+        gh release edit $tag --draft=false --latest
+        if ($LASTEXITCODE -ne 0) { throw 'Publishing verified release failed' }
