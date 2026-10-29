@@ -40,14 +40,13 @@ public class ProjectRegistry(string server, string database, string projectId)
         using var key = Registry.CurrentUser.OpenSubKey(registryPath);
         
         var value = key?.GetValue(registryKey);
-        if (int.TryParse(value as string, out var result))
+        var result = value switch
         {
-            if (result > 0)
-                return result;
+            int numericId => numericId,
+            string text when int.TryParse(text, out var parsedId) => parsedId,
+            _ => 0
+        };
 
-            return null;
-        }
-
-        return null;
+        return result > 0 ? result : null;
     }
 }
