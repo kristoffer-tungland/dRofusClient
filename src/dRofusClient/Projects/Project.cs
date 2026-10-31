@@ -14,6 +14,7 @@ namespace dRofusClient.Projects;
 ///     "room_level_gross_net_factor": 0,
 /// }
 /// </schema>
+[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 public record Project : dRofusIdDto
 {
     [JsonPropertyName("constructor")]
