@@ -70,7 +70,7 @@ public class AttributeRevitParameter
     {
         var parameterValue = GetParameterValue(p);
 
-        if (int.TryParse(parameterValue, out var id))
+        if (int.TryParse(parameterValue, out var id) && id > 0)
         {
             return id;
         }
@@ -196,7 +196,9 @@ public class AttributeRevitParameter
             rules.Add(rule);
         }
 
-        return new ElementParameterFilter(rules);
+        return rules.Count > 1
+            ? new LogicalOrFilter(rules.Select(rule => (ElementFilter)new ElementParameterFilter(rule)).ToList())
+            : new ElementParameterFilter(rules);
     }
 
     public ElementFilter CreateEqualsParameterFilter(int occurenceId)
@@ -215,6 +217,8 @@ public class AttributeRevitParameter
             rules.Add(rule);
         }
     
-        return new ElementParameterFilter(rules);
+        return rules.Count > 1
+            ? new LogicalOrFilter(rules.Select(rule => (ElementFilter)new ElementParameterFilter(rule)).ToList())
+            : new ElementParameterFilter(rules);
     }
 }
