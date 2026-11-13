@@ -9,6 +9,10 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     runs-on: windows-latest
@@ -134,8 +138,13 @@ jobs:
         retention-days: 1
 
   publish:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
     needs: [build, build-core]
     runs-on: windows-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     steps:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -167,13 +176,24 @@ jobs:
         }
       shell: pwsh
 
+    - name: NuGet login (trusted publishing)
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        user: ${{ vars.NUGET_USER }}
+
     - name: Push all packages to NuGet.org
+      env:
+        NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
       run: |
         $packages = Get-ChildItem -Path "all-packages" -Filter "*.nupkg" -Recurse
         Write-Host "Found $($packages.Count) packages to publish"
         foreach ($package in $packages) {
           Write-Host "Pushing $($package.FullName) to NuGet.org"
-          dotnet nuget push $package.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push $package.FullName --api-key "$env:NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) {
+            throw "NuGet.org publishing failed for $($package.Name) (exit code $LASTEXITCODE)"
+          }
         }
       shell: pwsh
 
