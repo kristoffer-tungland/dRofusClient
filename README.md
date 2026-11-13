@@ -147,6 +147,10 @@ The temporary key expires after one hour. Build configurations, semantic version
 duplicate handling, and automatic release behavior are otherwise unchanged. A failed NuGet push stops the job
 so it cannot create a release after only partially publishing packages.
 
+Pull requests build and validate package artifacts without pushing to either feed, requesting NuGet OIDC
+credentials, or creating releases. Their validation job retains the required `publish` status-check name.
+External publishing runs only on pushes to `master` or matching `v*` tags.
+
 Rerunning an older failed Actions run uses its original workflow revision, including the expired-key authentication;
 it does not pick up this change. Recover the failed version using a run whose revision contains this migration,
 and confirm its computed version before publishing. Package artifacts are retained for only one day.
