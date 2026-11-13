@@ -27,7 +27,7 @@ namespace dRofusClient
                 try
                 {
                     var contextTask = listener.GetContextAsync();
-                    if (await Task.WhenAny(contextTask, Task.Delay(300000, cancellationToken)) != contextTask)
+                    if (await Task.WhenAny(contextTask, Task.Delay(300000, cancellationToken)).ConfigureAwait(false) != contextTask)
                     {
                         return new BrowserResult
                         {
@@ -40,7 +40,7 @@ namespace dRofusClient
                     string responseString = "<html><head><script>setTimeout(function(){ window.close(); }, 1000);</script></head><body>You may now return to the app. This window will close automatically.</body></html>";
                     var buffer = Encoding.UTF8.GetBytes(responseString);
                     context.Response.ContentLength64 = buffer.Length;
-                    await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+                    await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
                     context.Response.OutputStream.Close();
 
                     string rawUrl = context.Request.RawUrl ?? "";

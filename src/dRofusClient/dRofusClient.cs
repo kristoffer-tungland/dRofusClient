@@ -81,12 +81,12 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
 
         try
         {
-            project = await this.GetProjectAsync(cancellationToken: cancellationToken);
+            project = await this.GetProjectAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException)
         {
-            await HandleLoginPromptAsync(cancellationToken);
-            await Login(cancellationToken);
+            await HandleLoginPromptAsync(cancellationToken).ConfigureAwait(false);
+            await Login(cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -96,14 +96,14 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
 
     private async Task HandleLoginPromptAsync(CancellationToken cancellationToken)
     {
-        await _loginPromptHandler.Handle(this, cancellationToken);
+        await _loginPromptHandler.Handle(this, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> IsLoggedIn()
     {
         try
         {
-            await this.GetProjectAsync();
+            await this.GetProjectAsync().ConfigureAwait(false);
             return true;
         }
         catch (Exception)
@@ -152,13 +152,13 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto, new()
     {
-        var response = await SendResponse(method, route, options, cancellationToken);
+        var response = await SendResponse(method, route, options, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         if (method == HttpMethod.Delete)
             return new TResult();
 
-        return await response.Content.ReadFromJsonAsync<TResult>(cancellationToken) ??
+        return await response.Content.ReadFromJsonAsync<TResult>(cancellationToken).ConfigureAwait(false) ??
                throw new NullReferenceException("Failed to read content from response.");
     }
 
@@ -179,12 +179,12 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
         CancellationToken cancellationToken = default
         ) where TResult : dRofusDto
     {
-        var response = await SendResponse(method, route, options, cancellationToken);
-        var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken)
+        var response = await SendResponse(method, route, options, cancellationToken).ConfigureAwait(false);
+        var items = await response.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken).ConfigureAwait(false)
             ?? throw new NullReferenceException("Failed to read content from response.");
 
         if (options is ListQuery listOptions && listOptions.GetNextItems())
-            await GetNextItems(method, response, items, cancellationToken);
+            await GetNextItems(method, response, items, cancellationToken).ConfigureAwait(false);
 
         return items;
     }
@@ -201,14 +201,14 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
             return;
 
         var request = new HttpRequestMessage(method, nextLink);
-        var nextResponse = await _httpClient.SendAsync(request, cancellationToken);
+        var nextResponse = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         nextResponse.EnsureSuccessStatusCode();
-        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken)
+        var nextItems = await nextResponse.Content.ReadFromJsonAsync<List<TResult>>(cancellationToken).ConfigureAwait(false)
             ?? throw new NullReferenceException("Failed to read content from response.");
 
         items.AddRange(nextItems);
 
-        await GetNextItems(method, nextResponse, items, cancellationToken);
+        await GetNextItems(method, nextResponse, items, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<HttpResponseMessage> SendResponse(
@@ -226,16 +226,16 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
         }
         catch (dRofusClientLoginException)
         {
-            await HandleLoginPromptAsync(cancellationToken);
+            await HandleLoginPromptAsync(cancellationToken).ConfigureAwait(false);
             request = BuildRequest(method, route, options);
         }
 
         try
         {
             if (_modernLoginResult is not null)
-                await RefreshTokenIfNeededAsync(cancellationToken);
+                await RefreshTokenIfNeededAsync(cancellationToken).ConfigureAwait(false);
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             
             response.EnsureSuccessStatusCode();
             return response;
@@ -244,10 +244,10 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
         {
             if (requestException.Message.Contains(((int)System.Net.HttpStatusCode.Unauthorized).ToString()))
             {
-                await HandleLoginPromptAsync(cancellationToken);
+                await HandleLoginPromptAsync(cancellationToken).ConfigureAwait(false);
                 request = BuildRequest(method, route, options);
 
-                var response = await _httpClient.SendAsync(request, cancellationToken);
+                var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                 response.EnsureSuccessStatusCode();
                 return response;
@@ -266,7 +266,7 @@ internal sealed class dRofusClient : IdRofusClient, IDisposable
             if (_loginPromptHandler is not ModernPromptHandler modernPromtHandler)
                 throw new dRofusClientLoginException("Modern login handler does not support token refresh.");
 
-            var result = await modernPromtHandler.HandleRefreshToken(this, _modernLoginResult.Server, _modernLoginResult.RefreshToken, cancellationToken);
+            var result = await modernPromtHandler.HandleRefreshToken(this, _modernLoginResult.Server, _modernLoginResult.RefreshToken, cancellationToken).ConfigureAwait(false);
             
             UpdateAuthentication(result);
         }

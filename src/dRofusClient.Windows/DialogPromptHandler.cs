@@ -57,7 +57,7 @@ public class DialogPromptHandler(IdRofusClientFactory clientFactory, ModernLogin
 
         _loginWindow.Show();
 
-        var result = await tcs.Task.ConfigureAwait(true);
+        var result = await tcs.Task.ConfigureAwait(false);
 
         if (result == null)
         {
