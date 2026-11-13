@@ -96,8 +96,7 @@ public static class AttributeRevitParameterExtensions
                     if (definition.Name.Equals(revitParameterName, StringComparison.OrdinalIgnoreCase) == false)
                         continue;
 
-                    definitions.Add(parameterElement.GetDefinition());
-                    break;
+                    definitions.Add(definition);
                 }
             }
         }
