@@ -118,6 +118,40 @@ var configs = client.GetAttributeConfigurations(AttributeConfigType.RevitOccurre
 
 Contributions are welcome! Please open issues or submit pull requests.
 
+### NuGet.org trusted publishing
+
+The master/tag publishing workflow uses [NuGet trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing)
+instead of a stored NuGet API key. Before running it:
+
+1. Sign in to nuget.org with the account that will authenticate publishing and create a **Trusted Publishing** policy.
+   Select the individual or organization owner of the packages, and enter:
+   - Repository owner: `kristoffer-tungland`
+   - Repository: `dRofusClient`
+   - Workflow file: `onPushMaster.yml` (filename only; preserve this spelling)
+   - Environment: leave empty (the publishing job does not use a GitHub environment).
+   Restrict the package pattern to `dRofusClient*` and allow publishing new versions.
+   Also allow publishing new packages if a package ID being released is not yet registered, such as a new Revit version.
+   The publishing set is `dRofusClient`, `dRofusClient.Windows`, `dRofusClient.WindowsCredentials`,
+   and `dRofusClient.Revit.2021` through `dRofusClient.Revit.2027`.
+2. In the GitHub repository's **Settings > Secrets and variables > Actions > Variables**, add the repository variable
+   `NUGET_USER` containing the authenticating account's actual **nuget.org profile username**, not an email address
+   or an assumed GitHub username. For an organization-owned policy, use the member account that created the policy.
+3. Confirm the policy is active and covers all package IDs and their owners before incorporating the workflow change
+   into `master`. A push to `master` or a matching `v*` tag starts publishing automatically.
+   After a successful trusted publish, remove the unused `NUGET_API_KEY` repository secret.
+   The existing `TOKEN` secret is still used for GitHub Packages and is not replaced by this migration.
+
+`NuGet/login@v1` exchanges the publishing job's GitHub OIDC token for a temporary API key immediately before
+pushing to NuGet.org. Only that job has `id-token: write`; build jobs retain read-only repository/package access.
+The temporary key expires after one hour. Build configurations, semantic versioning, package destinations,
+duplicate handling, and automatic release behavior are otherwise unchanged. A failed NuGet push stops the job
+so it cannot create a release after only partially publishing packages.
+
+Rerunning an older failed Actions run uses its original workflow revision, including the expired-key authentication;
+it does not pick up this change. Recover the failed version using a run whose revision contains this migration,
+and confirm its computed version before publishing. Package artifacts are retained for only one day.
+Check which packages already exist on each feed; `--skip-duplicate` skips existing versions but does not replace them.
+
 ## License
 
 [MIT](LICENSE)
